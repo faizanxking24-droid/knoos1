@@ -26,6 +26,15 @@ export const OTP_COOLDOWN_MS = 60 * 1000;   // 60 seconds
 export const OTP_MAX_ATTEMPTS = 5;
 
 /**
+ * Checks whether the mobile OTP login feature is enabled on the server.
+ * Requires explicit environment variable: NEXT_PUBLIC_OTP_ENABLED === "true".
+ * Defaults to false (disabled).
+ */
+export function isOtpFeatureEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_OTP_ENABLED === "true";
+}
+
+/**
  * Retrieves the server-side HMAC secret key.
  *
  * Checks OTP_HMAC_SECRET first, then AUTH_SECRET.
@@ -115,7 +124,16 @@ export async function requestOtpChallenge(rawPhone: string): Promise<RequestOtpR
 
   const phone = validation.normalized;
 
-  // 1. Verify HMAC secret configuration exists before issuing challenges
+  // 1. Verify OTP feature gate is enabled on the server
+  if (!isOtpFeatureEnabled()) {
+    return {
+      success: false,
+      code: "OTP_SERVICE_UNAVAILABLE",
+      error: "Mobile OTP authentication is currently disabled.",
+    };
+  }
+
+  // 2. Verify HMAC secret configuration exists before issuing challenges
   try {
     getHmacSecret();
   } catch {

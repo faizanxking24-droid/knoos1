@@ -18,7 +18,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import bcryptjs from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { verifyOtpChallenge } from "@/lib/otp";
+import { verifyOtpChallenge, isOtpFeatureEnabled } from "@/lib/otp";
 import { normalizeIndianMobile } from "@/lib/phone";
 
 import { resolveOrCreatePhoneUser } from "@/lib/phone-auth";
@@ -39,6 +39,63 @@ if (
    process.env.AUTH_URL.includes("127.0.0.1"))
 ) {
   process.env.AUTH_URL = "";
+}
+
+/**
+ * Helper to resolve the authenticated database user ID and role into the JWT token.
+ *
+ * Prioritizes resolving the database User by email first (Google OAuth & Admin credentials).
+ * Falls back to resolving by id when email is null (Phone OTP).
+ * Never overwrites a valid database token ID with an unverified provider ID.
+ */
+export async function resolveJwtUser({
+  token,
+  user,
+  db = prisma,
+}: {
+  token: { id?: string; role?: string; [key: string]: any };
+  user?: { id?: string; email?: string | null; role?: string; [key: string]: any };
+  db?: any;
+}): Promise<{ id?: string; role?: string; [key: string]: any }> {
+  if (user) {
+    if (user.role) {
+      token.role = user.role;
+    }
+
+    try {
+      const dbUser = user.email
+        ? await db.user.findUnique({
+            where: { email: user.email },
+            select: { id: true, role: true },
+          })
+        : user.id
+        ? await db.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, role: true },
+          })
+        : null;
+
+      if (dbUser) {
+        token.id = dbUser.id;
+        token.role = dbUser.role;
+      } else {
+        // If DB lookup unexpectedly fails:
+        // Do NOT overwrite a previously valid database token ID with an unverified provider ID.
+        if (!token.id && !user.email && user.id) {
+          token.id = user.id;
+        }
+        if (!token.role) {
+          token.role = "CUSTOMER";
+        }
+      }
+    } catch (error) {
+      if (!token.role) {
+        token.role = "CUSTOMER";
+      }
+    }
+  }
+
+  return token;
 }
 
 const nextAuth = NextAuth({
@@ -109,6 +166,12 @@ const nextAuth = NextAuth({
         code: { label: "OTP Code", type: "text" }
       },
       async authorize(credentials) {
+        // Enforce server-side OTP feature gate
+        if (!isOtpFeatureEnabled()) {
+          console.warn("[AUTH] Phone OTP login attempted while feature is disabled.");
+          return null;
+        }
+
         if (!credentials?.phone || !credentials?.code) return null;
 
         const rawPhone = credentials.phone as string;
@@ -190,37 +253,7 @@ const nextAuth = NextAuth({
      * Persist role/id into the JWT on first sign-in.
      */
     async jwt({ token, user, trigger }) {
-      if (user) {
-        if (user.id) {
-          token.id = user.id;
-        }
-        if ((user as { role?: string }).role) {
-          token.role = (user as { role?: string }).role!;
-        }
-
-        try {
-          const dbUser = user.id
-            ? await prisma.user.findUnique({
-                where: { id: user.id },
-                select: { id: true, role: true },
-              })
-            : user.email
-            ? await prisma.user.findUnique({
-                where: { email: user.email },
-                select: { id: true, role: true },
-              })
-            : null;
-
-          if (dbUser) {
-            token.role = dbUser.role;
-            token.id = dbUser.id;
-          } else if (!token.role) {
-            token.role = "CUSTOMER";
-          }
-        } catch (error) {
-          // Ignore
-        }
-      }
+      await resolveJwtUser({ token, user, db: prisma });
 
       // On manual session refresh, re-read the role from the database so
       // an admin promotion takes effect without forcing a re-login.
