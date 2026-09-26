@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
+import { saveProductImage } from "@/lib/image-storage";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
@@ -36,16 +37,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Convert to base64 data URL and store in database via product images endpoint
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const mimeType = file.type;
-    const dataUrl = `data:${mimeType};base64,${base64}`;
+    // Save file to Hostinger filesystem storage
+    const result = await saveProductImage(file);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to save image." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      url: dataUrl,
-      filename: file.name,
+      url: result.url,
+      filename: result.filename,
     });
   } catch (err) {
     console.error("Upload error:", err);

@@ -84,9 +84,20 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const updated = await prisma.order.update({
-    where: { id },
+  const updateResult = await prisma.order.updateMany({
+    where: { id, orderStatus: currentOrder.orderStatus },
     data,
+  });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json(
+      { error: "Order status changed. Refresh and try again." },
+      { status: 409 }
+    );
+  }
+
+  const updated = await prisma.order.findUnique({
+    where: { id },
     include: {
       items: true,
       address: true,
