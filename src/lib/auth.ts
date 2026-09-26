@@ -53,7 +53,7 @@ export async function resolveJwtUser({
   user,
   db = prisma,
 }: {
-  token: { id?: string; role?: string; [key: string]: any };
+  token: { id?: string; role?: string; email?: string | null; [key: string]: any };
   user?: { id?: string; email?: string | null; role?: string; [key: string]: any };
   db?: any;
 }): Promise<{ id?: string; role?: string; [key: string]: any }> {
@@ -87,6 +87,28 @@ export async function resolveJwtUser({
         if (!token.role) {
           token.role = "CUSTOMER";
         }
+      }
+    } catch (error) {
+      if (!token.role) {
+        token.role = "CUSTOMER";
+      }
+    }
+  } else if (token.email) {
+    // Self-heal: stale JWT session where token.id may hold a provider ID
+    // instead of the real Prisma User.id. Resolve by email and replace.
+    // This handles Google sessions created before the email-first fix.
+    // Phone OTP tokens without an email are not affected.
+    try {
+      const dbUser = await db.user.findUnique({
+        where: { email: token.email },
+        select: { id: true, role: true },
+      });
+
+      if (dbUser) {
+        token.id = dbUser.id;
+        token.role = dbUser.role;
+      } else if (!token.role) {
+        token.role = "CUSTOMER";
       }
     } catch (error) {
       if (!token.role) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FallbackImage } from "@/components/ui/FallbackImage";
+import { ColorVariantsPanel } from "./ColorVariantsPanel";
 
 const GENDERS = ["MEN", "WOMEN"] as const;
 
@@ -95,6 +96,8 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
   >([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [migratingImages, setMigratingImages] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
 
   // Load product for edit mode
   useEffect(() => {
@@ -260,6 +263,46 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
     setImages((imgs) => imgs.filter((_, i) => i !== index));
   };
 
+  const hasLegacyImages = images.some(
+    (img) => img.imageUrl.startsWith("data:image/")
+  );
+
+  const handleMigrateLegacyImages = async () => {
+    if (!productId) return;
+    setMigratingImages(true);
+    setMigrationResult(null);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/migrate-images`, {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Migration failed");
+      }
+
+      setMigrationResult(data.message || `Migrated ${data.migrated} images.`);
+
+      // Reload product to get updated image URLs
+      const productRes = await fetch(`/api/admin/products/${productId}`);
+      if (productRes.ok) {
+        const productData: Product = await productRes.json();
+        setImages(
+          productData.images?.length
+            ? productData.images.map((img) => ({ id: img.id, imageUrl: img.imageUrl, sortOrder: img.sortOrder }))
+            : []
+        );
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to migrate images");
+    } finally {
+      setMigratingImages(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -361,6 +404,9 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
           {error}
         </div>
       )}
+
+      {/* Color Variants — product family management */}
+      {productId && <ColorVariantsPanel productId={productId} />}
 
       <form onSubmit={handleSubmit} className="max-w-3xl">
         {/* Basic Info */}
@@ -487,22 +533,13 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
               {fieldErrors.color && <p className="text-red-600 text-xs mt-1">{fieldErrors.color}</p>}
             </div>
             <div>
-              <label htmlFor="colorGroupKey" className="block font-mono text-xs uppercase tracking-wide mb-2">
-                Color Group
-              </label>
-              <input
-                id="colorGroupKey"
-                type="text"
-                value={colorGroupKey}
-                onChange={(e) => setColorGroupKey(e.target.value)}
-                maxLength={100}
-                className={`w-full border px-4 py-2.5 text-sm focus:outline-none focus:border-brand-black transition-colors font-mono ${fieldErrors.colorGroupKey ? "border-red-300" : "border-brand-gray-200"}`}
-                placeholder="e.g. wave-323"
-              />
+              <label className="block font-mono text-xs uppercase tracking-wide mb-2">Color Group</label>
+              <div className={`w-full border px-4 py-2.5 text-sm font-mono bg-gray-50 ${colorGroupKey ? "border-brand-gray-200 text-brand-gray-700" : "border-dashed border-brand-gray-300 text-brand-gray-400"}`}>
+                {colorGroupKey || "No group yet — add a color variant to create one"}
+              </div>
               <p className="text-[11px] text-brand-gray-500 mt-1">
-                Use the same key for the same shoe sold in different colors. (e.g. wave-323)
+                Auto-managed via the Color Variants panel above.
               </p>
-              {fieldErrors.colorGroupKey && <p className="text-red-600 text-xs mt-1">{fieldErrors.colorGroupKey}</p>}
             </div>
             <div>
               <label htmlFor="subCategory" className="block font-mono text-xs uppercase tracking-wide mb-2">Sub Category</label>
@@ -746,6 +783,22 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {hasLegacyImages && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={handleMigrateLegacyImages}
+                disabled={migratingImages}
+                className="text-xs font-mono uppercase tracking-wide text-amber-700 border border-amber-300 bg-amber-50 px-4 py-2 hover:bg-amber-100 transition-colors disabled:opacity-50"
+              >
+                {migratingImages ? "Repairing..." : "Repair Legacy Images"}
+              </button>
+              {migrationResult && (
+                <p className="text-xs text-green-700 mt-1 font-mono">{migrationResult}</p>
+              )}
             </div>
           )}
 

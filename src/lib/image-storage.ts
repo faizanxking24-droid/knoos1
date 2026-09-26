@@ -207,14 +207,15 @@ export async function saveProductImage(file: {
   }
 
   // Check storage configuration
-  const productDir = getProductUploadDirectory();
-  if (!productDir) {
+  const rawProductDir = getProductUploadDirectory();
+  if (!rawProductDir) {
     return {
       success: false,
       error: "Persistent Hostinger image storage is not available.",
       code: "HOSTINGER_STORAGE_NOT_AVAILABLE",
     };
   }
+  const productDir = path.resolve(rawProductDir);
 
   // Create storage directory
   try {
@@ -289,6 +290,249 @@ export async function saveProductImage(file: {
  * Get the absolute filesystem path for a product image by filename.
  * Returns null if the filename is unsafe or the file doesn't exist inside the product directory.
  */
+// ─── Legacy Data URL Migration ────────────────────────────────────────────────
+
+/**
+ * Supported legacy data URL MIME types and their extensions.
+ */
+const LEGACY_MIME_TYPES: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/jpg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
+
+// Magic byte signatures for decoded image validation
+const MAGIC_BYTES: Record<string, Buffer> = {
+  "image/jpeg": Buffer.from([0xff, 0xd8, 0xff]),
+  "image/jpg": Buffer.from([0xff, 0xd8, 0xff]),
+  "image/png": Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  "image/webp": Buffer.from("RIFF", "ascii"),
+};
+
+export interface LegacyMigrationResult {
+  success: true;
+  url: string;
+  filename: string;
+}
+
+export interface LegacyMigrationError {
+  success: false;
+  error: string;
+  code: string;
+}
+
+export type LegacyMigrationOutcome = LegacyMigrationResult | LegacyMigrationError;
+
+/**
+ * Validate decoded image bytes match the claimed MIME type.
+ *
+ * Checks magic bytes at the start of the buffer:
+ *   JPEG: FF D8 FF
+ *   PNG:  89 50 4E 47 0D 0A 1A 0A
+ *   WEBP: starts with "RIFF"
+ */
+export function validateImageMagicBytes(buffer: Buffer, mimeType: string): ImageValidationResult {
+  const signature = MAGIC_BYTES[mimeType];
+  if (!signature) {
+    return {
+      valid: false,
+      error: `Unsupported MIME type for magic-byte check: ${mimeType}`,
+      code: "UNSUPPORTED_MIME",
+    };
+  }
+
+  if (buffer.length < signature.length) {
+    return {
+      valid: false,
+      error: "File is too short to be a valid image.",
+      code: "INVALID_IMAGE_DATA",
+    };
+  }
+
+  // WEBP needs additional check: bytes 8-11 must be "WEBP"
+  if (mimeType === "image/webp") {
+    const webpMarker = buffer.toString("ascii", 8, 12);
+    if (webpMarker !== "WEBP") {
+      return {
+        valid: false,
+        error: "Decoded data does not match WEBP format.",
+        code: "INVALID_IMAGE_DATA",
+      };
+    }
+    return { valid: true };
+  }
+
+  // JPEG and PNG: check prefix bytes
+  for (let i = 0; i < signature.length; i++) {
+    if (buffer[i] !== signature[i]) {
+      return {
+        valid: false,
+        error: `Decoded data does not match ${mimeType} format.`,
+        code: "INVALID_IMAGE_DATA",
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Migrate a legacy base64 data URL to Hostinger persistent storage.
+ *
+ * Accepts ONLY: data:image/jpeg;base64,... data:image/ppg;base64,... data:image/webp;base64,...
+ *
+ * - Validates MIME
+ * - Decodes base64 safely
+ * - Enforces 5MB decoded size
+ * - Rejects malformed/truncated data
+ * - Generates safe filename
+ * - Persists through the same Hostinger storage directory
+ * - Returns /media/products/<filename>
+ */
+export async function migrateLegacyDataUrl(dataUrl: string): Promise<LegacyMigrationOutcome> {
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
+    return {
+      success: false,
+      error: "Not a valid image data URL.",
+      code: "INVALID_DATA_URL",
+    };
+  }
+
+  // Parse data URL header
+  const match = dataUrl.match(/^data:(image\/[^;]+);base64,(.+)$/);
+  if (!match) {
+    return {
+      success: false,
+      error: "Data URL is not base64-encoded or format is invalid.",
+      code: "INVALID_DATA_URL_FORMAT",
+    };
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const base64Data = match[2];
+
+  // Validate MIME is in our allowlist
+  if (!LEGACY_MIME_TYPES[mimeType]) {
+    return {
+      success: false,
+      error: `Unsupported image type: ${mimeType}. Only JPEG, PNG, and WEBP are supported.`,
+      code: "UNSUPPORTED_MIME",
+    };
+  }
+
+  // Decode base64 safely
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(base64Data, "base64");
+  } catch {
+    return {
+      success: false,
+      error: "Failed to decode base64 data.",
+      code: "BASE64_DECODE_FAILED",
+    };
+  }
+
+  // Enforce 5MB decoded size
+  if (buffer.length > MAX_IMAGE_FILE_SIZE) {
+    return {
+      success: false,
+      error: `Decoded image is ${Math.round(buffer.length / 1024 / 1024)}MB. Maximum 5MB allowed.`,
+      code: "FILE_TOO_LARGE",
+    };
+  }
+
+  // Reject empty files
+  if (buffer.length === 0) {
+    return {
+      success: false,
+      error: "Decoded image is empty.",
+      code: "EMPTY_FILE",
+    };
+  }
+
+  // Validate decoded bytes match claimed MIME type (magic byte check)
+  const magicCheck = validateImageMagicBytes(buffer, mimeType);
+  if (!magicCheck.valid) {
+    return {
+      success: false,
+      error: magicCheck.error || "Decoded image data is corrupt or does not match the claimed format.",
+      code: magicCheck.code || "INVALID_IMAGE_DATA",
+    };
+  }
+
+  // Check storage configuration
+  const rawProductDir = getProductUploadDirectory();
+  if (!rawProductDir) {
+    return {
+      success: false,
+      error: "Persistent Hostinger image storage is not available.",
+      code: "HOSTINGER_STORAGE_NOT_AVAILABLE",
+    };
+  }
+  const productDir = path.resolve(rawProductDir);
+
+  // Create storage directory
+  try {
+    await mkdir(productDir, { recursive: true });
+  } catch (err) {
+    console.error("[IMAGE_STORAGE_MKDIR_ERROR]", err);
+    return {
+      success: false,
+      error: "Failed to create storage directory.",
+      code: "STORAGE_MKDIR_FAILED",
+    };
+  }
+
+  // Verify directory is writable
+  try {
+    await access(productDir, constants.W_OK);
+  } catch {
+    return {
+      success: false,
+      error: "Storage directory is not writable.",
+      code: "STORAGE_NOT_WRITABLE",
+    };
+  }
+
+  // Generate safe filename — use a recognizable prefix for legacy migration
+  const timestamp = Date.now();
+  const randomSuffix = crypto.randomBytes(4).toString("hex");
+  const ext = LEGACY_MIME_TYPES[mimeType];
+  const filename = `migrated-${timestamp}-${randomSuffix}${ext}`;
+
+  // Resolve and verify final path stays inside product directory
+  const filePath = path.resolve(productDir, filename);
+  if (!filePath.startsWith(productDir + path.sep)) {
+    return {
+      success: false,
+      error: "Path traversal detected.",
+      code: "PATH_TRAVERSAL",
+    };
+  }
+
+  // Write file
+  try {
+    await writeFile(filePath, buffer, { flag: "wx" });
+  } catch (err) {
+    console.error("[IMAGE_STORAGE_WRITE_ERROR]", err);
+    return {
+      success: false,
+      error: "Failed to write image to storage.",
+      code: "STORAGE_WRITE_FAILED",
+    };
+  }
+
+  // Return stable public URL
+  const url = `/media/products/${filename}`;
+
+  return {
+    success: true,
+    url,
+    filename,
+  };
+}
+
 export async function getProductImagePath(filename: string): Promise<string | null> {
   const resolved = resolveProductImagePath(filename);
   if (!resolved) return null;

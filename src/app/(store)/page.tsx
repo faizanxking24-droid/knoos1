@@ -237,6 +237,10 @@ export default async function HomePage() {
             <video
               className="absolute inset-0 h-full w-full object-cover"
               controls
+              autoPlay
+              muted
+              loop
+              playsInline
               preload="metadata"
               poster="/images/process-footwear.jpg"
             >

@@ -2,9 +2,6 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { saveProductImage } from "@/lib/image-storage";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
-
 export async function POST(request: Request) {
   const adminResult = await requireAdmin();
   if (adminResult instanceof Response) return adminResult;
@@ -20,30 +17,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file type
-    const fileType = file.type.toLowerCase();
-    if (!ALLOWED_TYPES.has(fileType)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only JPG, PNG, and WEBP are allowed." },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "File size too large. Maximum 5MB allowed." },
-        { status: 400 }
-      );
-    }
-
-    // Save file to Hostinger filesystem storage
-    const result = await saveProductImage(file);
+    // Persist to Hostinger filesystem via the storage module
+    const result = await saveProductImage({
+      arrayBuffer: () => file.arrayBuffer(),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
 
     if (!result.success) {
+      const statusMap: Record<string, number> = {
+        HOSTINGER_STORAGE_NOT_AVAILABLE: 503,
+      };
+      const status = statusMap[result.code] || 400;
       return NextResponse.json(
-        { error: result.error || "Failed to save image." },
-        { status: 500 }
+        { error: result.error },
+        { status }
       );
     }
 
@@ -52,7 +41,7 @@ export async function POST(request: Request) {
       filename: result.filename,
     });
   } catch (err) {
-    console.error("Upload error:", err);
+    console.error("[UPLOAD_ERROR]", err);
     return NextResponse.json(
       { error: "Failed to upload image" },
       { status: 500 }
