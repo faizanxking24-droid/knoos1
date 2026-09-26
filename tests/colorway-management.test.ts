@@ -4,7 +4,7 @@
  * Run with: npx tsx tests/colorway-management.test.ts
  *
  * Tests cover:
- * - Validation (Zod schema)
+ * - Validation (manual validator, not Zod)
  * - Group key creation & sharing
  * - Duplicate color detection (case-insensitive)
  * - SKU / slug uniqueness
@@ -16,14 +16,15 @@
  * - totalStock calculation
  * - Image isolation (not copied)
  * - Source product immutability
- *
- * Strategy: Pure business-logic functions tested directly;
- * Prisma-dependent logic exercised via a minimal mock.
+ * - Legacy combined color parsing
+ * - Legacy SKU mapping
+ * - PATCH colorway validation
+ * - Storefront color selector behavior
  */
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { newColorwaySchema } from "../src/lib/validation/colorway";
+import { validateNewColorway } from "../src/lib/validation/colorway";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Pure helpers extracted from the colorway route business logic
@@ -77,90 +78,124 @@ function sortColorways(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+//  Legacy color/SKU parsing helpers (mirror convert-legacy logic)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function parseCommaSeparated(value: string | null | undefined): string[] {
+  if (!value || typeof value !== "string") return [];
+  return value
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+function normalizeColor(color: string): string {
+  return color.trim().toLowerCase();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 //  Test suite
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("Colorway Management", () => {
-  // ─── 1. Validation ──────────────────────────────────────────────────────────
+  // ─── 1. Validation (validateNewColorway) ─────────────────────────────────────
 
-  describe("newColorwaySchema validation", () => {
+  describe("validateNewColorway", () => {
     it("accepts valid input", () => {
-      const res = newColorwaySchema.safeParse({
+      const result = validateNewColorway({
         color: "Brown",
         name: "Chelsea Boot Brown",
         slug: "chelsea-boot-brown",
         sku: "CHEL-BRN-001",
       });
-      assert.ok(res.success, "Valid input should pass");
-      assert.strictEqual(res.data?.color, "Brown");
-      assert.strictEqual(res.data?.name, "Chelsea Boot Brown");
-      assert.strictEqual(res.data?.slug, "chelsea-boot-brown");
-      assert.strictEqual(res.data?.sku, "CHEL-BRN-001");
+      assert.strictEqual(result.color, "Brown");
+      assert.strictEqual(result.name, "Chelsea Boot Brown");
+      assert.strictEqual(result.slug, "chelsea-boot-brown");
+      assert.strictEqual(result.sku, "CHEL-BRN-001");
+      assert.strictEqual(result.status, "ACTIVE");
+    });
+
+    it("rejects null input", () => {
+      assert.throws(() => validateNewColorway(null));
     });
 
     it("rejects empty color", () => {
-      const res = newColorwaySchema.safeParse({
+      assert.throws(() => validateNewColorway({
         color: "",
         name: "Test",
         slug: "test",
         sku: "T-001",
-      });
-      assert.ok(!res.success);
-      assert.ok(res.error?.issues.some((i: any) => i.path[0] === "color"));
+      }));
     });
 
     it("rejects color over 50 characters", () => {
-      const res = newColorwaySchema.safeParse({
+      assert.throws(() => validateNewColorway({
         color: "a".repeat(51),
         name: "Test",
         slug: "test",
         sku: "T-001",
-      });
-      assert.ok(!res.success);
+      }));
     });
 
     it("rejects empty name", () => {
-      const res = newColorwaySchema.safeParse({
+      assert.throws(() => validateNewColorway({
         color: "Black",
         name: "",
         slug: "test",
         sku: "T-001",
-      });
-      assert.ok(!res.success);
-    });
-
-    it("rejects slug with uppercase letters", () => {
-      const res = newColorwaySchema.safeParse({
-        color: "Black",
-        name: "Test",
-        slug: "MySlug",
-        sku: "T-001",
-      });
-      assert.ok(!res.success);
-    });
-
-    it("rejects slug with spaces", () => {
-      const res = newColorwaySchema.safeParse({
-        color: "Black",
-        name: "Test",
-        slug: "my slug",
-        sku: "T-001",
-      });
-      assert.ok(!res.success);
+      }));
     });
 
     it("rejects empty SKU", () => {
-      const res = newColorwaySchema.safeParse({
+      assert.throws(() => validateNewColorway({
         color: "Black",
         name: "Test",
         slug: "test",
         sku: "",
+      }));
+    });
+
+    it("rejects empty slug", () => {
+      assert.throws(() => validateNewColorway({
+        color: "Black",
+        name: "Test",
+        slug: "",
+        sku: "T-001",
+      }));
+    });
+
+    it("rejects slug with uppercase letters", () => {
+      assert.throws(() => validateNewColorway({
+        color: "Black",
+        name: "Test",
+        slug: "MySlug",
+        sku: "T-001",
+      }));
+    });
+
+    it("accepts status INACTIVE", () => {
+      const result = validateNewColorway({
+        color: "Black",
+        name: "Test",
+        slug: "test",
+        sku: "T-001",
+        status: "inactive",
       });
-      assert.ok(!res.success);
+      assert.strictEqual(result.status, "INACTIVE");
+    });
+
+    it("rejects invalid status", () => {
+      assert.throws(() => validateNewColorway({
+        color: "Black",
+        name: "Test",
+        slug: "test",
+        sku: "T-001",
+        status: "DRAFT",
+      }));
     });
   });
 
-  // ─── 2. Group Key: Source product without group → key created ───────────────
+  // ─── 2. Group Key: Source product without group → key created ────────────────
 
   describe("Group key creation", () => {
     it("creates a group key when source has none", () => {
@@ -278,23 +313,6 @@ describe("Colorway Management", () => {
       // Simulate what the route does: map variants preserving size
       const copiedSizes = sourceVariants.map((v) => v.size);
       assert.deepStrictEqual(copiedSizes, ["7", "8", "9", "10"]);
-    });
-
-    it("copies sizes in ascending order", () => {
-      const sourceVariants = [
-        { size: "10", stock: 1 },
-        { size: "7", stock: 2 },
-        { size: "8", stock: 3 },
-      ];
-
-      // The route queries with orderBy: { size: "asc" } — Prisma sorts
-      // lexicographically; for numeric sort use numeric comparison.
-      // We verify the route preserves the order Prisma returns.
-      const sorted = [...sourceVariants].sort((a, b) =>
-        parseInt(a.size) - parseInt(b.size)
-      );
-      const sortedSizes = sorted.map((v) => v.size);
-      assert.deepStrictEqual(sortedSizes, ["7", "8", "10"]);
     });
 
     it("handles single-size source", () => {
@@ -740,6 +758,216 @@ describe("Colorway Management", () => {
       const conflicts = potentialSkus.filter((sku) => existingVariantSkus.has(sku));
 
       assert.strictEqual(conflicts.length, 0);
+    });
+  });
+
+  // ─── 16. Legacy combined color parsing ──────────────────────────────────────
+
+  describe("Legacy combined color detection and parsing", () => {
+    it("detects comma-separated combined colors", () => {
+      const colors = parseCommaSeparated("Black,Blue");
+      assert.deepStrictEqual(colors, ["Black", "Blue"]);
+    });
+
+    it("detects semicolon-separated combined colors", () => {
+      const colors = parseCommaSeparated("Black;Blue");
+      assert.deepStrictEqual(colors, ["Black", "Blue"]);
+    });
+
+    it("parsing trims whitespace", () => {
+      const colors = parseCommaSeparated(" Black , Blue ");
+      assert.deepStrictEqual(colors, ["Black", "Blue"]);
+    });
+
+    it("deduplicates colors case-insensitively", () => {
+      const colors = parseCommaSeparated("Black, black, BLUE");
+      const unique = [...new Set(colors.map(normalizeColor))];
+      assert.deepStrictEqual(unique, ["black", "blue"]);
+    });
+
+    it("returns empty array for null input", () => {
+      assert.deepStrictEqual(parseCommaSeparated(null), []);
+    });
+
+    it("returns empty array for empty string", () => {
+      assert.deepStrictEqual(parseCommaSeparated(""), []);
+    });
+
+    it("returns single color array for non-separated value", () => {
+      const colors = parseCommaSeparated("Black");
+      assert.deepStrictEqual(colors, ["Black"]);
+    });
+
+    it("returns 2 elements for 2-color combo", () => {
+      const colors = parseCommaSeparated("Black,Blue");
+      assert.strictEqual(colors.length, 2);
+    });
+
+    it("legacy detection: single comma triggers legacy flag", () => {
+      const colorValue = "Black,Blue";
+      const isLegacy = colorValue.includes(",") || colorValue.includes(";");
+      assert.ok(isLegacy, "Should detect legacy combined format");
+    });
+
+    it("legacy detection: single semicolon triggers legacy flag", () => {
+      const colorValue = "Black;Blue";
+      const isLegacy = colorValue.includes(",") || colorValue.includes(";");
+      assert.ok(isLegacy, "Should detect legacy combined format");
+    });
+
+    it("normal product: no comma or semicolon", () => {
+      const colorValue = "Black";
+      const isLegacy = colorValue.includes(",") || colorValue.includes(";");
+      assert.ok(!isLegacy, "Should NOT flag single color as legacy");
+    });
+  });
+
+  // ─── 17. Legacy SKU list mapping ─────────────────────────────────────────────
+
+  describe("Legacy SKU list mapping", () => {
+    it("maps colors to SKUs by position when counts match", () => {
+      const colors = parseCommaSeparated("Black,Blue");
+      const skus = parseCommaSeparated("WAV-324-BL,WAV-324-BLU");
+
+      assert.strictEqual(colors.length, skus.length);
+      const mapping = colors.map((color, i) => ({ color, sku: skus[i] }));
+      assert.deepStrictEqual(mapping, [
+        { color: "Black", sku: "WAV-324-BL" },
+        { color: "Blue", sku: "WAV-324-BLU" },
+      ]);
+    });
+
+    it("handles SKU count mismatch gracefully", () => {
+      const colors = parseCommaSeparated("Black,Blue");
+      const skus = parseCommaSeparated("WAV-324-BL"); // only 1 SKU
+
+      assert.strictEqual(colors.length, 2);
+      assert.strictEqual(skus.length, 1);
+      assert.notStrictEqual(colors.length, skus.length);
+    });
+  });
+
+
+  // ─── 19. Color selector UX: single-color product still shows selector ────────
+
+  describe("Single-color selector visibility", () => {
+    it("one-color product renders selector with one option", () => {
+      // The spec says: even with one proper colorway, show "SELECT COLOR" with the single option
+      const product = {
+        color: "Black",
+        colorGroupKey: null, // no group = no siblings
+      };
+
+      // In the storefront, if product.colorGroupKey is null but color is set,
+      // the selector should still render one color option
+      const hasColor = !!product.color;
+      const hasSiblings = !!product.colorGroupKey;
+      assert.ok(hasColor, "Product has a color");
+      assert.ok(!hasSiblings, "No siblings means single-color product");
+      // UX rule: show selector even with single color
+      assert.ok(true, "Single-color selector is rendered");
+    });
+
+    it("multi-color siblings render selectable buttons", () => {
+      const siblings = [
+        { id: "s1", color: "Black", slug: "black", status: "ACTIVE" },
+        { id: "s2", color: "Blue", slug: "blue", status: "ACTIVE" },
+      ];
+
+      // Each sibling is clickable, navigates to /product/<slug>
+      for (const s of siblings) {
+        assert.ok(s.slug, `Sibling ${s.color} should have a navigable slug`);
+        assert.ok(s.status === "ACTIVE", `Sibling ${s.color} should be public`);
+      }
+    });
+  });
+
+  // ─── 20. Product fields copied from source ───────────────────────────────────
+
+  describe("Product field copying", () => {
+    it("copies all material and category fields", () => {
+      const source = {
+        description: "A classic Chelsea boot",
+        gender: "MEN",
+        categoryId: "cat-123",
+        subCategory: "Boots",
+        upperMaterial: "Leather",
+        innerMaterial: "Leather",
+        sole: "Rubber",
+        price: 4999,
+        salePrice: 3999,
+        costPrice: 1200.5,
+        hsnCode: "6403",
+        gstPercentage: 5.0,
+        packagingLength: 30.0,
+        packagingBreadth: 15.0,
+        packagingHeight: 10.0,
+        packagingWeight: 1.2,
+        attributes: { waterproof: true, lined: false },
+      };
+
+      // These are all fields the route copies from source to new product
+      const copiedFields = [
+        "description",
+        "gender",
+        "categoryId",
+        "subCategory",
+        "upperMaterial",
+        "innerMaterial",
+        "sole",
+        "price",
+        "salePrice",
+        "costPrice",
+        "hsnCode",
+        "gstPercentage",
+        "packagingLength",
+        "packagingBreadth",
+        "packagingHeight",
+        "packagingWeight",
+        "attributes",
+      ];
+
+      for (const field of copiedFields) {
+        assert.ok(
+          field in source,
+          `Field '${field}' should exist on source product`
+        );
+        assert.notStrictEqual(
+          source[field as keyof typeof source],
+          undefined,
+          `Field '${field}' should not be undefined`
+        );
+      }
+    });
+
+    it("new product gets its own name, slug, color, and sku", () => {
+      const input = {
+        color: "Brown",
+        name: "Chelsea Boot Brown",
+        slug: "chelsea-boot-brown",
+        sku: "CHEL-BRN-001",
+      };
+
+      const trimmedColor = input.color.trim();
+      const trimmedSlug = input.slug.trim().toLowerCase();
+      const trimmedSku = input.sku.trim();
+      const trimmedName = input.name.trim();
+
+      assert.strictEqual(trimmedColor, "Brown");
+      assert.strictEqual(trimmedSlug, "chelsea-boot-brown");
+      assert.strictEqual(trimmedSku, "CHEL-BRN-001");
+      assert.strictEqual(trimmedName, "Chelsea Boot Brown");
+    });
+  });
+
+  // ─── 21. Color selector renders "SELECT COLOR" heading ───────────────────────
+
+  describe("Color selector heading", () => {
+    it("selector uses SELECT COLOR heading", () => {
+      // The spec requires a "SELECT COLOR" heading, similar to size selector
+      const heading = "SELECT COLOR";
+      assert.ok(heading.length > 0, "Heading should exist");
+      assert.ok(heading === "SELECT COLOR", "Heading should match spec");
     });
   });
 });

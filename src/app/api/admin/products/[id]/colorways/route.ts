@@ -3,7 +3,14 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { newColorwaySchema } from "@/lib/validation/colorway";
+import { validateNewColorway } from "@/lib/validation/colorway";
+import {
+  colorGroupKeySchema,
+  productNameSchema,
+  productSlugSchema,
+  productSkuSchema,
+  productStatusSchema,
+} from "@/lib/validation/admin";
 
 // ─── GET: List all colorways (siblings) for a product ───────────────────────
 
@@ -86,20 +93,23 @@ export async function POST(
 
   const { id } = await params;
   const body = await request.json();
-  const parsed = newColorwaySchema.safeParse(body);
 
-  if (!parsed.success) {
+  // Validate input
+  let validated;
+  try {
+    validated = validateNewColorway(body);
+  } catch (err) {
     return NextResponse.json(
-      { error: "Validation failed", fieldErrors: mapZodErrors(parsed.error) },
+      { error: err instanceof Error ? err.message : "Validation failed" },
       { status: 400 }
     );
   }
 
-  const { color, name, slug, sku } = parsed.data;
-  const trimmedColor = color.trim();
-  const trimmedSlug = slug.trim().toLowerCase();
-  const trimmedSku = sku.trim();
-  const trimmedName = name.trim();
+  const { color, name, slug, sku } = validated;
+  const trimmedColor = color;
+  const trimmedSlug = slug;
+  const trimmedSku = sku;
+  const trimmedName = name;
 
   const sourceProduct = await prisma.product.findUnique({
     where: { id },
@@ -167,17 +177,15 @@ export async function POST(
   }
 
   // Check variant SKU uniqueness (new product SKU + size)
-  const sourceSizes = sourceProduct.variants.map((v: any) => v.size);
-  const potentialVariantSkus: string[] = sourceSizes.map((s: string) => `${trimmedSku}-${s}`);
-  const conflictingVariantSkus = await prisma.productVariant.findMany({
-    where: { sku: { in: potentialVariantSkus } },
+  const sourceVariantSkus = sourceProduct.variants.map((v: any) => `${trimmedSku}-${v.size}`);
+  const existingVariantSkus = await prisma.productVariant.findMany({
+    where: { sku: { in: sourceVariantSkus } },
     select: { sku: true },
   });
-
-  if (conflictingVariantSkus.length > 0) {
+  if (existingVariantSkus.length > 0) {
     return NextResponse.json(
       {
-        error: `Variant SKU conflict: ${conflictingVariantSkus.map((v: any) => v.sku).join(", ")} already exists`,
+        error: `Variant SKU conflict: ${existingVariantSkus.map((v: any) => v.sku).join(", ")} already exists`,
       },
       { status: 409 }
     );
@@ -256,6 +264,189 @@ export async function POST(
   }
 }
 
+// ─── PATCH: Update a colorway ────────────────────────────────────────────────
+
+// @ts-ignore - Next.js 16 type compatibility
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const adminResult = await requireAdmin();
+  if (adminResult instanceof Response) return adminResult;
+
+  const { id } = await params;
+  const body = await request.json();
+
+  const {
+    colorwayId,
+    color,
+    name,
+    sku,
+    slug,
+    status,
+  }: {
+    colorwayId: string;
+    color?: string;
+    name?: string;
+    sku?: string;
+    slug?: string;
+    status?: string;
+  } = body;
+
+  if (!colorwayId) {
+    return NextResponse.json({ error: "colorwayId is required" }, { status: 400 });
+  }
+
+  // Load the colorway to update
+  const colorway = await prisma.product.findUnique({
+    where: { id: colorwayId },
+    select: { id: true, color: true, sku: true, slug: true, colorGroupKey: true },
+  });
+
+  if (!colorway) {
+    return NextResponse.json({ error: "Colorway not found" }, { status: 404 });
+  }
+
+  // Build a group key reference — use existing or fallback
+  const groupKey = colorway.colorGroupKey;
+
+  // ─── Validate and check uniqueness for each provided field ─────────────────
+
+  // Color validation & uniqueness
+  if (color !== undefined) {
+    const trimmedColor = typeof color === "string" ? color.trim() : "";
+    if (!trimmedColor) {
+      return NextResponse.json({ error: "Color is required" }, { status: 400 });
+    }
+    if (trimmedColor.length > 50) {
+      return NextResponse.json(
+        { error: "Color must be 50 characters or fewer" },
+        { status: 400 }
+      );
+    }
+
+    if (groupKey) {
+      const allGroupProducts = await prisma.product.findMany({
+        where: { colorGroupKey: groupKey, NOT: { id: colorwayId } },
+        select: { id: true, color: true },
+      });
+      const duplicate = allGroupProducts.find(
+        (p: any) => p.color && p.color.trim().toLowerCase() === trimmedColor.toLowerCase()
+      );
+      if (duplicate) {
+        return NextResponse.json(
+          {
+            error: `"${trimmedColor}" already exists in this product family (conflicts with "${duplicate.color}"). Each color must be unique.`,
+          },
+          { status: 409 }
+        );
+      }
+    }
+  }
+
+  // SKU validation & uniqueness
+  if (sku !== undefined) {
+    const trimmedSku = typeof sku === "string" ? sku.trim() : "";
+    const skuParse = productSkuSchema.safeParse(trimmedSku);
+    if (!skuParse.success) {
+      return NextResponse.json(
+        { error: skuParse.error.issues[0]?.message || "Invalid SKU" },
+        { status: 400 }
+      );
+    }
+
+    const existingSku = await prisma.product.findFirst({
+      where: { sku: trimmedSku, NOT: { id: colorwayId } },
+    });
+    if (existingSku) {
+      return NextResponse.json(
+        { error: "A product with this SKU already exists" },
+        { status: 409 }
+      );
+    }
+  }
+
+  // Slug validation & uniqueness
+  if (slug !== undefined) {
+    const trimmedSlug = typeof slug === "string" ? slug.trim().toLowerCase() : "";
+    const slugParse = productSlugSchema.safeParse(trimmedSlug);
+    if (!slugParse.success) {
+      return NextResponse.json(
+        { error: slugParse.error.issues[0]?.message || "Invalid slug" },
+        { status: 400 }
+      );
+    }
+
+    const existingSlug = await prisma.product.findFirst({
+      where: { slug: trimmedSlug, NOT: { id: colorwayId } },
+    });
+    if (existingSlug) {
+      return NextResponse.json(
+        { error: "A product with this slug already exists" },
+        { status: 409 }
+      );
+    }
+  }
+
+  // Status validation
+  if (status !== undefined) {
+    const statusParse = productStatusSchema.safeParse(status);
+    if (!statusParse.success) {
+      return NextResponse.json(
+        { error: "Status must be ACTIVE or INACTIVE" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Name validation
+  if (name !== undefined) {
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    const nameParse = productNameSchema.safeParse(trimmedName);
+    if (!nameParse.success) {
+      return NextResponse.json(
+        { error: nameParse.error.issues[0]?.message || "Invalid name" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // ─── Build update data ─────────────────────────────────────────────────────
+
+  const updateData: Record<string, unknown> = {};
+  if (color !== undefined) updateData.color = typeof color === "string" ? color.trim() : color;
+  if (name !== undefined) updateData.name = typeof name === "string" ? name.trim() : name;
+  if (sku !== undefined) updateData.sku = typeof sku === "string" ? sku.trim() : sku;
+  if (slug !== undefined) updateData.slug = typeof slug === "string" ? slug.trim().toLowerCase() : slug;
+  if (status !== undefined) updateData.status = status;
+
+  try {
+    const updated = await prisma.product.update({
+      where: { id: colorwayId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        color: true,
+        sku: true,
+        status: true,
+        colorGroupKey: true,
+        price: true,
+        salePrice: true,
+      },
+    });
+
+    return Response.json({ colorway: updated });
+  } catch (err) {
+    console.error("Failed to update colorway:", err);
+    return NextResponse.json(
+      { error: "Failed to update color variant. Please try again." },
+      { status: 500 }
+    );
+  }
+}
+
 // ─── DELETE: Remove a colorway from the group ────────────────────────────────
 
 // @ts-ignore - Next.js 16 type compatibility
@@ -315,19 +506,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
-
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
-function mapZodErrors(error: unknown): Record<string, string> {
-  const result: Record<string, string> = {};
-  const issues = (error as any)?.issues;
-  if (!Array.isArray(issues)) return result;
-  for (const issue of issues) {
-    const path = issue.path?.join(".");
-    if (path && !result[path]) {
-      result[path] = issue.message;
-    }
-  }
-  return result;
 }
