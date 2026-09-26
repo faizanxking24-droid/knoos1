@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FallbackImage } from "@/components/ui/FallbackImage";
+import { ColorVariantsPanel } from "./ColorVariantsPanel";
 
 const GENDERS = ["MEN", "WOMEN"] as const;
 
@@ -362,6 +363,9 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
         </div>
       )}
 
+      {/* Color Variants — product family management */}
+      {productId && <ColorVariantsPanel productId={productId} />}
+
       <form onSubmit={handleSubmit} className="max-w-3xl">
         {/* Basic Info */}
         <div className="bg-white border border-brand-gray-200 p-6 mb-6 space-y-5">
@@ -487,22 +491,13 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
               {fieldErrors.color && <p className="text-red-600 text-xs mt-1">{fieldErrors.color}</p>}
             </div>
             <div>
-              <label htmlFor="colorGroupKey" className="block font-mono text-xs uppercase tracking-wide mb-2">
-                Color Group
-              </label>
-              <input
-                id="colorGroupKey"
-                type="text"
-                value={colorGroupKey}
-                onChange={(e) => setColorGroupKey(e.target.value)}
-                maxLength={100}
-                className={`w-full border px-4 py-2.5 text-sm focus:outline-none focus:border-brand-black transition-colors font-mono ${fieldErrors.colorGroupKey ? "border-red-300" : "border-brand-gray-200"}`}
-                placeholder="e.g. wave-323"
-              />
+              <label className="block font-mono text-xs uppercase tracking-wide mb-2">Color Group</label>
+              <div className={`w-full border px-4 py-2.5 text-sm font-mono bg-gray-50 ${colorGroupKey ? "border-brand-gray-200 text-brand-gray-700" : "border-dashed border-brand-gray-300 text-brand-gray-400"}`}>
+                {colorGroupKey || "No group yet — add a color variant to create one"}
+              </div>
               <p className="text-[11px] text-brand-gray-500 mt-1">
-                Use the same key for the same shoe sold in different colors. (e.g. wave-323)
+                Auto-managed via the Color Variants panel above.
               </p>
-              {fieldErrors.colorGroupKey && <p className="text-red-600 text-xs mt-1">{fieldErrors.colorGroupKey}</p>}
             </div>
             <div>
               <label htmlFor="subCategory" className="block font-mono text-xs uppercase tracking-wide mb-2">Sub Category</label>

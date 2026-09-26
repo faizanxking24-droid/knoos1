@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FallbackImage } from "@/components/ui/FallbackImage";
 import ProductImportPanel from "./ProductImportPanel";
 import NormalizeSlugsModal from "./NormalizeSlugsModal";
+import { getColorSwatch } from "@/lib/colors";
 
 const GENDERS = ["MEN", "WOMEN"] as const;
 const STATUSES = ["ACTIVE", "INACTIVE"] as const;
@@ -18,6 +19,7 @@ interface Product {
   id: string;
   name: string;
   gender: string;
+  color?: string | null;
   sku: string;
   price: number;
   salePrice: number | null;
@@ -261,6 +263,7 @@ export default function AdminProductsPage() {
                 <tr className="border-b border-brand-gray-100 text-left">
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 w-12"></th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Product</th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Color</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Category</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Gender</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">SKU</th>
@@ -293,6 +296,22 @@ export default function AdminProductsPage() {
                         <Link href={`/admin/products/${product.id}`} className="text-brand-black hover:underline font-medium">
                           {product.name}
                         </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        {product.color ? (() => {
+                          const swatch = getColorSwatch(product.color);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-block w-3 h-3 rounded-full flex-shrink-0 ${swatch.isLight ? "border border-black/20" : ""}`}
+                                style={{ backgroundColor: swatch.hex }}
+                              />
+                              <span className="font-mono text-xs capitalize">{swatch.label}</span>
+                            </div>
+                          );
+                        })() : (
+                          <span className="text-brand-gray-300">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">
                         {product.categoryRel?.name ?? product.categoryId ? (
