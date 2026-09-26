@@ -23,6 +23,7 @@ interface Order {
   total: number;
   orderStatus: string;
   paymentStatus: string;
+  paymentMethod: string;
   deliveryMethod: string;
   createdAt: string;
   items: OrderItem[];
@@ -147,7 +148,10 @@ function OrderCard({ order }: { order: Order }) {
               {STATUS_LABELS[order.orderStatus] || order.orderStatus}
             </span>
             <p className="text-sm text-brand-gray-600 mt-2">
-              {order.items.length} item{order.items.length !== 1 ? "s" : ""} &bull; {order.deliveryMethod === "FAST" ? "Fast Delivery" : "Standard Delivery"}
+              {order.items.length} item{order.items.length !== 1 ? "s" : ""} &bull; {order.deliveryMethod === "FAST" ? "Fast Delivery" : "Standard Delivery"} &bull;{" "}
+              {order.paymentMethod === "COD"
+                ? (order.paymentStatus === "PAID" ? "Paid on delivery" : "Pay on delivery")
+                : (order.paymentStatus === "PAID" ? "Prepaid" : order.paymentStatus)}
             </p>
             <p className="text-xs text-brand-gray-400 mt-1 line-clamp-1">
               {order.items.map((i) => `${i.productName} (x${i.quantity})`).join(", ")}

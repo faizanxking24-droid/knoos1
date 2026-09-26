@@ -34,6 +34,7 @@ interface Order {
   total: number;
   orderStatus: string;
   paymentStatus: string;
+  paymentMethod: string;
   deliveryMethod: string;
   createdAt: string;
   items: OrderItem[];
@@ -208,7 +209,13 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
     window.open(`https://wa.me/917088808882?text=${baseMsg}${order ? orderMsg : ""}`, "_blank");
   };
 
-  const isCancellable = order && !["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"].includes(order.orderStatus);
+  const isCancellable =
+    order &&
+    order.orderStatus !== "CANCELLED" &&
+    order.orderStatus !== "DELIVERED" &&
+    (order.paymentMethod === "COD"
+      ? ["PROCESSING", "PACKED", "SHIPPED"].includes(order.orderStatus)
+      : ["PENDING", "PAID"].includes(order.orderStatus));
 
   if (loading) {
     return (
@@ -263,7 +270,9 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         </span>
         <span className="text-sm text-brand-gray-500">
           {order.deliveryMethod === "FAST" ? "Fast Delivery" : "Standard Delivery"} &bull;{" "}
-          {order.paymentStatus === "PAID" ? "Prepaid" : order.paymentStatus}
+          {order.paymentMethod === "COD"
+            ? (order.paymentStatus === "PAID" ? "Paid on delivery" : "Payment will be collected on delivery")
+            : (order.paymentStatus === "PAID" ? "Prepaid" : order.paymentStatus)}
         </span>
       </div>
 

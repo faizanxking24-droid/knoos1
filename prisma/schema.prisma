@@ -183,6 +183,7 @@ model Order {
   discountAmount    Int      @default(0)
   couponReservationActive Boolean @default(false)
   deliveryCharge    Int
+  paymentMethod     String   @default("ONLINE") @db.VarChar(20)
   total             Int
   deliveryMethod    String   @db.VarChar(20)
   checkoutMode      String   @default("CART") @db.VarChar(20)

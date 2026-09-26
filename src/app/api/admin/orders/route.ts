@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { OrderStatus, PaymentStatus } from "@/lib/constants";
+import { OrderStatus, PaymentStatus, PaymentMethod } from "@/lib/constants";
 import { orderStatusUpdateSchema, mapZodErrors } from "@/lib/validation/admin";
 
 export async function GET(request: Request) {
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
   const payment = searchParams.get("payment");
+  const method = searchParams.get("method");
   const page = parseInt(searchParams.get("page") ?? "1", 10);
   const limit = parseInt(searchParams.get("limit") ?? "20", 10);
   const q = searchParams.get("q");
@@ -21,6 +22,9 @@ export async function GET(request: Request) {
   }
   if (payment && Object.values(PaymentStatus).includes(payment as PaymentStatus)) {
     where.paymentStatus = payment;
+  }
+  if (method && Object.values(PaymentMethod).includes(method as PaymentMethod)) {
+    where.paymentMethod = method;
   }
   if (q) {
     where.OR = [

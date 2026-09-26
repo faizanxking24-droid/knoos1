@@ -3,12 +3,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { DeliveryMethod, getDeliveryCharge } from "@/lib/constants";
+import { DeliveryMethod, PaymentMethod, getDeliveryCharge } from "@/lib/constants";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { getEffectiveSellingPrice } from "@/lib/pricing";
 import { CouponValidationError, calculateFinalTotal } from "@/lib/coupon";
 import { validateCouponForSubtotal } from "@/lib/coupon-service";
 import { parsePositiveIntegerQuantity } from "@/lib/utils";
+import { finalizeCodOrder } from "@/lib/finalize-cod-order";
 
 export async function GET() {
   const session = await auth();
@@ -32,7 +33,20 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { mode, deliveryMethod, addressId, couponCode, productId, variantId, quantity: rawQuantity } = body;
+  const {
+    mode,
+    deliveryMethod,
+    addressId,
+    couponCode,
+    productId,
+    variantId,
+    quantity: rawQuantity,
+    paymentMethod,
+  } = body;
+
+  // Validate paymentMethod
+  const resolvedPaymentMethod: PaymentMethod =
+    paymentMethod === "COD" ? "COD" : "ONLINE";
 
   if (!Object.values(DeliveryMethod).includes(deliveryMethod) || !addressId) {
     return NextResponse.json({ error: "deliveryMethod and addressId are required" }, { status: 400 });
@@ -67,6 +81,7 @@ export async function POST(request: Request) {
     price: number;
     total: number;
   }> = [];
+  let inventoryToCommit: Array<{ variantId: string; quantity: number }> = [];
 
   if (isBuyNow) {
     if (!productId || !variantId) {
@@ -124,6 +139,8 @@ export async function POST(request: Request) {
         total: subtotal,
       },
     ];
+
+    inventoryToCommit = [{ variantId: variant.id, quantity: qty }];
   } else {
     // CART Mode: Authoritative load and validation of user's active cart
     const cart = await prisma.cart.findUnique({
@@ -169,8 +186,48 @@ export async function POST(request: Request) {
         total: price * item.quantity,
       };
     });
+
+    inventoryToCommit = cart.items.map((item) => ({
+      variantId: item.variantId,
+      quantity: item.quantity,
+    }));
   }
 
+  // ─── COD Path ────────────────────────────────────────────────────────
+  if (resolvedPaymentMethod === "COD") {
+    try {
+      const deliveryCharge = getDeliveryCharge(deliveryMethod);
+      const result = await finalizeCodOrder({
+        userId: session.user.id,
+        subtotal,
+        couponCode: couponCode ?? null,
+        deliveryCharge,
+        deliveryMethod,
+        checkoutMode: isBuyNow ? "BUY_NOW" : "CART",
+        fullName: address.fullName,
+        phone: address.phone,
+        addressLine1: address.addressLine1,
+        city: address.city,
+        state: address.state,
+        pincode: address.postalCode,
+        itemsToCreate,
+        inventoryToCommit,
+      });
+
+      return NextResponse.json(result, { status: 201 });
+    } catch (error) {
+      if (error instanceof CouponValidationError) {
+        return NextResponse.json({ error: error.message, code: error.code }, { status: 400 });
+      }
+      console.error("COD order creation failed:", error);
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Order creation failed" },
+        { status: 500 }
+      );
+    }
+  }
+
+  // ─── ONLINE Path (existing Razorpay flow) ────────────────────────────
   try {
     const txResult = await prisma.$transaction(async (tx) => {
       let couponApplication = null;
@@ -192,9 +249,9 @@ export async function POST(request: Request) {
         const coupon = await tx.coupon.findUnique({ where: { code: couponApplication.code } });
         if (coupon && coupon.usageLimit !== null) {
           const reserved = await tx.$executeRaw`
-            UPDATE Coupon 
-            SET reservedCount = reservedCount + 1 
-            WHERE code = ${coupon.code} 
+            UPDATE Coupon
+            SET reservedCount = reservedCount + 1
+            WHERE code = ${coupon.code}
               AND isActive = true
               AND (usageCount + reservedCount) < usageLimit
           `;
@@ -217,11 +274,12 @@ export async function POST(request: Request) {
           discountAmount,
           couponReservationActive,
           deliveryCharge,
+          paymentMethod: "ONLINE",
+          paymentStatus: "PENDING",
+          orderStatus: "PENDING",
           total,
           deliveryMethod,
           checkoutMode: isBuyNow ? "BUY_NOW" : "CART",
-          orderStatus: "PENDING",
-          paymentStatus: "PENDING",
           items: {
             create: itemsToCreate,
           },
@@ -253,8 +311,8 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(
-        { 
-          orderId: updatedOrder.id, 
+        {
+          orderId: updatedOrder.id,
           razorpayOrderId: rpOrder.razorpayOrderId,
           amount: rpOrder.amount,
           currency: rpOrder.currency,
@@ -269,7 +327,7 @@ export async function POST(request: Request) {
       );
     } catch (error) {
       console.error("Failed to create Razorpay order", error);
-      
+
       if (order.couponReservationActive && order.couponCode) {
         await prisma.$transaction(async (tx) => {
           const released = await tx.order.updateMany({

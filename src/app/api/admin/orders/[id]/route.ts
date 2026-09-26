@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { PaymentMethod } from "@/lib/constants";
 import { orderStatusUpdateSchema, mapZodErrors } from "@/lib/validation/admin";
 
 export async function GET(
@@ -54,14 +55,14 @@ export async function PATCH(
     PENDING: ["PAID", "CANCELLED"],
     PAID: ["PROCESSING", "CANCELLED"],
     PROCESSING: ["PACKED", "CANCELLED"],
-    PACKED: ["SHIPPED"],
-    SHIPPED: ["DELIVERED"],
+    PACKED: ["SHIPPED", "CANCELLED"],
+    SHIPPED: ["DELIVERED", "CANCELLED"],
     DELIVERED: [],
     CANCELLED: [],
   };
 
-  const allowedNext = validTransitions[currentOrder.orderStatus] || [];
-  if (parsed.data.orderStatus && !allowedNext.includes(parsed.data.orderStatus)) {
+  const currentAllowed = validTransitions[currentOrder.orderStatus] || [];
+  if (parsed.data.orderStatus && !currentAllowed.includes(parsed.data.orderStatus)) {
     return NextResponse.json(
       { error: `Invalid transition from ${currentOrder.orderStatus} to ${parsed.data.orderStatus}` },
       { status: 400 }
@@ -70,7 +71,14 @@ export async function PATCH(
 
   const data: Record<string, string> = {};
   if (parsed.data.orderStatus) data.orderStatus = parsed.data.orderStatus;
-  // Intentionally omitting manual paymentStatus updates by admins as per requirements.
+
+  // For COD orders: auto-mark payment as PAID when delivered
+  if (
+    parsed.data.orderStatus === "DELIVERED" &&
+    currentOrder.paymentMethod === PaymentMethod.COD
+  ) {
+    data.paymentStatus = "PAID";
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

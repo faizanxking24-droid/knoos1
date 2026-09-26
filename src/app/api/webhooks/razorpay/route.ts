@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { prisma } from "@/lib/db";
+import { PaymentMethod } from "@/lib/constants";
 import { finalizePaidOrder } from "@/lib/finalize-paid-order";
 
 export async function POST(request: Request) {
@@ -28,6 +29,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
 
+      // Only finalize online orders via webhook
+      if (order.paymentMethod === PaymentMethod.COD) {
+        return NextResponse.json({ received: true });
+      }
+
       await finalizePaidOrder({
         orderId: order.id,
         razorpayPaymentId,
@@ -39,12 +45,12 @@ export async function POST(request: Request) {
     case "payment.failed": {
       const payment = payload.payment.entity;
       const razorpayOrderId = payment.order_id;
-      
+
       const order = await prisma.order.findFirst({ where: { razorpayOrderId } });
-      if (order && order.paymentStatus !== "PAID") {
-        await prisma.order.update({ 
-          where: { id: order.id }, 
-          data: { paymentStatus: "FAILED" } 
+      if (order && order.paymentMethod === PaymentMethod.ONLINE && order.paymentStatus !== "PAID") {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentStatus: "FAILED" },
         });
       }
       return NextResponse.json({ received: true });
@@ -53,12 +59,12 @@ export async function POST(request: Request) {
     case "order.paid": {
       const orderEntity = payload.order.entity;
       const razorpayOrderId = orderEntity.id;
-      
+
       const order = await prisma.order.findFirst({ where: { razorpayOrderId } });
-      if (order && order.paymentStatus !== "PAID") {
-         await prisma.order.update({ 
-           where: { id: order.id }, 
-           data: { orderStatus: "PROCESSING" } 
+      if (order && order.paymentMethod === PaymentMethod.ONLINE && order.paymentStatus !== "PAID") {
+         await prisma.order.update({
+           where: { id: order.id },
+           data: { orderStatus: "PROCESSING" },
          });
       }
       return NextResponse.json({ received: true });

@@ -41,6 +41,16 @@ export const ProductStatus = {
 export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus];
 
 /**
+ * Payment methods.
+ */
+export const PaymentMethod = {
+  ONLINE: "ONLINE",
+  COD: "COD",
+} as const;
+
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+/**
  * Order statuses.
  */
 export const OrderStatus = {

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { PaymentMethod } from "@/lib/constants";
 import { verifyRazorpaySignature } from "@/lib/razorpay";
 import { finalizePaidOrder } from "@/lib/finalize-paid-order";
 
@@ -33,6 +34,10 @@ export async function POST(
 
   if (order.razorpayOrderId !== razorpay_order_id) {
     return NextResponse.json({ error: "Order mismatch" }, { status: 400 });
+  }
+
+  if (order.paymentMethod !== "ONLINE") {
+    return NextResponse.json({ error: "This order does not use online payment." }, { status: 400 });
   }
 
   // Already marked as PAID via webhook or previous call

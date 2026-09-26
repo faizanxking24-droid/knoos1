@@ -50,6 +50,8 @@ export function CheckoutClient() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
+  const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "COD">("ONLINE");
+
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({ name: "", phone: "", address: "", city: "", state: "", pincode: "" });
 
@@ -176,6 +178,7 @@ export function CheckoutClient() {
           deliveryMethod,
           addressId: selectedAddressId,
           couponCode: coupon?.code,
+          paymentMethod,
         }),
       });
 
@@ -190,6 +193,14 @@ export function CheckoutClient() {
         throw new Error(orderData.error || "Failed to create order");
       }
 
+      // COD: no payment gateway needed — redirect directly to order confirmation
+      if (orderData.paymentMethod === "COD") {
+        localStorage.removeItem(APPLIED_COUPON_STORAGE_KEY);
+        router.push(`/account/orders/${orderData.orderId}`);
+        return;
+      }
+
+      // ONLINE: existing Razorpay flow
       if (!(window as any).Razorpay) {
         throw new Error("Payment gateway is not ready yet. Please try again in a moment.");
       }
@@ -388,6 +399,44 @@ export function CheckoutClient() {
             </label>
           </div>
         </section>
+
+        <section>
+          <h2 className="text-xl font-medium mb-6 uppercase tracking-wider border-b pb-2 text-brand-dark">Payment Method</h2>
+          <div className="space-y-4">
+            <label className={`block border p-4 rounded-xl cursor-pointer transition-all ${paymentMethod === 'ONLINE' ? 'border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/30 shadow-xs' : 'border-brand-gray-200 hover:border-brand-sky-border/70 bg-white'}`}>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="ONLINE"
+                  checked={paymentMethod === 'ONLINE'}
+                  onChange={() => setPaymentMethod('ONLINE')}
+                  className="mr-3 accent-brand-blue"
+                />
+                <div>
+                  <span className="font-medium text-brand-dark block">Online Payment</span>
+                  <span className="text-sm text-brand-gray-500">Pay securely using Razorpay</span>
+                </div>
+              </div>
+            </label>
+            <label className={`block border p-4 rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/30 shadow-xs' : 'border-brand-gray-200 hover:border-brand-sky-border/70 bg-white'}`}>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={paymentMethod === 'COD'}
+                  onChange={() => setPaymentMethod('COD')}
+                  className="mr-3 accent-brand-blue"
+                />
+                <div>
+                  <span className="font-medium text-brand-dark block">Cash on Delivery</span>
+                  <span className="text-sm text-brand-gray-500">Pay in cash when your order is delivered.</span>
+                </div>
+              </div>
+            </label>
+          </div>
+        </section>
       </div>
 
       <div className="lg:col-span-5">
@@ -438,12 +487,14 @@ export function CheckoutClient() {
             <span className="font-semibold">₹{total.toLocaleString("en-IN")}</span>
           </div>
 
-          <button 
-            onClick={handlePayment} 
+          <button
+            onClick={handlePayment}
             disabled={paying || !selectedAddressId}
             className="w-full bg-brand-navy hover:bg-brand-blue text-white py-4 font-medium tracking-wide uppercase transition-all duration-300 rounded-lg shadow-md hover:shadow-lg disabled:bg-brand-gray-300 disabled:cursor-not-allowed"
           >
-            {paying ? "Creating secure payment..." : "Pay Securely"}
+            {paying
+              ? (paymentMethod === "COD" ? "Placing order..." : "Creating secure payment...")
+              : (paymentMethod === "COD" ? "Place COD Order" : "Pay Securely")}
           </button>
         </div>
       </div>

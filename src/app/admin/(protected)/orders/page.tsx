@@ -5,6 +5,7 @@ import Link from "next/link";
 
 const ORDER_STATUSES = ["PENDING", "PAID", "PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
 const PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REFUNDED"] as const;
+const PAYMENT_METHODS = ["ONLINE", "COD"] as const;
 
 interface OrderItem {
   id: string;
@@ -75,6 +76,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
   const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+  const [methodFilter, setMethodFilter] = useState("");
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -85,6 +87,7 @@ export default function AdminOrdersPage() {
         limit: "20",
         ...(statusFilter ? { status: statusFilter } : {}),
         ...(paymentFilter ? { payment: paymentFilter } : {}),
+        ...(methodFilter ? { method: methodFilter } : {}),
         ...(searchQuery ? { q: searchQuery } : {}),
       });
 
@@ -104,15 +107,15 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, statusFilter, paymentFilter]);
+  }, [page, searchQuery, statusFilter, paymentFilter, methodFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, paymentFilter, methodFilter]);
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, statusFilter, paymentFilter]);
 
   const updateOrderStatus = async (orderId: string, field: string, value: string) => {
     setUpdatingOrder(orderId);
@@ -181,6 +184,16 @@ export default function AdminOrdersPage() {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
+          <select
+            value={methodFilter}
+            onChange={(e) => setMethodFilter(e.target.value)}
+            className="border border-brand-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-black transition-colors"
+          >
+            <option value="">All Payment Methods</option>
+            {PAYMENT_METHODS.map((m) => (
+              <option key={m} value={m}>{m === "COD" ? "Cash on Delivery" : "Online"}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -213,6 +226,7 @@ export default function AdminOrdersPage() {
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Items</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">Total</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Order Status</th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Method</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Payment</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Date</th>
                   <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">Actions</th>
@@ -256,18 +270,20 @@ export default function AdminOrdersPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={order.paymentStatus}
-                        onChange={(e) =>
-                          updateOrderStatus(order.id, "paymentStatus", e.target.value)
-                        }
-                        disabled={updatingOrder === order.id}
-                        className={`text-xs px-2 py-1 border focus:outline-none disabled:opacity-50 ${PAYMENT_COLORS[order.paymentStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}
-                      >
-                        {PAYMENT_STATUSES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${
+                        (order as any).paymentMethod === "COD"
+                          ? "bg-orange-50 text-orange-700 border-orange-200"
+                          : "bg-gray-50 text-gray-700 border-gray-200"
+                      }`}>
+                        {(order as any).paymentMethod === "COD" ? "COD" : "Online"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${PAYMENT_COLORS[order.paymentStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                        {(order as any).paymentMethod === "COD" && order.paymentStatus === "PENDING"
+                          ? "COD — Pending"
+                          : order.paymentStatus}
+                      </span>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-brand-gray-400">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {

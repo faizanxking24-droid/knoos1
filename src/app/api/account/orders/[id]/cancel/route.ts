@@ -3,11 +3,12 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { PaymentMethod } from "@/lib/constants";
 
 /**
  * Cancels an order if it's still in a cancellable state.
- * Allowed: PENDING, PAID
- * NOT allowed: PROCESSING, PACKED, SHIPPED, DELIVERED, CANCELLED
+ * Allowed: PENDING, PAID, PROCESSING, PACKED, SHIPPED
+ * NOT allowed: DELIVERED, CANCELLED
  */
 export async function POST(
   request: Request,
@@ -21,30 +22,94 @@ export async function POST(
   try {
     const { id } = await params;
 
-    const order = await prisma.order.findFirst({
-      where: { id, userId: session.user.id },
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
     });
 
-    if (!order) {
-      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    if (!order || order.userId !== session.user.id) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const nonCancellable = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"];
-    if (nonCancellable.includes(order.orderStatus)) {
+    const isCod = order.paymentMethod === PaymentMethod.COD;
+    const cancellableOnline = ["PENDING", "PAID"];
+    const cancellableCod = ["PROCESSING", "PACKED", "SHIPPED"];
+    const cancellableStatuses = isCod ? cancellableCod : cancellableOnline;
+
+    if (!cancellableStatuses.includes(order.orderStatus)) {
       return NextResponse.json(
         { error: `Order cannot be cancelled at this stage (${order.orderStatus}).` },
         { status: 400 }
       );
     }
 
-    const updated = await prisma.order.update({
-      where: { id },
-      data: { orderStatus: "CANCELLED" },
+    // Use conditional update to ensure only one caller transitions to CANCELLED
+    const cancelResult = await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.order.updateMany({
+        where: {
+          id,
+          userId: session.user.id,
+          orderStatus: { not: "CANCELLED" },
+        },
+        data: { orderStatus: "CANCELLED" },
+      });
+
+      if (updateResult.count === 0) {
+        // Already cancelled by a concurrent request
+        return null;
+      }
+
+      // For COD orders: restore stock that was deducted at order placement
+      if (order.paymentMethod === PaymentMethod.COD) {
+        for (const item of order.items) {
+          if (!item.productId) continue;
+
+          const variant = await tx.productVariant.findFirst({
+            where: { productId: item.productId, size: item.size },
+          });
+
+          if (variant) {
+            await tx.productVariant.update({
+              where: { id: variant.id },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
+        }
+      }
+
+      // For COD orders: decrement coupon usageCount since the coupon was consumed at order placement
+      if (
+        order.paymentMethod === PaymentMethod.COD &&
+        order.couponCode
+      ) {
+        const coupon = await tx.coupon.findUnique({
+          where: { code: order.couponCode },
+        });
+
+        if (coupon && coupon.usageCount > 0) {
+          await tx.coupon.update({
+            where: { code: order.couponCode },
+            data: { usageCount: { decrement: 1 } },
+          });
+        }
+      }
+
+      return { success: true };
     });
 
-    return NextResponse.json(updated);
+    if (cancelResult === null) {
+      return NextResponse.json(
+        { error: "Order was already cancelled." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Cancel order error:", error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 }
+    );
   }
 }

@@ -26,6 +26,7 @@ interface Order {
   deliveryMethod: string;
   orderStatus: string;
   paymentStatus: string;
+  paymentMethod: string;
   razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
   createdAt: string;
@@ -229,15 +230,31 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
             </div>
           </div>
 
-          {/* Payment Status */}
+          {/* Payment Method */}
           <div className="bg-white border border-brand-gray-200">
             <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Payment Status</h2>
+              <h2 className="font-serif text-lg">Payment</h2>
             </div>
-            <div className="px-6 py-4">
-              <div className={`w-full border px-4 py-2.5 text-sm font-mono ${PAYMENT_STATUS_COLORS[order.paymentStatus] || "bg-white border-brand-gray-200"}`}>
-                {order.paymentStatus}
+            <div className="px-6 py-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-gray-500 font-mono">Method</span>
+                <span className="font-medium">{order.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-gray-500 font-mono">Status</span>
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${PAYMENT_STATUS_COLORS[order.paymentStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                  {order.paymentMethod === "COD" && order.paymentStatus === "PENDING"
+                    ? "COD — Pending Collection"
+                    : order.paymentStatus}
+                </span>
+              </div>
+              {order.paymentMethod === "COD" && (
+                <p className="text-xs text-brand-gray-500">
+                  {order.paymentStatus === "PAID"
+                    ? "Cash collected on delivery."
+                    : "Payment will be collected on delivery."}
+                </p>
+              )}
             </div>
           </div>
 
