@@ -56,50 +56,89 @@ export async function POST(request: Request) {
   if (authResult instanceof Response) return authResult;
   const userId = authResult.user.id;
 
-  const body = await request.json();
-  const { productId, variantId, quantity = 1 } = body;
+  try {
+    const body = await request.json();
+    const { productId, variantId, quantity = 1 } = body;
 
-  if (!productId || !variantId || !Number.isInteger(quantity) || quantity < 1) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    if (!productId || !variantId || !Number.isInteger(quantity) || quantity < 1) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    // Validate the authenticated user exists in the database.
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: "Session expired. Please sign in again." },
+        { status: 401 }
+      );
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({ where: { id: productId } });
+      if (!product || product.status !== "ACTIVE") {
+        throw { code: "PRODUCT_UNAVAILABLE" as const };
+      }
+
+      const variant = await tx.productVariant.findUnique({ where: { id: variantId } });
+      if (!variant || variant.productId !== productId) {
+        throw { code: "VARIANT_NOT_FOUND" as const };
+      }
+
+      const cart = await tx.cart.upsert({
+        where: { userId: dbUser.id },
+        create: { userId: dbUser.id },
+        update: { updatedAt: new Date() },
+      });
+
+      const existingItem = await tx.cartItem.findUnique({
+        where: { cartId_variantId: { cartId: cart.id, variantId } },
+      });
+
+      const currentQuantity = existingItem?.quantity || 0;
+      const newTotalQuantity = currentQuantity + quantity;
+
+      if (newTotalQuantity > variant.stock) {
+        throw {
+          code: "INSUFFICIENT_STOCK" as const,
+          available: variant.stock,
+        };
+      }
+
+      const item = await tx.cartItem.upsert({
+        where: { cartId_variantId: { cartId: cart.id, variantId } },
+        create: { cartId: cart.id, productId, variantId, quantity },
+        update: { quantity: newTotalQuantity },
+      });
+
+      return item;
+    });
+
+    return NextResponse.json({ id: result.id, quantity: result.quantity, success: true });
+  } catch (err: any) {
+    console.error("[CART][POST] Unexpected error:", err);
+
+    if (err?.code === "PRODUCT_UNAVAILABLE") {
+      return NextResponse.json({ error: "Product is not available" }, { status: 400 });
+    }
+    if (err?.code === "VARIANT_NOT_FOUND") {
+      return NextResponse.json({ error: "Variant not found" }, { status: 404 });
+    }
+    if (err?.code === "INSUFFICIENT_STOCK") {
+      return NextResponse.json(
+        { error: `Only ${err.available} available in stock.` },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Unable to add this item to your cart right now." },
+      { status: 500 }
+    );
   }
-
-  // Find product and variant, check status and stock
-  const product = await prisma.product.findUnique({ where: { id: productId } });
-  if (!product || product.status !== "ACTIVE") {
-    return NextResponse.json({ error: "Product is not available" }, { status: 400 });
-  }
-
-  const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
-  if (!variant || variant.productId !== productId) {
-    return NextResponse.json({ error: "Variant not found" }, { status: 404 });
-  }
-
-  // Ensure cart exists
-  const cart = await prisma.cart.upsert({
-    where: { userId },
-    create: { userId },
-    update: { updatedAt: new Date() },
-  });
-
-  // Check if item already exists to validate total quantity against stock
-  const existingItem = await prisma.cartItem.findUnique({
-    where: { cartId_variantId: { cartId: cart.id, variantId } },
-  });
-
-  const currentQuantity = existingItem?.quantity || 0;
-  const newTotalQuantity = currentQuantity + quantity;
-
-  if (newTotalQuantity > variant.stock) {
-    return NextResponse.json({ error: `Only ${variant.stock} available in stock.` }, { status: 400 });
-  }
-
-  const item = await prisma.cartItem.upsert({
-    where: { cartId_variantId: { cartId: cart.id, variantId } },
-    create: { cartId: cart.id, productId, variantId, quantity },
-    update: { quantity: newTotalQuantity },
-  });
-
-  return NextResponse.json({ id: item.id, quantity: item.quantity, success: true });
 }
 
 export async function PATCH(request: Request) {

@@ -130,6 +130,72 @@ describe("JWT User ID Resolution & Provider ID Isolation (Item 1 & 2)", () => {
       "Must not overwrite with unverified provider ID"
     );
   });
+
+  it("E. Existing stale Google JWT self-heals token.id from token.email when user is absent", async () => {
+    const mockDb = {
+      user: {
+        findUnique: async ({ where }: any) => {
+          if (where.email === "customer@example.com") {
+            return {
+              id: "real-prisma-user-id",
+              email: "customer@example.com",
+              role: "CUSTOMER",
+            };
+          }
+          return null;
+        },
+      },
+    };
+
+    // Simulate a JWT from a stale session where token.id still holds
+    // the old Google provider ID instead of the real Prisma User.id.
+    const token: { id?: string; role?: string; email?: string | null } = {
+      id: "old-google-provider-id",
+      email: "customer@example.com",
+      role: "CUSTOMER",
+    };
+
+    // user is undefined — normal case for subsequent requests using
+    // an existing session cookie/JWT.
+    const user = undefined;
+
+    const resolved = await resolveJwtUser({ token, user, db: mockDb });
+
+    assert.strictEqual(
+      resolved.id,
+      "real-prisma-user-id",
+      "token.id must self-heal to real Prisma User.id from token.email"
+    );
+    assert.notStrictEqual(
+      resolved.id,
+      "old-google-provider-id",
+      "Must NOT retain old Google provider ID"
+    );
+    assert.strictEqual(resolved.role, "CUSTOMER");
+  });
+
+  it("F. Phone OTP token without email is NOT modified by self-heal", async () => {
+    const mockDb = {
+      user: {
+        findUnique: async () => null,
+      },
+    };
+
+    const token: { id?: string; role?: string; email?: string | null } = {
+      id: "phone-user-id",
+      role: "CUSTOMER",
+    };
+
+    const user = undefined;
+
+    const resolved = await resolveJwtUser({ token, user, db: mockDb });
+
+    assert.strictEqual(
+      resolved.id,
+      "phone-user-id",
+      "Phone token ID must be preserved when no email is present"
+    );
+  });
 });
 
 describe("Server-Side OTP Feature Gate Enforcement (Item 3)", () => {

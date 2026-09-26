@@ -104,10 +104,20 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to add to cart");
+        throw new Error(
+          data?.error || "Unable to add this item to your cart. Please try again."
+        );
       }
 
       setSuccess(true);
@@ -115,7 +125,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
       
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Unable to add this item to your cart. Please try again.");
     } finally {
       setLoading(false);
     }
