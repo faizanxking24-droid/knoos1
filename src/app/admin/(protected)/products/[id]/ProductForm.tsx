@@ -95,6 +95,8 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
   >([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [migratingImages, setMigratingImages] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
 
   // Load product for edit mode
   useEffect(() => {
@@ -258,6 +260,46 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
 
   const removeImage = (index: number) => {
     setImages((imgs) => imgs.filter((_, i) => i !== index));
+  };
+
+  const hasLegacyImages = images.some(
+    (img) => img.imageUrl.startsWith("data:image/")
+  );
+
+  const handleMigrateLegacyImages = async () => {
+    if (!productId) return;
+    setMigratingImages(true);
+    setMigrationResult(null);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/migrate-images`, {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Migration failed");
+      }
+
+      setMigrationResult(data.message || `Migrated ${data.migrated} images.`);
+
+      // Reload product to get updated image URLs
+      const productRes = await fetch(`/api/admin/products/${productId}`);
+      if (productRes.ok) {
+        const productData: Product = await productRes.json();
+        setImages(
+          productData.images?.length
+            ? productData.images.map((img) => ({ id: img.id, imageUrl: img.imageUrl, sortOrder: img.sortOrder }))
+            : []
+        );
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to migrate images");
+    } finally {
+      setMigratingImages(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -746,6 +788,22 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {hasLegacyImages && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={handleMigrateLegacyImages}
+                disabled={migratingImages}
+                className="text-xs font-mono uppercase tracking-wide text-amber-700 border border-amber-300 bg-amber-50 px-4 py-2 hover:bg-amber-100 transition-colors disabled:opacity-50"
+              >
+                {migratingImages ? "Repairing..." : "Repair Legacy Images"}
+              </button>
+              {migrationResult && (
+                <p className="text-xs text-green-700 mt-1 font-mono">{migrationResult}</p>
+              )}
             </div>
           )}
 

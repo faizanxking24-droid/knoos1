@@ -70,14 +70,34 @@ export const productVariantSchema = z.object({
 
 export type ProductVariantInput = z.infer<typeof productVariantSchema>;
 
-// Product image — accepts both external URLs and base64 data URLs
+// Product image — accepts local media paths, legacy local paths, or absolute http(s) URLs
+// New uploads produce /media/products/<filename> URLs. Legacy /uploads/... and http(s) are
+// accepted for backward compatibility only. data:, javascript:, file:, vbscript:, and
+// protocol-relative URLs are rejected.
 export const productImageSchema = z.object({
   imageUrl: z.string().refine(
     (val) => {
-      if (val.startsWith("data:")) return true;
-      return z.string().url().safeParse(val).success;
+      const trimmed = val.trim();
+      // Reject unsafe schemes
+      const lower = trimmed.toLowerCase();
+      if (
+        lower.startsWith("data:") ||
+        lower.startsWith("javascript:") ||
+        lower.startsWith("file:") ||
+        lower.startsWith("vbscript:") ||
+        trimmed.startsWith("//")
+      ) {
+        return false;
+      }
+      // Accept /media/products/... (new Hostinger storage)
+      if (trimmed.startsWith("/media/products/")) return true;
+      // Accept /uploads/... (legacy local, backward compat)
+      if (trimmed.startsWith("/uploads/")) return true;
+      // Accept absolute http(s) URLs (legacy remote)
+      if (lower.startsWith("http://") || lower.startsWith("https://")) return true;
+      return false;
     },
-    { message: "Invalid image URL" }
+    { message: "Invalid image URL. Use /media/products/... URLs, legacy /uploads/..., or absolute http(s) URLs." }
   ),
   sortOrder: z.number().int().nonnegative().optional(),
 });

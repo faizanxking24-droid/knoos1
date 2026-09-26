@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, useRef, MouseEvent } from "react";
 import { ProductImage } from "@prisma/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { FallbackImage } from "@/components/ui/FallbackImage";
 
 interface ProductGalleryProps {
   images: ProductImage[];
@@ -110,7 +110,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                     : "border-brand-sky-border/40 opacity-60 hover:opacity-100 hover:border-brand-blue/50"
                 }`}
               >
-                <Image
+                <FallbackImage
                   src={image.imageUrl}
                   alt={`${productName} thumbnail ${index + 1}`}
                   fill
@@ -138,7 +138,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   setIsLightboxOpen(true);
                 }}
               >
-                <Image
+                <FallbackImage
                   src={image.imageUrl}
                   alt={`${productName} view ${index + 1}`}
                   fill
@@ -194,7 +194,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="absolute inset-0 p-4 md:p-8"
             >
-              <Image
+              <FallbackImage
                 src={activeImage.imageUrl}
                 alt={productName}
                 fill
@@ -215,7 +215,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   transform: "scale(2.2)",
                 }}
               >
-                <Image
+                <FallbackImage
                   src={activeImage.imageUrl}
                   alt={productName}
                   fill
@@ -296,7 +296,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   transition={{ duration: 0.3 }}
                   className="absolute inset-0"
                 >
-                  <Image
+                  <FallbackImage
                     src={activeImage.imageUrl}
                     alt={productName}
                     fill
@@ -306,7 +306,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 </motion.div>
               </AnimatePresence>
             </div>
-            
+
             {images.length > 1 && (
               <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 px-4 overflow-x-auto hide-scrollbar pointer-events-none">
                 <div className="flex gap-2 pointer-events-auto bg-black/50 p-2 rounded-xl backdrop-blur-md">
@@ -323,7 +323,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                           : "border-2 border-transparent opacity-40 hover:opacity-100"
                       }`}
                     >
-                      <Image
+                      <FallbackImage
                         src={image.imageUrl}
                         alt={`Thumbnail ${index + 1}`}
                         fill
