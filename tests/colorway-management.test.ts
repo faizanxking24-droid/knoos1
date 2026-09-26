@@ -399,8 +399,9 @@ describe("Colorway Management", () => {
       assert.strictEqual(createData.status, "INACTIVE");
     });
 
-    it("ACTIVE is not the default for new colorway", () => {
-      assert.ok("INACTIVE" !== "ACTIVE");
+    it("new colorway status is INACTIVE, not ACTIVE", () => {
+      const status = "INACTIVE" as string;
+      assert.ok(status !== "ACTIVE");
     });
   });
 

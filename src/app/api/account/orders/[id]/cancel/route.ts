@@ -49,7 +49,10 @@ export async function POST(
         where: {
           id,
           userId: session.user.id,
-          orderStatus: { in: cancellableStatuses },
+          AND: [
+            { orderStatus: { in: cancellableStatuses } },
+            { orderStatus: { not: "CANCELLED" } },
+          ],
         },
         data: { orderStatus: "CANCELLED" },
       });
