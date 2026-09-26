@@ -1,8 +1,6 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+import { saveProductImage } from "@/lib/image-storage";
 
 export async function POST(request: Request) {
   const adminResult = await requireAdmin();
@@ -19,36 +17,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file type
-    const fileType = file.type.toLowerCase();
-    if (!ALLOWED_TYPES.has(fileType)) {
+    // Persist to Hostinger filesystem via the storage module
+    const result = await saveProductImage({
+      arrayBuffer: () => file.arrayBuffer(),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
+    if (!result.success) {
+      const statusMap: Record<string, number> = {
+        HOSTINGER_STORAGE_NOT_AVAILABLE: 503,
+      };
+      const status = statusMap[result.code] || 400;
       return NextResponse.json(
-        { error: "Invalid file type. Only JPG, PNG, and WEBP are allowed." },
-        { status: 400 }
+        { error: result.error },
+        { status }
       );
     }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "File size too large. Maximum 5MB allowed." },
-        { status: 400 }
-      );
-    }
-
-    // Convert to base64 data URL and store in database via product images endpoint
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const mimeType = file.type;
-    const dataUrl = `data:${mimeType};base64,${base64}`;
 
     return NextResponse.json({
-      url: dataUrl,
-      filename: file.name,
+      url: result.url,
+      filename: result.filename,
     });
   } catch (err) {
-    console.error("Upload error:", err);
+    console.error("[UPLOAD_ERROR]", err);
     return NextResponse.json(
       { error: "Failed to upload image" },
       { status: 500 }
