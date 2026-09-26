@@ -207,14 +207,15 @@ export async function saveProductImage(file: {
   }
 
   // Check storage configuration
-  const productDir = getProductUploadDirectory();
-  if (!productDir) {
+  const rawProductDir = getProductUploadDirectory();
+  if (!rawProductDir) {
     return {
       success: false,
       error: "Persistent Hostinger image storage is not available.",
       code: "HOSTINGER_STORAGE_NOT_AVAILABLE",
     };
   }
+  const productDir = path.resolve(rawProductDir);
 
   // Create storage directory
   try {
@@ -301,6 +302,14 @@ const LEGACY_MIME_TYPES: Record<string, string> = {
   "image/webp": ".webp",
 };
 
+// Magic byte signatures for decoded image validation
+const MAGIC_BYTES: Record<string, Buffer> = {
+  "image/jpeg": Buffer.from([0xff, 0xd8, 0xff]),
+  "image/jpg": Buffer.from([0xff, 0xd8, 0xff]),
+  "image/png": Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  "image/webp": Buffer.from("RIFF", "ascii"),
+};
+
 export interface LegacyMigrationResult {
   success: true;
   url: string;
@@ -314,6 +323,59 @@ export interface LegacyMigrationError {
 }
 
 export type LegacyMigrationOutcome = LegacyMigrationResult | LegacyMigrationError;
+
+/**
+ * Validate decoded image bytes match the claimed MIME type.
+ *
+ * Checks magic bytes at the start of the buffer:
+ *   JPEG: FF D8 FF
+ *   PNG:  89 50 4E 47 0D 0A 1A 0A
+ *   WEBP: starts with "RIFF"
+ */
+export function validateImageMagicBytes(buffer: Buffer, mimeType: string): ImageValidationResult {
+  const signature = MAGIC_BYTES[mimeType];
+  if (!signature) {
+    return {
+      valid: false,
+      error: `Unsupported MIME type for magic-byte check: ${mimeType}`,
+      code: "UNSUPPORTED_MIME",
+    };
+  }
+
+  if (buffer.length < signature.length) {
+    return {
+      valid: false,
+      error: "File is too short to be a valid image.",
+      code: "INVALID_IMAGE_DATA",
+    };
+  }
+
+  // WEBP needs additional check: bytes 8-11 must be "WEBP"
+  if (mimeType === "image/webp") {
+    const webpMarker = buffer.toString("ascii", 8, 12);
+    if (webpMarker !== "WEBP") {
+      return {
+        valid: false,
+        error: "Decoded data does not match WEBP format.",
+        code: "INVALID_IMAGE_DATA",
+      };
+    }
+    return { valid: true };
+  }
+
+  // JPEG and PNG: check prefix bytes
+  for (let i = 0; i < signature.length; i++) {
+    if (buffer[i] !== signature[i]) {
+      return {
+        valid: false,
+        error: `Decoded data does not match ${mimeType} format.`,
+        code: "INVALID_IMAGE_DATA",
+      };
+    }
+  }
+
+  return { valid: true };
+}
 
 /**
  * Migrate a legacy base64 data URL to Hostinger persistent storage.
@@ -389,15 +451,26 @@ export async function migrateLegacyDataUrl(dataUrl: string): Promise<LegacyMigra
     };
   }
 
+  // Validate decoded bytes match claimed MIME type (magic byte check)
+  const magicCheck = validateImageMagicBytes(buffer, mimeType);
+  if (!magicCheck.valid) {
+    return {
+      success: false,
+      error: magicCheck.error || "Decoded image data is corrupt or does not match the claimed format.",
+      code: magicCheck.code || "INVALID_IMAGE_DATA",
+    };
+  }
+
   // Check storage configuration
-  const productDir = getProductUploadDirectory();
-  if (!productDir) {
+  const rawProductDir = getProductUploadDirectory();
+  if (!rawProductDir) {
     return {
       success: false,
       error: "Persistent Hostinger image storage is not available.",
       code: "HOSTINGER_STORAGE_NOT_AVAILABLE",
     };
   }
+  const productDir = path.resolve(rawProductDir);
 
   // Create storage directory
   try {

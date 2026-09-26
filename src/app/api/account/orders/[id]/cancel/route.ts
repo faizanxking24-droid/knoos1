@@ -43,19 +43,19 @@ export async function POST(
       );
     }
 
-    // Use conditional update to ensure only one caller transitions to CANCELLED
+    // Use conditional update to atomically check cancellable state and transition to CANCELLED
     const cancelResult = await prisma.$transaction(async (tx) => {
       const updateResult = await tx.order.updateMany({
         where: {
           id,
           userId: session.user.id,
-          orderStatus: { not: "CANCELLED" },
+          orderStatus: { in: cancellableStatuses },
         },
         data: { orderStatus: "CANCELLED" },
       });
 
       if (updateResult.count === 0) {
-        // Already cancelled by a concurrent request
+        // Race: order was not in a cancellable state at update time
         return null;
       }
 
@@ -99,8 +99,8 @@ export async function POST(
 
     if (cancelResult === null) {
       return NextResponse.json(
-        { error: "Order was already cancelled." },
-        { status: 400 }
+        { error: "Order cannot be cancelled. It may have already been shipped or delivered." },
+        { status: 409 }
       );
     }
 

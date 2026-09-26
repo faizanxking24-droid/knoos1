@@ -33,7 +33,7 @@ export async function GET(
       where: { colorGroupKey: sourceProduct.colorGroupKey },
       include: {
         images: { orderBy: { sortOrder: "asc" }, take: 1, select: { imageUrl: true } },
-        variants: { select: { id: true } },
+        variants: { select: { id: true, stock: true, size: true } },
       },
     });
   } else {
@@ -41,7 +41,7 @@ export async function GET(
       where: { id },
       include: {
         images: { orderBy: { sortOrder: "asc" }, take: 1, select: { imageUrl: true } },
-        variants: { select: { id: true } },
+        variants: { select: { id: true, stock: true, size: true } },
       },
     });
   }
@@ -49,20 +49,27 @@ export async function GET(
   // Order: source product first, then others
   colorways.sort((a: any, b: any) => (a.id === id ? -1 : b.id === id ? 1 : 0));
 
-  const formatted = colorways.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    color: p.color,
-    sku: p.sku,
-    status: p.status,
-    colorGroupKey: p.colorGroupKey,
-    image: p.images[0]?.imageUrl ?? null,
-    variantCount: p.variants.length,
-    price: p.price,
-    salePrice: p.salePrice,
-    isCurrent: p.id === id,
-  }));
+  const formatted = colorways.map((p: any) => {
+    const totalStock = p.variants.reduce((sum: number, v: any) => sum + (v.stock ?? 0), 0);
+    const uniqueSizes = new Set(p.variants.map((v: any) => v.size));
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      color: p.color,
+      sku: p.sku,
+      status: p.status,
+      colorGroupKey: p.colorGroupKey,
+      image: p.images[0]?.imageUrl ?? null,
+      variantCount: p.variants.length,
+      sizeLabel: `${uniqueSizes.size} sizes`,
+      totalStock,
+      stockLabel: `${uniqueSizes.size} sizes · ${totalStock} units`,
+      price: p.price,
+      salePrice: p.salePrice,
+      isCurrent: p.id === id,
+    };
+  });
 
   return Response.json({ colorways: formatted });
 }
@@ -112,18 +119,25 @@ export async function POST(
     groupKey = `color-group-${sourceProduct.id}`;
   }
 
-  // Check for duplicate color within the group (case-insensitive)
+  // Check for duplicate color within the group (case-insensitive, trimmed)
+  // Compare against ALL products in the group, including the source product
   const allGroupProducts = await prisma.product.findMany({
-    where: { colorGroupKey: groupKey, NOT: { id } },
+    where: { colorGroupKey: groupKey },
     select: { color: true },
   });
+  const normalizedNewColor = trimmedColor.toLowerCase();
   const hasDuplicateColor = allGroupProducts.some(
-    (p: any) => p.color && p.color.toLowerCase() === trimmedColor.toLowerCase()
+    (p: any) => p.color && p.color.trim().toLowerCase() === normalizedNewColor
   );
 
   if (hasDuplicateColor) {
+    const conflictingColor = allGroupProducts.find(
+      (p: any) => p.color && p.color.trim().toLowerCase() === normalizedNewColor
+    )?.color;
     return NextResponse.json(
-      { error: `"${trimmedColor}" already exists in this product family.` },
+      {
+        error: `"${trimmedColor}" already exists in this product family (conflicts with "${conflictingColor}"). Each color in a family must be unique.`,
+      },
       { status: 409 }
     );
   }

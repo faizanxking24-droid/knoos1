@@ -69,14 +69,17 @@ export async function PATCH(
     );
   }
 
+  // Build update payload: for COD DELIVERED, atomically set paymentStatus too
   const data: Record<string, string> = {};
-  if (parsed.data.orderStatus) data.orderStatus = parsed.data.orderStatus;
+  if (parsed.data.orderStatus) {
+    data.orderStatus = parsed.data.orderStatus;
+  }
 
-  // For COD orders: auto-mark payment as PAID when delivered
-  if (
+  const isCodDelivered =
     parsed.data.orderStatus === "DELIVERED" &&
-    currentOrder.paymentMethod === PaymentMethod.COD
-  ) {
+    currentOrder.paymentMethod === PaymentMethod.COD;
+
+  if (isCodDelivered) {
     data.paymentStatus = "PAID";
   }
 
@@ -84,13 +87,29 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const updated = await prisma.order.update({
-    where: { id },
+  // Optimistic lock: only update if the status hasn't changed since we read it
+  const updateResult = await prisma.order.updateMany({
+    where: {
+      id,
+      orderStatus: currentOrder.orderStatus,
+    },
     data,
+  });
+
+  if (updateResult.count === 0) {
+    return NextResponse.json(
+      { error: "Order status changed. Refresh and try again." },
+      { status: 409 }
+    );
+  }
+
+  // Fetch the updated order with relations to return
+  const updated = await prisma.order.findUnique({
+    where: { id },
     include: {
       items: true,
       address: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, image: true } },
     },
   });
 

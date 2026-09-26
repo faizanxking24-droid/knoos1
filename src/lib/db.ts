@@ -24,37 +24,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-let prismaInstance: PrismaClient | undefined;
-
-export function getPrismaClient(): PrismaClient {
-  if (!prismaInstance) {
-    const opts: ConstructorParameters<typeof PrismaClient>[0] = {};
-    if (process.env.DATABASE_URL) {
-      opts.datasources = {
-        db: { url: process.env.DATABASE_URL },
-      };
-    }
-    prismaInstance = new PrismaClient(opts);
-    if (process.env.NODE_ENV !== "production") {
-      globalForPrisma.prisma = prismaInstance;
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
     }
   }
-  return prismaInstance;
-}
-
-// Lazy: defer instantiation until first use so test environments
-// that pass a mock db to resolveJwtUser do not need a live database.
-let _prisma: PrismaClient | undefined;
-export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_, prop) {
-    if (!_prisma) {
-      _prisma = getPrismaClient();
-    }
-    return (_prisma as any)[prop];
-  },
-  set() {
-    throw new Error("Cannot assign to the prisma export — it is a read-only proxy.");
-  },
 });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
