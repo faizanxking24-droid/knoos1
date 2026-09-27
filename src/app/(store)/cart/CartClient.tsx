@@ -16,6 +16,7 @@ interface CartItemData {
   price: number;
   quantity: number;
   size: string;
+  color: string | null;
   imageUrl: string | null;
   stock: number;
   productStatus: string;
@@ -230,7 +231,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
                       <span className="font-mono text-sm text-brand-dark font-medium">₹{item.price.toLocaleString('en-IN')}</span>
                     </div>
                     <p className="font-mono text-xs text-brand-gray-500 uppercase tracking-widest mb-4">
-                      Size: {item.size}
+                      Color: {item.color || "Not specified"} · Size: {item.size}
                     </p>
                     
                     {isUnavailable && <p className="text-red-600 text-sm mb-2 font-medium">This product is no longer available.</p>}

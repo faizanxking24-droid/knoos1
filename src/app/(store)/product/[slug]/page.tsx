@@ -88,6 +88,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     price: number;
     salePrice: number | null;
     images: { id: string; imageUrl: string }[];
+    variants: { stock: number }[];
   }> = [];
 
   if (product.colorGroupKey) {
@@ -113,6 +114,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               imageUrl: true,
             },
           },
+          variants: { select: { stock: true } },
         },
         orderBy: { createdAt: "asc" },
       });
@@ -131,6 +133,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         price: product.price,
         salePrice: product.salePrice,
         images: product.images.slice(0, 1).map((img) => ({ id: img.id, imageUrl: img.imageUrl })),
+        variants: product.variants.map((variant) => ({ stock: variant.stock })),
       });
     }
   }

@@ -72,6 +72,7 @@ export default async function CartPage() {
     quantity: item.quantity,
     variantId: item.variant.id,
     size: item.variant.size,
+    color: item.product.color,
     productId: item.product.id,
     productName: item.product.name,
     productStatus: item.product.status,
