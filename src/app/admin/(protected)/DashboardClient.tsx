@@ -805,15 +805,21 @@ export function AdminDashboardClient({ data, recentOrders }: DashboardClientProp
           </div>
 
           <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
-            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Active Products</p>
+            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Live Products</p>
             <p className="text-xl font-serif mt-1 text-brand-black">{data.inventory.activeProducts}</p>
-            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">Live on storefront</p>
+            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">Active colorways</p>
           </div>
 
           <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
-            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Inactive Products</p>
-            <p className="text-xl font-serif mt-1 text-brand-black">{data.inventory.inactiveProducts}</p>
-            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">Draft or unlisted</p>
+            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Live Families</p>
+            <p className="text-xl font-serif mt-1 text-brand-black">{data.inventory.liveProductFamilies}</p>
+            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">Distinct shoe models</p>
+          </div>
+
+          <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
+            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Inactive / Draft</p>
+            <p className="text-xl font-serif mt-1 text-brand-black">{data.inventory.inactiveProducts + (data.inventory.draftProducts ?? 0)}</p>
+            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">{data.inventory.inactiveProducts} inactive, {data.inventory.draftProducts ?? 0} draft</p>
           </div>
 
           <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
@@ -823,15 +829,9 @@ export function AdminDashboardClient({ data, recentOrders }: DashboardClientProp
           </div>
 
           <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
-            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Low Stock Variants</p>
-            <p className="text-xl font-serif mt-1 text-orange-600">{data.inventory.lowStockCount}</p>
-            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">1 to 5 units</p>
-          </div>
-
-          <div className="border border-brand-gray-100 p-4 bg-brand-gray-50/20">
-            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Out of Stock</p>
-            <p className="text-xl font-serif mt-1 text-red-600">{data.inventory.outOfStockCount}</p>
-            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">Exactly 0 units</p>
+            <p className="text-brand-gray-500 font-mono text-[11px] uppercase">Low / Out of Stock</p>
+            <p className="text-xl font-serif mt-1 text-orange-600">{data.inventory.lowStockCount} <span className="text-sm font-sans text-brand-gray-400">/</span> <span className="text-red-600">{data.inventory.outOfStockCount}</span></p>
+            <p className="text-[10px] text-brand-gray-400 font-mono mt-0.5">1–5 low / 0 OOS</p>
           </div>
         </div>
 

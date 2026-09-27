@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { FallbackImage } from "@/components/ui/FallbackImage";
-import ProductImportPanel from "./ProductImportPanel";
 import NormalizeSlugsModal from "./NormalizeSlugsModal";
 import { getColorSwatch } from "@/lib/colors";
 
 const GENDERS = ["MEN", "WOMEN"] as const;
-const STATUSES = ["ACTIVE", "INACTIVE"] as const;
+const STATUSES = ["ACTIVE", "INACTIVE", "DRAFT"] as const;
 
 interface CategoryOption {
   id: string;
@@ -179,8 +178,6 @@ export default function AdminProductsPage() {
           </Link>
         </div>
       </div>
-
-      <ProductImportPanel />
 
       {/* Filters */}
       <div className="bg-white border border-brand-gray-200 p-4 mb-6">

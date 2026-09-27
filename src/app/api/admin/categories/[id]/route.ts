@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { slugify } from "@/lib/utils";
+import { ProductStatus } from "@/lib/constants";
 import { z } from "zod";
 
 const updateCategorySchema = z.object({
@@ -22,16 +23,31 @@ export async function GET(
 
   const { id } = await params;
 
-  const category = await prisma.category.findUnique({
-    where: { id },
-    include: { _count: { select: { products: true } } },
-  });
+  const [category, liveProductCount] = await Promise.all([
+    prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } },
+    }),
+    prisma.product.count({
+      where: { categoryId: id, status: ProductStatus.ACTIVE },
+    }),
+  ]);
 
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
   }
 
-  return NextResponse.json(category);
+  const linkedProductCount = category._count?.products ?? 0;
+
+  return NextResponse.json({
+    ...category,
+    liveProductCount,
+    linkedProductCount,
+    _count: {
+      ...category._count,
+      products: liveProductCount,
+    },
+  });
 }
 
 export async function PATCH(
@@ -76,11 +92,28 @@ export async function PATCH(
   }
 
   try {
-    const category = await prisma.category.update({
-      where: { id },
-      data: updateData,
+    const [category, liveProductCount] = await Promise.all([
+      prisma.category.update({
+        where: { id },
+        data: updateData,
+        include: { _count: { select: { products: true } } },
+      }),
+      prisma.product.count({
+        where: { categoryId: id, status: ProductStatus.ACTIVE },
+      }),
+    ]);
+
+    const linkedProductCount = category._count?.products ?? 0;
+
+    return NextResponse.json({
+      ...category,
+      liveProductCount,
+      linkedProductCount,
+      _count: {
+        ...category._count,
+        products: liveProductCount,
+      },
     });
-    return NextResponse.json(category);
   } catch (error: any) {
     if (error.code === "P2002") {
       const target = error.meta?.target?.[0];
@@ -119,11 +152,14 @@ export async function DELETE(
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
   }
 
-  if (category._count.products > 0) {
+  const linkedProductCount = category._count?.products ?? 0;
+
+  if (linkedProductCount > 0) {
     return NextResponse.json(
       {
-        error: `Cannot delete category "${category.name}" because it has ${category._count.products} product(s) assigned. Please reassign or deactivate the products first.`,
-        productCount: category._count.products,
+        error: `Cannot delete category "${category.name}" because it has ${linkedProductCount} product(s) assigned. Please reassign or deactivate the products first.`,
+        productCount: linkedProductCount,
+        linkedProductCount,
       },
       { status: 409 }
     );

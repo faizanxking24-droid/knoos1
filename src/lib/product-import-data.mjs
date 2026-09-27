@@ -3,7 +3,6 @@
  *
  * Consumed by:
  *   - scripts/import-products.mjs  (offline validation)
- *   - src/app/api/admin/import-products/route.ts  (production import)
  *
  * This file has ZERO external imports. Pure data.
  */

@@ -14,13 +14,28 @@ import { prisma } from "@/lib/db";
 import { ProductStatus } from "@/lib/constants";
 import { InventorySnapshotMetrics } from "./definitions";
 
+export function countLiveProductFamilies(
+  products: Array<{ id: string; colorGroupKey?: string | null }>
+): number {
+  const familyKeys = new Set<string>();
+  for (const p of products) {
+    const key = p.colorGroupKey?.trim() ? `cgk:${p.colorGroupKey.trim()}` : `prod:${p.id}`;
+    familyKeys.add(key);
+  }
+  return familyKeys.size;
+}
+
 export async function getInventorySnapshot(limitVariants = 25): Promise<InventorySnapshotMetrics> {
   const [
     // Product counts by status
     catalogProductsCount,
     activeProductsCount,
     inactiveProductsCount,
+    draftProductsCount,
     deletedProductsCount,
+
+    // Active products for distinct logical family calculation
+    activeProductsForFamilies,
 
     // Active variant counts
     activeVariantsCount,
@@ -45,7 +60,7 @@ export async function getInventorySnapshot(limitVariants = 25): Promise<Inventor
       where: { status: { not: "DELETED" } },
     }),
 
-    // Active Products: status = ACTIVE
+    // Active Products: status = ACTIVE (LIVE PRODUCTS)
     prisma.product.count({
       where: { status: ProductStatus.ACTIVE },
     }),
@@ -55,9 +70,20 @@ export async function getInventorySnapshot(limitVariants = 25): Promise<Inventor
       where: { status: ProductStatus.INACTIVE },
     }),
 
+    // Draft Products: status = DRAFT
+    prisma.product.count({
+      where: { status: ProductStatus.DRAFT },
+    }),
+
     // Deleted Products: status = DELETED (for internal tracking/audit)
     prisma.product.count({
       where: { status: "DELETED" },
+    }),
+
+    // Active Products for distinct family calculation
+    prisma.product.findMany({
+      where: { status: ProductStatus.ACTIVE },
+      select: { id: true, colorGroupKey: true },
     }),
 
     // Active Variants count
@@ -118,10 +144,14 @@ export async function getInventorySnapshot(limitVariants = 25): Promise<Inventor
     }),
   ]);
 
+  const liveProductFamilies = countLiveProductFamilies(activeProductsForFamilies);
+
   return {
     catalogProducts: catalogProductsCount,
     activeProducts: activeProductsCount,
     inactiveProducts: inactiveProductsCount,
+    draftProducts: draftProductsCount,
+    liveProductFamilies,
     deletedProducts: deletedProductsCount,
     activeVariants: activeVariantsCount,
     inventoryUnits: inventoryUnitsAgg._sum.stock ?? 0,

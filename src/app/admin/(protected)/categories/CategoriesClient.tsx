@@ -8,6 +8,8 @@ interface Category {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  liveProductCount: number;
+  linkedProductCount: number;
   _count?: { products: number };
 }
 
@@ -95,7 +97,16 @@ export function CategoriesClient() {
         }
 
         setCategories((cats) =>
-          cats.map((c) => (c.id === editingId ? { ...c, ...data } : c))
+          cats.map((c) =>
+            c.id === editingId
+              ? {
+                  ...c,
+                  ...data,
+                  liveProductCount: data.liveProductCount ?? c.liveProductCount ?? 0,
+                  linkedProductCount: data.linkedProductCount ?? c.linkedProductCount ?? 0,
+                }
+              : c
+          )
         );
         setEditingId(null);
         setFormData(emptyForm);
@@ -118,7 +129,14 @@ export function CategoriesClient() {
           return;
         }
 
-        setCategories((cats) => [...cats, data]);
+        setCategories((cats) => [
+          ...cats,
+          {
+            ...data,
+            liveProductCount: data.liveProductCount ?? 0,
+            linkedProductCount: data.linkedProductCount ?? 0,
+          },
+        ]);
         setFormData(emptyForm);
       }
     } catch (err) {
@@ -314,7 +332,7 @@ export function CategoriesClient() {
             <tr className="border-b border-gray-200">
               <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Name</th>
               <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Slug</th>
-              <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Products</th>
+              <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Live Products</th>
               <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Status</th>
               <th className="text-left p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Sort Order</th>
               <th className="text-right p-4 font-mono text-xs uppercase tracking-wide text-gray-500">Actions</th>
@@ -332,7 +350,7 @@ export function CategoriesClient() {
                 <tr key={cat.id} className="border-b border-gray-100 last:border-0">
                   <td className="p-4">{cat.name}</td>
                   <td className="p-4 font-mono text-xs text-gray-500">{cat.slug}</td>
-                  <td className="p-4">{cat._count?.products ?? 0}</td>
+                  <td className="p-4">{cat.liveProductCount ?? 0}</td>
                   <td className="p-4">
                     <span
                       className={`inline-block px-2 py-1 text-xs font-mono uppercase tracking-wide ${
@@ -376,9 +394,9 @@ export function CategoriesClient() {
                     {/* Delete Confirmation */}
                     {deleteConfirm === cat.id && (
                       <div className="mt-2 p-3 bg-red-50 border border-red-200 text-xs">
-                        {(cat._count?.products ?? 0) > 0 ? (
+                        {(cat.linkedProductCount ?? cat._count?.products ?? 0) > 0 ? (
                           <p className="text-red-700 mb-2">
-                            This category has {cat._count?.products} product(s).
+                            This category has {cat.linkedProductCount ?? cat._count?.products} linked product(s).
                             Deactivate it instead of deleting.
                           </p>
                         ) : (
@@ -389,7 +407,7 @@ export function CategoriesClient() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleDelete(cat.id)}
-                            disabled={(cat._count?.products ?? 0) > 0}
+                            disabled={(cat.linkedProductCount ?? cat._count?.products ?? 0) > 0}
                             className="px-3 py-1 bg-red-600 text-white text-xs font-mono uppercase tracking-wide hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Confirm Delete

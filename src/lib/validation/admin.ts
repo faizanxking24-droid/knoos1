@@ -39,7 +39,7 @@ export const productSkuSchema = z
   .min(1, "SKU is required")
   .max(100, "SKU must be at most 100 characters");
 
-export const ProductStatusEnum = ["ACTIVE", "INACTIVE"] as const;
+export const ProductStatusEnum = ["ACTIVE", "INACTIVE", "DRAFT"] as const;
 export const productStatusSchema = z.enum(ProductStatusEnum);
 
 // Product variant

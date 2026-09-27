@@ -143,8 +143,10 @@ export interface InventoryVariantItem {
 
 export interface InventorySnapshotMetrics {
   catalogProducts: number;                 // status != DELETED
-  activeProducts: number;                  // status = ACTIVE
+  activeProducts: number;                  // status = ACTIVE (LIVE PRODUCTS)
   inactiveProducts: number;                // status = INACTIVE
+  draftProducts: number;                   // status = DRAFT
+  liveProductFamilies: number;             // Distinct logical families under ACTIVE products
   deletedProducts: number;                 // status = DELETED (for internal audit)
   activeVariants: number;                  // Variants under ACTIVE products
   inventoryUnits: number;                  // Sum of stock of variants under ACTIVE products

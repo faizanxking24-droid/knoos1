@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { slugify } from "@/lib/utils";
+import { ProductStatus } from "@/lib/constants";
 import { z } from "zod";
 
 const createCategorySchema = z.object({
@@ -28,16 +29,45 @@ export async function GET(request: Request) {
 
   const where = includeInactive ? {} : { isActive: true };
 
-  const [categories, total] = await Promise.all([
+  const [categories, total, activeCounts] = await Promise.all([
     prisma.category.findMany({
       where,
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: { _count: { select: { products: true } } },
     }),
     prisma.category.count({ where }),
+    prisma.product.groupBy({
+      by: ["categoryId"],
+      where: {
+        status: ProductStatus.ACTIVE,
+        categoryId: { not: null },
+      },
+      _count: { id: true },
+    }),
   ]);
 
-  return NextResponse.json({ categories, total });
+  const activeCountMap = new Map<string, number>();
+  for (const item of activeCounts) {
+    if (item.categoryId) {
+      activeCountMap.set(item.categoryId, item._count.id);
+    }
+  }
+
+  const enrichedCategories = categories.map((cat) => {
+    const liveProductCount = activeCountMap.get(cat.id) ?? 0;
+    const linkedProductCount = cat._count?.products ?? 0;
+    return {
+      ...cat,
+      liveProductCount,
+      linkedProductCount,
+      _count: {
+        ...cat._count,
+        products: liveProductCount,
+      },
+    };
+  });
+
+  return NextResponse.json({ categories: enrichedCategories, total });
 }
 
 export async function POST(request: Request) {
@@ -74,7 +104,15 @@ export async function POST(request: Request) {
         sortOrder: sortOrder ?? 0,
       },
     });
-    return NextResponse.json(category, { status: 201 });
+    return NextResponse.json(
+      {
+        ...category,
+        liveProductCount: 0,
+        linkedProductCount: 0,
+        _count: { products: 0 },
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     if (error.code === "P2002") {
       const target = error.meta?.target?.[0];
