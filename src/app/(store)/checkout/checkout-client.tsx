@@ -822,35 +822,42 @@ export function CheckoutClient() {
         )}
 
         {/* Section 1: Customer Contact */}
-        <section className="bg-white border border-brand-sky-border/70 rounded-2xl p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between mb-5 border-b border-brand-sky-border/30 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-xs font-mono font-medium flex items-center justify-center">
-                1
+        <section className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between mb-6 border-b border-brand-gray-100 pb-5">
+            <div className="flex items-start gap-3.5">
+              <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-[11px] font-mono font-medium flex items-center justify-center shrink-0 mt-0.5">
+                01
               </span>
-              <h2 className="font-serif text-xl text-brand-navy">Contact Information</h2>
+              <div>
+                <h2 className="font-serif text-xl sm:text-2xl text-brand-navy font-normal tracking-tight">Contact Information</h2>
+                <p className="text-xs text-brand-gray-400 font-sans mt-0.5">Order notifications & delivery tracking</p>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-mono uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full text-[11px] font-mono uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Verified Account</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="p-3.5 bg-brand-sky/20 border border-brand-sky-border/40 rounded-xl flex items-center gap-3">
-              <Mail className="w-4 h-4 text-brand-blue shrink-0" />
+            <div className="p-4 bg-[#fafbfc] border border-brand-gray-200/70 rounded-xl flex items-center gap-3.5">
+              <div className="w-8 h-8 rounded-lg bg-brand-sky/40 flex items-center justify-center shrink-0 text-brand-navy">
+                <Mail className="w-4 h-4 text-brand-navy shrink-0" />
+              </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-mono uppercase tracking-wider text-brand-gray-400">Account Email</p>
-                <p className="font-medium text-brand-dark truncate">{userProfile?.email || "Account"}</p>
+                <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-brand-gray-400">Account Email</p>
+                <p className="font-medium text-brand-dark truncate mt-0.5">{userProfile?.email || "Account"}</p>
               </div>
             </div>
 
-            <div className="p-3.5 bg-brand-sky/20 border border-brand-sky-border/40 rounded-xl flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <Phone className="w-4 h-4 text-brand-blue shrink-0" />
+            <div className="p-4 bg-[#fafbfc] border border-brand-gray-200/70 rounded-xl flex items-center justify-between gap-3.5">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-brand-sky/40 flex items-center justify-center shrink-0 text-brand-navy">
+                  <Phone className="w-4 h-4 text-brand-navy shrink-0" />
+                </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-mono uppercase tracking-wider text-brand-gray-400">Contact Mobile</p>
-                  <p className="font-medium text-brand-dark truncate">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-brand-gray-400">Contact Mobile</p>
+                  <p className="font-medium text-brand-dark truncate mt-0.5">
                     {userProfile?.phone ? formatPhoneDisplay(userProfile.phone) : selectedAddress?.phone ? formatPhoneDisplay(selectedAddress.phone) : "Not set"}
                   </p>
                 </div>
@@ -858,7 +865,7 @@ export function CheckoutClient() {
               <button
                 type="button"
                 onClick={() => setEditingContactPhone(!editingContactPhone)}
-                className="text-xs font-mono uppercase tracking-wider text-brand-blue hover:text-brand-navy transition-colors shrink-0 underline"
+                className="text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue transition-colors shrink-0 underline ml-2"
               >
                 {editingContactPhone ? "Close" : userProfile?.phone ? "Edit" : "Set Phone"}
               </button>
@@ -866,7 +873,7 @@ export function CheckoutClient() {
           </div>
 
           {editingContactPhone && (
-            <form onSubmit={handleSaveContactPhone} className="mt-4 pt-4 border-t border-brand-sky-border/30 flex gap-2">
+            <form onSubmit={handleSaveContactPhone} className="mt-4 pt-4 border-t border-brand-gray-100 flex gap-2">
               <div className="relative flex-1">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-xs text-brand-gray-400">+91</span>
                 <input
@@ -876,14 +883,14 @@ export function CheckoutClient() {
                   value={contactPhoneInput}
                   onChange={(e) => setContactPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   placeholder="10-digit mobile"
-                  className="w-full pl-12 pr-3 py-2 text-sm border border-brand-gray-300 rounded-lg outline-none focus:border-brand-blue bg-white"
+                  className="w-full pl-12 pr-3.5 py-2.5 text-sm border border-brand-gray-300 rounded-lg outline-none focus:border-brand-navy bg-white transition-colors"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={savingContactPhone}
-                className="px-4 py-2 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 bg-brand-navy hover:bg-[#1a365d] text-white font-mono text-xs uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50"
               >
                 {savingContactPhone ? "Saving..." : "Save"}
               </button>
@@ -892,13 +899,16 @@ export function CheckoutClient() {
         </section>
 
         {/* Section 2: Delivery Address */}
-        <section className="bg-white border border-brand-sky-border/70 rounded-2xl p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between mb-5 border-b border-brand-sky-border/30 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-xs font-mono font-medium flex items-center justify-center">
-                2
+        <section className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between mb-6 border-b border-brand-gray-100 pb-5">
+            <div className="flex items-start gap-3.5">
+              <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-[11px] font-mono font-medium flex items-center justify-center shrink-0 mt-0.5">
+                02
               </span>
-              <h2 className="font-serif text-xl text-brand-navy">Delivery Address</h2>
+              <div>
+                <h2 className="font-serif text-xl sm:text-2xl text-brand-navy font-normal tracking-tight">Delivery Address</h2>
+                <p className="text-xs text-brand-gray-400 font-sans mt-0.5">Choose where you'd like your order delivered</p>
+              </div>
             </div>
             {!showAddressForm && !addressesLoading && (
               <button
@@ -910,9 +920,9 @@ export function CheckoutClient() {
                   setAddressFormError(null);
                   setShowAddressForm(true);
                 }}
-                className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue border border-brand-gray-300 hover:border-brand-navy px-3.5 py-1.5 rounded-lg transition-colors font-medium shrink-0"
               >
-                <Plus size={15} />
+                <Plus size={14} />
                 <span>+ ADD NEW ADDRESS</span>
               </button>
             )}
@@ -1304,12 +1314,12 @@ export function CheckoutClient() {
 
           {/* Empty State when no saved addresses and form is closed */}
           {!addressesLoading && !addressFetchError && !showAddressForm && addresses.length === 0 && (
-            <div className="text-center py-10 px-4 border border-dashed border-brand-sky-border rounded-xl bg-brand-sky/10">
-              <div className="w-12 h-12 rounded-full bg-brand-sky/40 border border-brand-sky-border/60 flex items-center justify-center mx-auto mb-3 text-brand-navy">
+            <div className="text-center py-12 px-6 border border-dashed border-brand-gray-300 rounded-2xl bg-[#fafbfc]">
+              <div className="w-12 h-12 rounded-full bg-brand-sky/40 border border-brand-sky-border/60 flex items-center justify-center mx-auto mb-3.5 text-brand-navy">
                 <MapPin className="w-5 h-5 text-brand-navy" />
               </div>
-              <p className="font-serif text-lg text-brand-navy mb-1">No saved delivery address.</p>
-              <p className="text-xs font-mono uppercase tracking-wider text-brand-gray-500 mb-5">
+              <p className="font-serif text-xl text-brand-navy mb-1 font-normal">No saved delivery address.</p>
+              <p className="text-xs font-mono uppercase tracking-wider text-brand-gray-400 mb-6">
                 Add an address to continue with your checkout
               </p>
               <button
@@ -1321,7 +1331,7 @@ export function CheckoutClient() {
                   setAddressFormError(null);
                   setShowAddressForm(true);
                 }}
-                className="inline-flex items-center gap-2 bg-brand-navy hover:bg-brand-blue text-white px-6 py-3 rounded-xl font-mono text-xs uppercase tracking-widest transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 bg-brand-navy hover:bg-[#1a365d] text-white px-7 py-3 rounded-xl font-mono text-xs uppercase tracking-widest transition-colors shadow-xs"
               >
                 <Plus size={15} />
                 <span>+ ADD NEW ADDRESS</span>
@@ -1338,42 +1348,42 @@ export function CheckoutClient() {
                   <div
                     key={address.id}
                     onClick={() => setSelectedAddressId(address.id)}
-                    className={`relative border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                    className={`relative border rounded-2xl p-5 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                       isSelected
-                        ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-navy/30 shadow-xs"
-                        : "border-brand-gray-200 hover:border-brand-sky-border bg-white"
+                        ? "border-brand-navy bg-[#f8fbff] ring-1 ring-brand-navy/30 shadow-xs"
+                        : "border-brand-gray-200 hover:border-brand-gray-300 bg-white hover:bg-[#fafafa]/60"
                     }`}
                   >
                     <div>
                       {/* Top Header: Radio, Name, Labels, Actions */}
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2.5 flex-wrap">
+                      <div className="flex items-start justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <div
                             className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                               isSelected
                                 ? "border-brand-navy bg-brand-navy"
-                                : "border-brand-gray-400 bg-white"
+                                : "border-brand-gray-300 bg-white"
                             }`}
                           >
                             {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
                           <span className="font-medium text-brand-navy text-base">{address.fullName}</span>
-                          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-brand-sky text-brand-navy border border-brand-sky-border/60 font-semibold">
+                          <span className="text-[10px] font-mono uppercase tracking-[0.1em] px-2 py-0.5 rounded bg-brand-sky text-brand-navy border border-brand-sky-border/60 font-semibold">
                             {address.label || "HOME"}
                           </span>
                           {address.isDefault && (
-                            <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                            <span className="text-[10px] font-mono uppercase tracking-[0.1em] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                               Default
                             </span>
                           )}
                         </div>
 
                         {/* Actions: EDIT and REMOVE */}
-                        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
                             onClick={() => handleStartEditAddress(address)}
-                            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue transition-colors px-1.5 py-0.5 rounded hover:bg-brand-sky/40"
+                            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue transition-colors px-2 py-1 rounded hover:bg-brand-sky/40"
                             title="Edit Address"
                           >
                             <Pencil size={12} />
@@ -1382,7 +1392,7 @@ export function CheckoutClient() {
                           <button
                             type="button"
                             onClick={() => setAddressToDelete(address)}
-                            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-brand-gray-400 hover:text-red-600 transition-colors px-1.5 py-0.5 rounded hover:bg-red-50"
+                            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider text-brand-gray-400 hover:text-red-600 transition-colors px-2 py-1 rounded hover:bg-red-50"
                             title="Remove Address"
                           >
                             <Trash2 size={12} />
@@ -1392,14 +1402,14 @@ export function CheckoutClient() {
                       </div>
 
                       {/* Address Body */}
-                      <div className="pl-6.5 text-sm text-brand-gray-600 leading-relaxed space-y-0.5">
+                      <div className="pl-6 text-sm text-brand-gray-600 leading-relaxed space-y-0.5">
                         <p>{address.addressLine1}</p>
                         {address.addressLine2 && <p>{address.addressLine2}</p>}
-                        {address.landmark && <p className="text-xs text-brand-gray-500">Near {address.landmark}</p>}
+                        {address.landmark && <p className="text-xs text-brand-gray-400">Near {address.landmark}</p>}
                         <p>
                           {address.city}, {address.state} — <span className="font-mono font-medium text-brand-dark">{address.postalCode}</span>
                         </p>
-                        <p className="font-mono text-xs text-brand-gray-500 pt-1">
+                        <p className="font-mono text-xs text-brand-gray-400 pt-1">
                           +91 {address.phone}
                         </p>
                       </div>
@@ -1447,66 +1457,69 @@ export function CheckoutClient() {
         </section>
 
         {/* Section 3: Delivery Speed */}
-        <section className="bg-white border border-brand-sky-border/70 rounded-2xl p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center gap-3 mb-5 border-b border-brand-sky-border/30 pb-4">
-            <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-xs font-mono font-medium flex items-center justify-center">
-              3
+        <section className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-3.5 mb-6 border-b border-brand-gray-100 pb-5">
+            <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-[11px] font-mono font-medium flex items-center justify-center shrink-0 mt-0.5">
+              03
             </span>
-            <h2 className="font-serif text-xl text-brand-navy">Delivery Options</h2>
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl text-brand-navy font-normal tracking-tight">Delivery Options</h2>
+              <p className="text-xs text-brand-gray-400 font-sans mt-0.5">Select preferred shipping method</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label
-              className={`block border p-4.5 rounded-xl cursor-pointer transition-all duration-200 ${
+              className={`block border p-5 rounded-2xl cursor-pointer transition-all duration-200 ${
                 deliveryMethod === "STANDARD"
-                  ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/35 shadow-xs"
-                  : "border-brand-gray-200 hover:border-brand-sky-border/80 bg-white"
+                  ? "border-brand-navy bg-[#f8fbff] ring-1 ring-brand-navy/30 shadow-xs"
+                  : "border-brand-gray-200 hover:border-brand-gray-300 bg-white hover:bg-[#fafafa]/60"
               }`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3.5">
                 <input
                   type="radio"
                   name="deliveryMethod"
                   value="STANDARD"
                   checked={deliveryMethod === "STANDARD"}
                   onChange={() => setDeliveryMethod("STANDARD")}
-                  className="mt-1 accent-brand-blue w-4 h-4"
+                  className="mt-1 accent-brand-navy w-4 h-4 cursor-pointer"
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-brand-dark">Standard Delivery</span>
+                    <span className="font-medium text-brand-dark text-sm sm:text-base">Standard Delivery</span>
                     <span className="font-mono text-sm font-semibold text-brand-navy">₹100</span>
                   </div>
-                  <p className="text-xs text-brand-gray-500 font-mono">Estimated delivery: 4–7 business days</p>
+                  <p className="text-xs text-brand-gray-500 font-sans">Estimated delivery: 3–5 business days</p>
                 </div>
               </div>
             </label>
 
             <label
-              className={`block border p-4.5 rounded-xl cursor-pointer transition-all duration-200 ${
+              className={`block border p-5 rounded-2xl cursor-pointer transition-all duration-200 ${
                 deliveryMethod === "FAST"
-                  ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/35 shadow-xs"
-                  : "border-brand-gray-200 hover:border-brand-sky-border/80 bg-white"
+                  ? "border-brand-navy bg-[#f8fbff] ring-1 ring-brand-navy/30 shadow-xs"
+                  : "border-brand-gray-200 hover:border-brand-gray-300 bg-white hover:bg-[#fafafa]/60"
               }`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3.5">
                 <input
                   type="radio"
                   name="deliveryMethod"
                   value="FAST"
                   checked={deliveryMethod === "FAST"}
                   onChange={() => setDeliveryMethod("FAST")}
-                  className="mt-1 accent-brand-blue w-4 h-4"
+                  className="mt-1 accent-brand-navy w-4 h-4 cursor-pointer"
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-brand-dark">Express Delivery</span>
+                      <span className="font-medium text-brand-dark text-sm sm:text-base">Express Delivery</span>
                       <Zap className="w-3.5 h-3.5 text-brand-gold fill-brand-gold" />
                     </div>
                     <span className="font-mono text-sm font-semibold text-brand-navy">₹149</span>
                   </div>
-                  <p className="text-xs text-brand-gray-500 font-mono">Estimated delivery: 2–3 business days</p>
+                  <p className="text-xs text-brand-gray-500 font-sans">Estimated delivery: 1–2 business days</p>
                 </div>
               </div>
             </label>
@@ -1514,21 +1527,24 @@ export function CheckoutClient() {
         </section>
 
         {/* Section 4: Payment Method */}
-        <section className="bg-white border border-brand-sky-border/70 rounded-2xl p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center gap-3 mb-5 border-b border-brand-sky-border/30 pb-4">
-            <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-xs font-mono font-medium flex items-center justify-center">
-              4
+        <section className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-3.5 mb-6 border-b border-brand-gray-100 pb-5">
+            <span className="w-7 h-7 rounded-full bg-brand-navy text-white text-[11px] font-mono font-medium flex items-center justify-center shrink-0 mt-0.5">
+              04
             </span>
-            <h2 className="font-serif text-xl text-brand-navy">Payment Method</h2>
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl text-brand-navy font-normal tracking-tight">Payment Method</h2>
+              <p className="text-xs text-brand-gray-400 font-sans mt-0.5">Choose how you wish to pay</p>
+            </div>
           </div>
 
           <div className="space-y-4">
             {/* Online Payment */}
             <label
-              className={`block border p-5 rounded-xl cursor-pointer transition-all duration-200 ${
+              className={`block border p-5 rounded-2xl cursor-pointer transition-all duration-200 ${
                 paymentMethod === "ONLINE"
-                  ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/35 shadow-xs"
-                  : "border-brand-gray-200 hover:border-brand-sky-border/80 bg-white"
+                  ? "border-brand-navy bg-[#f8fbff] ring-1 ring-brand-navy/30 shadow-xs"
+                  : "border-brand-gray-200 hover:border-brand-gray-300 bg-white hover:bg-[#fafafa]/60"
               }`}
             >
               <div className="flex items-start gap-3.5">
@@ -1538,24 +1554,24 @@ export function CheckoutClient() {
                   value="ONLINE"
                   checked={paymentMethod === "ONLINE"}
                   onChange={() => setPaymentMethod("ONLINE")}
-                  className="mt-1 accent-brand-blue w-4 h-4"
+                  className="mt-1 accent-brand-navy w-4 h-4 cursor-pointer"
                 />
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                  <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-brand-blue" />
+                      <CreditCard className="w-4 h-4 text-brand-navy" />
                       <span className="font-medium text-brand-dark text-base">Online Payment</span>
                     </div>
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-brand-blue bg-brand-sky px-2 py-0.5 rounded border border-brand-sky-border/60">
-                      Instant & Recommended
+                    <span className="text-[10px] font-mono uppercase tracking-[0.1em] text-brand-navy bg-brand-sky px-2.5 py-0.5 rounded border border-brand-sky-border/60 font-semibold">
+                      RECOMMENDED
                     </span>
                   </div>
-                  <p className="text-xs text-brand-gray-600 mb-3">
-                    Pay securely using UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, NetBanking, or Wallets.
+                  <p className="text-xs text-brand-gray-600 mb-2.5 font-sans leading-relaxed">
+                    UPI (Google Pay, PhonePe, Paytm), Credit & Debit Cards, NetBanking, or Wallets.
                   </p>
-                  <div className="flex items-center gap-2 text-[11px] font-mono text-brand-gray-400 uppercase tracking-wider">
-                    <Lock className="w-3 h-3 text-brand-blue" />
-                    <span>256-Bit Encrypted via Razorpay</span>
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-brand-gray-400 uppercase tracking-wider">
+                    <Lock className="w-3.5 h-3.5 text-brand-navy" />
+                    <span>256-Bit SSL Encrypted via Razorpay</span>
                   </div>
                 </div>
               </div>
@@ -1563,10 +1579,10 @@ export function CheckoutClient() {
 
             {/* Cash on Delivery */}
             <label
-              className={`block border p-5 rounded-xl cursor-pointer transition-all duration-200 ${
+              className={`block border p-5 rounded-2xl cursor-pointer transition-all duration-200 ${
                 paymentMethod === "COD"
-                  ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-blue/35 shadow-xs"
-                  : "border-brand-gray-200 hover:border-brand-sky-border/80 bg-white"
+                  ? "border-brand-navy bg-[#f8fbff] ring-1 ring-brand-navy/30 shadow-xs"
+                  : "border-brand-gray-200 hover:border-brand-gray-300 bg-white hover:bg-[#fafafa]/60"
               }`}
             >
               <div className="flex items-start gap-3.5">
@@ -1576,14 +1592,14 @@ export function CheckoutClient() {
                   value="COD"
                   checked={paymentMethod === "COD"}
                   onChange={() => setPaymentMethod("COD")}
-                  className="mt-1 accent-brand-blue w-4 h-4"
+                  className="mt-1 accent-brand-navy w-4 h-4 cursor-pointer"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Banknote className="w-4 h-4 text-brand-navy" />
                     <span className="font-medium text-brand-dark text-base">Cash on Delivery (COD)</span>
                   </div>
-                  <p className="text-xs text-brand-gray-600">
+                  <p className="text-xs text-brand-gray-600 font-sans leading-relaxed">
                     Pay with cash or UPI QR scan when your footwear arrives at your delivery doorstep.
                   </p>
                 </div>
@@ -1595,10 +1611,10 @@ export function CheckoutClient() {
 
       {/* Sticky Order Summary Sidebar (5 cols) */}
       <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
-        <div className="bg-white border border-brand-sky-border/80 rounded-2xl p-6 sm:p-7 shadow-sm">
-          <div className="flex items-center justify-between pb-4 border-b border-brand-sky-border/40 mb-5">
-            <h2 className="font-serif text-xl text-brand-navy">Order Summary</h2>
-            <span className="text-xs font-mono uppercase tracking-wider text-brand-gray-400 bg-brand-sky/50 px-2 py-0.5 rounded">
+        <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between pb-4 border-b border-brand-gray-100 mb-5">
+            <h2 className="font-serif text-xl sm:text-2xl text-brand-navy font-normal tracking-tight">Order Summary</h2>
+            <span className="text-xs font-mono uppercase tracking-wider text-brand-gray-500 bg-[#f4f6f8] px-2.5 py-0.5 rounded-full border border-brand-gray-200/60 font-medium">
               {items.reduce((s, i) => s + i.quantity, 0)} {items.reduce((s, i) => s + i.quantity, 0) === 1 ? "Item" : "Items"}
             </span>
           </div>
@@ -1607,7 +1623,7 @@ export function CheckoutClient() {
           <div className="space-y-4 mb-6 max-h-[360px] overflow-y-auto pr-1">
             {items.map((item) => (
               <div key={item.id} className="flex gap-3.5 items-center justify-between py-2 border-b border-brand-gray-100 last:border-b-0">
-                <div className="relative w-16 h-16 rounded-xl bg-brand-sky/20 border border-brand-sky-border/50 shrink-0 overflow-hidden">
+                <div className="relative w-16 h-16 rounded-xl bg-[#f4f6f8] border border-brand-gray-200/80 shrink-0 overflow-hidden">
                   <FallbackImage
                     src={item.imageUrl || "/placeholder-shoe.jpg"}
                     alt={item.productName}
@@ -1617,7 +1633,7 @@ export function CheckoutClient() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm text-brand-dark truncate">{item.productName}</h4>
+                  <h4 className="font-medium text-sm text-brand-navy truncate">{item.productName}</h4>
                   <p className="text-xs font-mono text-brand-gray-500 mt-0.5">
                     Size: UK {item.size} • Qty: {item.quantity}
                   </p>
@@ -1659,7 +1675,7 @@ export function CheckoutClient() {
           />
 
           {/* Pricing Breakdown */}
-          <div className="space-y-3 py-4 border-t border-brand-sky-border/40 text-sm">
+          <div className="space-y-3 py-4 border-t border-brand-gray-100 text-sm">
             <div className="flex justify-between text-brand-gray-600">
               <span>Subtotal</span>
               <span className="font-mono font-medium text-brand-dark">₹{subtotal.toLocaleString("en-IN")}</span>
@@ -1684,12 +1700,12 @@ export function CheckoutClient() {
           </div>
 
           {/* Total Payable */}
-          <div className="pt-4 pb-6 border-t border-brand-sky-border/40 flex justify-between items-baseline">
+          <div className="pt-4 pb-6 border-t border-brand-gray-100 flex justify-between items-baseline">
             <div>
               <span className="text-base font-semibold text-brand-dark">Total Amount</span>
               <p className="text-[11px] font-mono text-brand-gray-400 uppercase tracking-wider">Inclusive of all taxes</p>
             </div>
-            <span className="font-serif text-2xl font-bold text-brand-navy">
+            <span className="font-serif text-3xl font-bold text-brand-navy">
               ₹{finalTotal.toLocaleString("en-IN")}
             </span>
           </div>
@@ -1699,7 +1715,7 @@ export function CheckoutClient() {
             type="button"
             onClick={handlePlaceOrder}
             disabled={paying || !selectedAddressId || items.some((i) => i.stock < i.quantity)}
-            className="w-full bg-brand-navy hover:bg-brand-blue text-white py-4 font-mono text-xs uppercase tracking-widest transition-all duration-300 rounded-xl shadow-md hover:shadow-lg disabled:bg-brand-gray-300 disabled:cursor-not-allowed text-center"
+            className="w-full bg-brand-navy hover:bg-[#1a365d] active:scale-[0.99] text-white py-4 font-mono text-xs uppercase tracking-[0.18em] transition-all duration-200 rounded-xl shadow-sm hover:shadow text-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {paying ? (
               <span className="flex items-center justify-center gap-2">
@@ -1714,19 +1730,19 @@ export function CheckoutClient() {
           </button>
 
           {!selectedAddressId && (
-            <p className="text-xs text-amber-700 font-mono text-center mt-2.5">
+            <p className="text-xs text-amber-700 font-mono text-center mt-3">
               * Please select a delivery address above to place your order.
             </p>
           )}
 
           {/* Trust badges */}
-          <div className="mt-6 pt-5 border-t border-brand-sky-border/30 grid grid-cols-2 gap-3 text-[11px] font-mono text-brand-gray-500 uppercase tracking-wider">
+          <div className="mt-6 pt-5 border-t border-brand-gray-100 grid grid-cols-2 gap-3 text-[11px] font-mono text-brand-gray-500 uppercase tracking-wider">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-blue shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-brand-navy shrink-0" />
               <span>100% Genuine KNOOS</span>
             </div>
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-brand-blue shrink-0" />
+              <Truck className="w-4 h-4 text-brand-navy shrink-0" />
               <span>Free Exchanges</span>
             </div>
           </div>

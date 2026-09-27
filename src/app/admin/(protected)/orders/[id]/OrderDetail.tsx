@@ -10,6 +10,7 @@ import {
   OrderStatus,
   PaymentStatus,
 } from "@/lib/constants";
+import { AlertTriangle, ArrowLeft, CreditCard, MapPin, ShieldCheck, User } from "lucide-react";
 
 const ORDER_STATUSES = [
   "PENDING",
@@ -172,17 +173,33 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
   };
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-gray-200/80">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="font-serif text-3xl">Order</h1>
-            <span className="font-mono text-xs text-brand-gray-400">
-              #{currentOrder.id.slice(0, 12)}
+          <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+            <h1 className="font-serif text-3xl sm:text-4xl text-brand-navy font-normal tracking-tight">
+              Order #{currentOrder.id.slice(0, 8)}
+            </h1>
+            <span
+              className={`text-xs font-mono uppercase px-2.5 py-0.5 rounded-full border font-medium ${
+                ORDER_STATUS_COLORS[currentOrder.orderStatus as OrderStatus] ||
+                "bg-gray-50 text-gray-700 border-gray-200"
+              }`}
+            >
+              {ORDER_STATUS_LABELS[currentOrder.orderStatus as OrderStatus] || currentOrder.orderStatus}
+            </span>
+            <span
+              className={`text-xs font-mono uppercase px-2.5 py-0.5 rounded-full border font-medium ${
+                PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
+                "bg-gray-50 text-gray-700 border-gray-200"
+              }`}
+            >
+              {PAYMENT_STATUS_LABELS[currentOrder.paymentStatus as PaymentStatus] || currentOrder.paymentStatus}
             </span>
           </div>
-          <p className="text-brand-gray-500 font-mono text-sm">
+          <p className="text-brand-gray-500 font-sans text-xs sm:text-sm">
+            Placed on{" "}
             {new Date(currentOrder.createdAt).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "long",
@@ -194,136 +211,113 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
         </div>
         <Link
           href="/admin/orders"
-          className="px-5 py-2 border border-brand-gray-200 text-sm font-mono uppercase tracking-wide hover:border-brand-black transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 border border-brand-gray-200 hover:border-brand-navy rounded-xl text-xs font-mono uppercase tracking-wider text-brand-navy transition-colors font-medium self-start sm:self-auto"
         >
-          Back to Orders
+          <ArrowLeft size={14} />
+          <span>Back to Orders</span>
         </Link>
       </div>
 
       {/* Status feedback message */}
       {message && (
         <div
-          className={`px-6 py-4 text-sm font-mono mb-6 border ${
+          className={`px-5 py-3.5 text-xs font-mono rounded-xl border flex items-center justify-between ${
             message.type === "success"
               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : "bg-red-50 text-red-800 border-red-200"
           }`}
         >
-          {message.text}
+          <span>{message.text}</span>
+          <button
+            onClick={() => setMessage(null)}
+            className="text-brand-gray-400 hover:text-brand-navy font-mono text-xs ml-4"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Order items */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Order Items</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left: Order Items & Pricing Breakdown (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white border border-brand-gray-200/90 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+            <div className="border-b border-brand-gray-100 px-6 py-4.5 flex items-center justify-between bg-[#fafbfc]">
+              <h2 className="font-serif text-xl text-brand-navy font-normal">Order Items</h2>
+              <span className="text-xs font-mono text-brand-gray-400 uppercase tracking-wider">
+                {currentOrder.items.reduce((s, i) => s + i.quantity, 0)} Units
+              </span>
             </div>
-            <div className="divide-y divide-brand-gray-50">
+            <div className="divide-y divide-brand-gray-100">
               {currentOrder.items.map((item) => (
                 <div
                   key={item.id}
-                  className="px-6 py-4 flex items-center justify-between"
+                  className="px-6 py-4.5 flex items-center justify-between gap-4"
                 >
-                  <div>
-                    <p className="font-medium">{item.productName}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-brand-navy text-sm sm:text-base truncate">
+                      {item.productName}
+                    </p>
                     <p className="text-xs text-brand-gray-400 font-mono mt-0.5">
-                      Size {item.size} x {item.quantity}
+                      Size: UK {item.size} • Qty: {item.quantity}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-mono text-sm">
+                  <div className="text-right shrink-0">
+                    <p className="font-mono text-xs text-brand-gray-400">
                       {formatINR(item.price)} each
                     </p>
-                    <p className="font-mono text-sm font-medium">
+                    <p className="font-mono text-sm font-semibold text-brand-navy mt-0.5">
                       {formatINR(item.total)}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="border-t border-brand-gray-200 px-6 py-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-brand-gray-500 font-mono">Subtotal</span>
-                <span className="font-mono">{formatINR(currentOrder.subtotal)}</span>
+            <div className="border-t border-brand-gray-100 px-6 py-5 bg-[#fbfcfd] space-y-3">
+              <div className="flex justify-between text-sm text-brand-gray-600">
+                <span>Subtotal</span>
+                <span className="font-mono font-medium text-brand-dark">{formatINR(currentOrder.subtotal)}</span>
               </div>
               {currentOrder.discountAmount > 0 && (
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-brand-gray-500 font-mono">
-                    Coupon ({currentOrder.couponCode})
-                  </span>
-                  <span className="font-mono">
-                    -{formatINR(currentOrder.discountAmount)}
-                  </span>
+                <div className="flex justify-between text-sm text-emerald-700">
+                  <span>Coupon ({currentOrder.couponCode})</span>
+                  <span className="font-mono font-semibold">-{formatINR(currentOrder.discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-brand-gray-500 font-mono">
-                  Delivery ({currentOrder.deliveryMethod})
-                </span>
-                <span className="font-mono">
-                  {formatINR(currentOrder.deliveryCharge)}
-                </span>
+              <div className="flex justify-between text-sm text-brand-gray-600">
+                <span>Delivery ({currentOrder.deliveryMethod})</span>
+                <span className="font-mono font-medium text-brand-dark">{formatINR(currentOrder.deliveryCharge)}</span>
               </div>
-              <div className="flex justify-between font-medium pt-3 border-t border-brand-gray-100">
-                <span className="font-mono uppercase text-sm">Total</span>
-                <span className="font-mono">{formatINR(currentOrder.total)}</span>
+              <div className="flex justify-between items-baseline pt-4 border-t border-brand-gray-200">
+                <span className="font-mono text-xs uppercase tracking-wider text-brand-dark font-medium">Total Amount</span>
+                <span className="font-serif text-2xl font-bold text-brand-navy">{formatINR(currentOrder.total)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Status + Customer + Shipping + Payment */}
-        <div className="space-y-6">
-          {/* Customer */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Customer</h2>
-            </div>
-            <div className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                {currentOrder.user.image && (
-                  <img
-                    src={currentOrder.user.image}
-                    alt=""
-                    className="w-10 h-10 rounded-full object-cover border border-brand-gray-100"
-                  />
-                )}
-                <div>
-                  <p className="font-medium">{currentOrder.user.name || "—"}</p>
-                  <p className="text-xs text-brand-gray-400 font-mono">
-                    {currentOrder.user.email}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Status Control */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Order Status</h2>
-              <span
-                className={`text-xs font-mono uppercase px-2 py-0.5 border ${
-                  ORDER_STATUS_COLORS[currentOrder.orderStatus as OrderStatus] ||
-                  "bg-gray-50 text-gray-700 border-gray-200"
-                }`}
-              >
-                {currentOrder.orderStatus}
+        {/* Right: Operations & Information Panel (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Status Management Panel */}
+          <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5">
+            <div className="border-b border-brand-gray-100 pb-3 flex items-center justify-between">
+              <h2 className="font-serif text-xl text-brand-navy font-normal">Status Management</h2>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-brand-navy bg-brand-sky px-2 py-0.5 rounded border border-brand-sky-border/60 font-semibold">
+                Admin Control
               </span>
             </div>
-            <div className="px-6 py-4 space-y-2">
-              <label className="text-xs font-mono text-brand-gray-500 uppercase block">
-                Change Status
+
+            {/* Order Status Control */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-mono text-brand-gray-400 uppercase tracking-wider block">
+                Order Fulfillment Status
               </label>
               <select
                 value={currentOrder.orderStatus}
                 onChange={(e) => handleStatusChange("orderStatus", e.target.value)}
                 disabled={updating === "orderStatus"}
-                className={`w-full border px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors disabled:opacity-50 ${
+                className={`w-full border px-4 py-2.5 text-xs font-mono font-medium rounded-xl focus:outline-none focus:border-brand-navy transition-colors cursor-pointer disabled:opacity-50 ${
                   ORDER_STATUS_COLORS[currentOrder.orderStatus as OrderStatus] ||
-                  "bg-white border-brand-gray-200"
+                  "bg-white border-brand-gray-200 text-brand-dark"
                 }`}
               >
                 {ORDER_STATUSES.map((s) => (
@@ -332,36 +326,20 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-brand-gray-400 font-mono">
-                Admins may transition between any order statuses.
-              </p>
             </div>
-          </div>
 
-          {/* Payment Status Control */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="font-serif text-lg">Payment Status</h2>
-              <span
-                className={`text-xs font-mono uppercase px-2 py-0.5 border ${
-                  PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
-                  "bg-gray-50 text-gray-700 border-gray-200"
-                }`}
-              >
-                {currentOrder.paymentStatus}
-              </span>
-            </div>
-            <div className="px-6 py-4 space-y-2">
-              <label className="text-xs font-mono text-brand-gray-500 uppercase block">
-                Change Status
+            {/* Payment Status Control */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-mono text-brand-gray-400 uppercase tracking-wider block">
+                Payment Collection Status
               </label>
               <select
                 value={currentOrder.paymentStatus}
                 onChange={(e) => handleStatusChange("paymentStatus", e.target.value)}
                 disabled={updating === "paymentStatus"}
-                className={`w-full border px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors disabled:opacity-50 ${
+                className={`w-full border px-4 py-2.5 text-xs font-mono font-medium rounded-xl focus:outline-none focus:border-brand-navy transition-colors cursor-pointer disabled:opacity-50 ${
                   PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
-                  "bg-white border-brand-gray-200"
+                  "bg-white border-brand-gray-200 text-brand-dark"
                 }`}
               >
                 {PAYMENT_STATUSES.map((s) => (
@@ -370,142 +348,142 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-brand-gray-400 font-mono">
+              <p className="text-[11px] text-brand-gray-400 font-mono pt-1">
                 Manual status changes do not initiate payment capture or refunds.
               </p>
             </div>
           </div>
 
-          {/* Shipping Address */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Shipping Address</h2>
+          {/* Customer Card */}
+          <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+            <div className="border-b border-brand-gray-100 pb-3 mb-4">
+              <h2 className="font-serif text-lg text-brand-navy font-normal">Customer</h2>
             </div>
-            <div className="px-6 py-4 text-sm font-mono text-brand-gray-600">
-              {currentOrder.address ? (
-                <>
-                  <p className="font-medium text-black mb-1">
-                    {currentOrder.address.name}
-                  </p>
-                  <p>{currentOrder.address.address}</p>
-                  <p>
-                    {currentOrder.address.city}, {currentOrder.address.state}{" "}
-                    {currentOrder.address.pincode}
-                  </p>
-                  <p className="mt-2">Phone: {currentOrder.address.phone}</p>
-                </>
+            <div className="flex items-center gap-3">
+              {currentOrder.user.image ? (
+                <img
+                  src={currentOrder.user.image}
+                  alt=""
+                  className="w-10 h-10 rounded-full object-cover border border-brand-gray-100"
+                />
               ) : (
-                <p className="text-brand-gray-400">Address snapshot unavailable.</p>
+                <div className="w-10 h-10 rounded-full bg-brand-sky/60 border border-brand-sky-border/80 flex items-center justify-center font-mono text-sm text-brand-navy font-semibold">
+                  {currentOrder.user.name ? currentOrder.user.name.charAt(0).toUpperCase() : "C"}
+                </div>
               )}
-            </div>
-          </div>
-
-          {/* Payment Method Details */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Payment Details</h2>
-            </div>
-            <div className="px-6 py-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray-500 font-mono">Method</span>
-                <span className="font-medium font-mono">
-                  {currentOrder.paymentMethod === "COD"
-                    ? "Cash on Delivery (COD)"
-                    : "Online Payment"}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray-500 font-mono">Collection State</span>
-                <span
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${
-                    PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
-                    "bg-gray-50 text-gray-600 border-gray-200"
-                  }`}
-                >
-                  {currentOrder.paymentMethod === "COD" &&
-                  currentOrder.paymentStatus === "PENDING"
-                    ? "COD — Pending Collection"
-                    : currentOrder.paymentStatus}
-                </span>
-              </div>
-              {currentOrder.paymentMethod === "COD" && (
-                <p className="text-xs text-brand-gray-500 font-mono">
-                  {currentOrder.paymentStatus === "PAID"
-                    ? "Cash collected on delivery."
-                    : "Payment will be collected on delivery."}
+              <div className="min-w-0">
+                <p className="font-medium text-brand-navy truncate">
+                  {currentOrder.user.name || "—"}
                 </p>
-              )}
-              <div className="border-t border-brand-gray-100 pt-3">
-                <p className="text-xs text-brand-gray-400 font-mono">
-                  Note: Manual status changes do not initiate payment capture or refunds.
+                <p className="text-xs text-brand-gray-400 font-mono truncate">
+                  {currentOrder.user.email}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Delivery */}
-          <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Delivery</h2>
+          {/* Delivery Address Card */}
+          <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+            <div className="border-b border-brand-gray-100 pb-3 mb-4 flex items-center justify-between">
+              <h2 className="font-serif text-lg text-brand-navy font-normal">Shipping Address</h2>
+              <MapPin size={16} className="text-brand-gray-400" />
             </div>
-            <div className="px-6 py-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray-500 font-mono">Method</span>
-                <span className="font-mono">{currentOrder.deliveryMethod}</span>
+            {currentOrder.address ? (
+              <div className="text-sm font-sans text-brand-gray-600 leading-relaxed space-y-1">
+                <p className="font-medium text-brand-dark">{currentOrder.address.name}</p>
+                <p>{currentOrder.address.address}</p>
+                <p>
+                  {currentOrder.address.city}, {currentOrder.address.state} —{" "}
+                  <span className="font-mono text-brand-navy font-medium">
+                    {currentOrder.address.pincode}
+                  </span>
+                </p>
+                <p className="pt-1.5 font-mono text-xs text-brand-gray-400">
+                  Phone: +91 {currentOrder.address.phone}
+                </p>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray-500 font-mono">Charge</span>
-                <span className="font-mono">
-                  {formatINR(currentOrder.deliveryCharge)}
-                </span>
-              </div>
-            </div>
+            ) : (
+              <p className="text-brand-gray-400 font-mono text-xs">Address snapshot unavailable.</p>
+            )}
           </div>
 
-          {/* Razorpay info */}
-          {currentOrder.razorpayOrderId && (
-            <div className="bg-white border border-brand-gray-200">
-              <div className="border-b border-brand-gray-200 px-6 py-4">
-                <h2 className="font-serif text-lg">Gateway Reference</h2>
-              </div>
-              <div className="px-6 py-4 space-y-3">
+          {/* Payment & Gateway Information */}
+          <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-3.5">
+            <div className="border-b border-brand-gray-100 pb-3">
+              <h2 className="font-serif text-lg text-brand-navy font-normal">Payment Information</h2>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-brand-gray-400 font-mono text-xs uppercase tracking-wider">Method</span>
+              <span className="font-mono text-xs font-semibold text-brand-navy">
+                {currentOrder.paymentMethod === "COD"
+                  ? "Cash on Delivery (COD)"
+                  : "Online Payment"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-brand-gray-400 font-mono text-xs uppercase tracking-wider">Status</span>
+              <span
+                className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-mono font-medium border ${
+                  PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
+                  "bg-gray-50 text-gray-600 border-gray-200"
+                }`}
+              >
+                {currentOrder.paymentMethod === "COD" &&
+                currentOrder.paymentStatus === "PENDING"
+                  ? "COD — Pending Collection"
+                  : currentOrder.paymentStatus}
+              </span>
+            </div>
+
+            {currentOrder.razorpayOrderId && (
+              <div className="pt-3 border-t border-brand-gray-100 space-y-2">
                 <div>
-                  <span className="text-xs text-brand-gray-400 font-mono block">
+                  <span className="text-[10px] text-brand-gray-400 font-mono uppercase tracking-wider block mb-0.5">
                     Razorpay Order ID
                   </span>
-                  <p className="font-mono text-xs break-all">
+                  <div className="p-2 bg-[#fafbfc] border border-brand-gray-200/80 rounded-lg font-mono text-xs text-brand-navy break-all select-all">
                     {currentOrder.razorpayOrderId}
-                  </p>
+                  </div>
                 </div>
                 {currentOrder.razorpayPaymentId && (
                   <div>
-                    <span className="text-xs text-brand-gray-400 font-mono block">
+                    <span className="text-[10px] text-brand-gray-400 font-mono uppercase tracking-wider block mb-0.5">
                       Razorpay Payment ID
                     </span>
-                    <p className="font-mono text-xs break-all">
+                    <div className="p-2 bg-[#fafbfc] border border-brand-gray-200/80 rounded-lg font-mono text-xs text-brand-navy break-all select-all">
                       {currentOrder.razorpayPaymentId}
-                    </p>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Confirmation Modal */}
       {confirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white max-w-md w-full p-6 border border-brand-gray-200 shadow-xl space-y-4">
-            <h3 className="font-serif text-xl">{confirmModal.title}</h3>
-            <p className="text-sm font-mono text-brand-gray-600 leading-relaxed">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-navy/40 backdrop-blur-xs">
+          <div className="bg-white border border-brand-gray-200 rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="font-serif text-xl text-brand-navy font-normal">{confirmModal.title}</h3>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-brand-gray-400">
+                  Target status: {confirmModal.value}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm font-sans text-brand-gray-600 leading-relaxed pt-1">
               {confirmModal.description}
             </p>
             <div className="flex justify-end gap-3 pt-4 border-t border-brand-gray-100">
               <button
                 type="button"
                 onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 border border-brand-gray-200 text-xs font-mono uppercase tracking-wide hover:border-brand-black transition-colors"
+                className="px-4 py-2 border border-brand-gray-300 rounded-xl text-xs font-mono uppercase tracking-wider text-brand-dark hover:bg-brand-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -516,9 +494,9 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
                   setConfirmModal(null);
                   executeStatusUpdate(field, value);
                 }}
-                className="px-4 py-2 bg-brand-black text-white text-xs font-mono uppercase tracking-wide hover:bg-neutral-800 transition-colors"
+                className="px-5 py-2 bg-brand-navy hover:bg-[#1a365d] text-white text-xs font-mono uppercase tracking-wider rounded-xl transition-colors shadow-xs"
               >
-                Confirm
+                Confirm Change
               </button>
             </div>
           </div>

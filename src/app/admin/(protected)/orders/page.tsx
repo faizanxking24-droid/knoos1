@@ -10,6 +10,7 @@ import {
   OrderStatus,
   PaymentStatus,
 } from "@/lib/constants";
+import { AlertTriangle, ChevronRight, Search, ShieldCheck } from "lucide-react";
 
 const ORDER_STATUSES = [
   "PENDING",
@@ -224,171 +225,199 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl">Orders</h1>
-        <p className="text-brand-gray-500 font-mono text-sm mt-1">
-          Manage customer orders and payment statuses
-        </p>
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-brand-gray-200/80">
+        <div>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-gray-400 block mb-1">
+            Operations
+          </span>
+          <h1 className="font-serif text-3xl sm:text-4xl text-brand-navy font-normal tracking-tight">
+            Orders
+          </h1>
+          <p className="text-brand-gray-500 font-sans text-sm mt-1">
+            Manage fulfillment and payment status
+          </p>
+        </div>
       </div>
 
       {/* Action Notice */}
       {actionNotice && (
         <div
-          className={`px-6 py-4 text-sm font-mono mb-6 border ${
+          className={`px-5 py-3.5 text-xs font-mono rounded-xl border flex items-center justify-between ${
             actionNotice.type === "success"
               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
               : "bg-red-50 text-red-800 border-red-200"
           }`}
         >
-          {actionNotice.text}
+          <span>{actionNotice.text}</span>
+          <button
+            onClick={() => setActionNotice(null)}
+            className="text-brand-gray-400 hover:text-brand-navy font-mono text-xs ml-4"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="bg-white border border-brand-gray-200 p-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
+      {/* Filters Bar */}
+      <div className="bg-white border border-brand-gray-200/90 rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-brand-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by order ID, email, name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-brand-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-black transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-brand-gray-200 rounded-xl focus:outline-none focus:border-brand-navy transition-colors bg-white font-sans placeholder:text-brand-gray-400"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-brand-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-black transition-colors"
-          >
-            <option value="">All Statuses</option>
-            {ORDER_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {ORDER_STATUS_LABELS[s] || s}
-              </option>
-            ))}
-          </select>
-          <select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value)}
-            className="border border-brand-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-black transition-colors"
-          >
-            <option value="">All Payments</option>
-            {PAYMENT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {PAYMENT_STATUS_LABELS[s] || s}
-              </option>
-            ))}
-          </select>
-          <select
-            value={methodFilter}
-            onChange={(e) => setMethodFilter(e.target.value)}
-            className="border border-brand-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-brand-black transition-colors"
-          >
-            <option value="">All Payment Methods</option>
-            {PAYMENT_METHODS.map((m) => (
-              <option key={m} value={m}>
-                {m === "COD" ? "Cash on Delivery (COD)" : "Online"}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap sm:flex-nowrap gap-2.5">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-brand-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase tracking-wider focus:outline-none focus:border-brand-navy transition-colors bg-white text-brand-dark cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              {ORDER_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {ORDER_STATUS_LABELS[s] || s}
+                </option>
+              ))}
+            </select>
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="border border-brand-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase tracking-wider focus:outline-none focus:border-brand-navy transition-colors bg-white text-brand-dark cursor-pointer"
+            >
+              <option value="">All Payments</option>
+              {PAYMENT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {PAYMENT_STATUS_LABELS[s] || s}
+                </option>
+              ))}
+            </select>
+            <select
+              value={methodFilter}
+              onChange={(e) => setMethodFilter(e.target.value)}
+              className="border border-brand-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase tracking-wider focus:outline-none focus:border-brand-navy transition-colors bg-white text-brand-dark cursor-pointer"
+            >
+              <option value="">All Methods</option>
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {m === "COD" ? "Cash on Delivery" : "Online"}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 text-sm mb-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 text-sm rounded-xl">
           {error}
         </div>
       )}
 
-      <div className="bg-white border border-brand-gray-200">
+      {/* Orders Table Container */}
+      <div className="bg-white border border-brand-gray-200/90 rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
         {loading ? (
-          <div className="p-12 text-center">
-            <p className="text-brand-gray-400 font-mono text-sm">Loading...</p>
+          <div className="p-16 text-center">
+            <div className="inline-block w-8 h-8 border-2 border-brand-navy border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-brand-gray-400 font-mono text-xs uppercase tracking-widest">
+              Loading orders...
+            </p>
           </div>
         ) : orders.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-brand-gray-400 font-mono text-sm">
+          <div className="p-16 text-center">
+            <p className="font-serif text-2xl text-brand-navy mb-1 font-normal">No orders found.</p>
+            <p className="text-brand-gray-400 font-mono text-xs uppercase tracking-wider">
               {searchQuery || statusFilter || paymentFilter || methodFilter
-                ? "No orders match your filters"
-                : "No orders yet"}
+                ? "Try adjusting your search criteria or active filters."
+                : "New customer orders will appear here."}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-brand-gray-100 text-left">
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                <tr className="border-b border-brand-gray-100 bg-[#fafbfc] text-left">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Order ID
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Customer
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium text-center">
                     Items
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium text-right">
                     Total
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Order Status
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Method
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Payment Status
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium">
                     Date
                   </th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">
-                    Actions
+                  <th className="px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.15em] text-brand-gray-400 font-medium text-right">
+                    Action
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-brand-gray-100">
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="border-b border-brand-gray-50 hover:bg-brand-gray-50"
+                    className="hover:bg-[#fafbfc]/80 transition-colors"
                   >
-                    <td className="px-4 py-3 font-mono text-xs">
+                    <td className="px-5 py-4 font-mono text-xs font-medium text-brand-navy">
                       #{order.id.slice(0, 8)}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {order.user.image && (
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2.5">
+                        {order.user.image ? (
                           <img
                             src={order.user.image}
                             alt=""
-                            className="w-6 h-6 rounded-full object-cover border border-brand-gray-100"
+                            className="w-7 h-7 rounded-full object-cover border border-brand-gray-200"
                           />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-brand-sky/60 border border-brand-sky-border/80 flex items-center justify-center font-mono text-[10px] text-brand-navy font-semibold">
+                            {order.user.name ? order.user.name.charAt(0).toUpperCase() : "C"}
+                          </div>
                         )}
-                        <div>
-                          <p className="text-sm">{order.user.name || "—"}</p>
-                          <p className="text-xs text-brand-gray-400 font-mono">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-brand-dark truncate">
+                            {order.user.name || "Customer"}
+                          </p>
+                          <p className="text-xs text-brand-gray-400 font-mono truncate">
                             {order.user.email}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-center">
+                    <td className="px-5 py-4 font-mono text-xs text-center text-brand-gray-600 font-medium">
                       {order.items.reduce((sum, item) => sum + item.quantity, 0)}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-right font-medium">
+                    <td className="px-5 py-4 font-mono text-sm text-right font-semibold text-brand-navy">
                       {formatINR(order.total)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <select
                         value={order.orderStatus}
                         onChange={(e) =>
                           requestStatusUpdate(order.id, "orderStatus", e.target.value)
                         }
                         disabled={updatingOrder === order.id}
-                        className={`text-xs px-2.5 py-1 border font-mono focus:outline-none disabled:opacity-50 ${
+                        className={`text-xs px-2.5 py-1 rounded-full border font-mono font-medium focus:outline-none transition-colors cursor-pointer disabled:opacity-50 ${
                           ORDER_STATUS_COLORS[order.orderStatus as OrderStatus] ||
                           "bg-gray-50 text-gray-600 border-gray-200"
                         }`}
@@ -400,25 +429,25 @@ export default function AdminOrdersPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-mono font-medium border ${
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium border ${
                           order.paymentMethod === "COD"
-                            ? "bg-orange-50 text-orange-700 border-orange-200"
-                            : "bg-blue-50 text-blue-700 border-blue-200"
+                            ? "bg-orange-50 text-orange-700 border-orange-200/80"
+                            : "bg-blue-50 text-blue-700 border-blue-200/80"
                         }`}
                       >
                         {order.paymentMethod === "COD" ? "COD" : "Online"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <select
                         value={order.paymentStatus}
                         onChange={(e) =>
                           requestStatusUpdate(order.id, "paymentStatus", e.target.value)
                         }
                         disabled={updatingOrder === order.id}
-                        className={`text-xs px-2.5 py-1 border font-mono focus:outline-none disabled:opacity-50 ${
+                        className={`text-xs px-2.5 py-1 rounded-full border font-mono font-medium focus:outline-none transition-colors cursor-pointer disabled:opacity-50 ${
                           PAYMENT_STATUS_COLORS[order.paymentStatus as PaymentStatus] ||
                           "bg-gray-50 text-gray-600 border-gray-200"
                         }`}
@@ -430,19 +459,20 @@ export default function AdminOrdersPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-brand-gray-400">
+                    <td className="px-5 py-4 font-mono text-xs text-brand-gray-400">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
                       })}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-5 py-4 text-right">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="text-xs font-mono uppercase tracking-wide text-brand-gray-400 hover:text-brand-black transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue border border-brand-gray-200 hover:border-brand-navy px-3 py-1.5 rounded-lg transition-colors font-medium"
                       >
-                        View
+                        <span>View</span>
+                        <ChevronRight size={13} />
                       </Link>
                     </td>
                   </tr>
@@ -453,7 +483,7 @@ export default function AdminOrdersPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="border-t border-brand-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="border-t border-brand-gray-100 px-6 py-4 flex items-center justify-between">
             <p className="text-brand-gray-400 font-mono text-xs">
               Page {page} of {totalPages}
             </p>
@@ -461,14 +491,14 @@ export default function AdminOrdersPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-4 py-1.5 border border-brand-gray-200 text-sm font-mono disabled:opacity-30 hover:border-brand-black transition-colors"
+                className="px-4 py-1.5 border border-brand-gray-200 rounded-lg text-xs font-mono uppercase tracking-wider disabled:opacity-30 hover:border-brand-navy transition-colors"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-4 py-1.5 border border-brand-gray-200 text-sm font-mono disabled:opacity-30 hover:border-brand-black transition-colors"
+                className="px-4 py-1.5 border border-brand-gray-200 rounded-lg text-xs font-mono uppercase tracking-wider disabled:opacity-30 hover:border-brand-navy transition-colors"
               >
                 Next
               </button>
@@ -477,19 +507,29 @@ export default function AdminOrdersPage() {
         )}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Premium Confirmation Modal */}
       {confirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white max-w-md w-full p-6 border border-brand-gray-200 shadow-xl space-y-4">
-            <h3 className="font-serif text-xl">{confirmModal.title}</h3>
-            <p className="text-sm font-mono text-brand-gray-600 leading-relaxed">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-navy/40 backdrop-blur-xs">
+          <div className="bg-white border border-brand-gray-200 rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="font-serif text-xl text-brand-navy font-normal">{confirmModal.title}</h3>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-brand-gray-400">
+                  Target status: {confirmModal.value}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm font-sans text-brand-gray-600 leading-relaxed pt-1">
               {confirmModal.description}
             </p>
             <div className="flex justify-end gap-3 pt-4 border-t border-brand-gray-100">
               <button
                 type="button"
                 onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 border border-brand-gray-200 text-xs font-mono uppercase tracking-wide hover:border-brand-black transition-colors"
+                className="px-4 py-2 border border-brand-gray-300 rounded-xl text-xs font-mono uppercase tracking-wider text-brand-dark hover:bg-brand-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -500,9 +540,9 @@ export default function AdminOrdersPage() {
                   setConfirmModal(null);
                   executeStatusUpdate(orderId, field, value);
                 }}
-                className="px-4 py-2 bg-brand-black text-white text-xs font-mono uppercase tracking-wide hover:bg-neutral-800 transition-colors"
+                className="px-5 py-2 bg-brand-navy hover:bg-[#1a365d] text-white text-xs font-mono uppercase tracking-wider rounded-xl transition-colors shadow-xs"
               >
-                Confirm
+                Confirm Change
               </button>
             </div>
           </div>
