@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { StoreContainer } from "@/components/store/StoreContainer";
 
 export const metadata: Metadata = {
   title: "Return & Refund Policy | KNOOS",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 
 export default function ReturnsRefundsPage() {
   return (
-    <main className="max-w-4xl mx-auto px-6 md:px-12 lg:px-16 py-16 md:py-24 text-brand-dark">
+    <main className="bg-brand-surface min-h-screen py-12 sm:py-20 text-brand-dark">
+      <StoreContainer>
+        <div className="max-w-4xl mx-auto bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-14 lg:p-16 shadow-xs">
       {/* Policy Header */}
       <div className="border-b border-brand-sky-border/80 pb-10 mb-12">
         <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-3">
@@ -245,6 +248,8 @@ export default function ReturnsRefundsPage() {
           </div>
         </section>
       </div>
+      </div>
+      </StoreContainer>
     </main>
   );
 }

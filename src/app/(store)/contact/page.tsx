@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { StoreContainer } from "@/components/store/StoreContainer";
+import { Phone, MessageCircle, Mail, MapPin, Clock, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Us | KNOOS",
@@ -8,175 +10,171 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-16 md:py-24">
-      {/* Header section */}
-      <div className="max-w-3xl mb-16">
-        <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-3">
-          Customer Support &amp; Inquiries
-        </span>
-        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl tracking-tight mb-6 text-brand-dark">
-          Contact Us
-        </h1>
-        <p className="text-brand-gray-600 text-base md:text-lg leading-relaxed">
-          We are here to assist you with order inquiries, sizing questions, product details, and return requests. Reach out to the KNOOS customer support team through any of our direct channels below.
-        </p>
-      </div>
-
-      {/* Primary Direct Action CTAs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-        {/* Call CTA */}
-        <div className="border border-brand-sky-border/60 bg-gradient-to-b from-white to-brand-sky/20 rounded-2xl p-8 flex flex-col justify-between hover:border-brand-blue/50 hover:shadow-md transition-all">
-          <div>
-            <div className="w-10 h-10 rounded-full bg-brand-sky text-brand-navy flex items-center justify-center mb-6">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-            </div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-1">
-              Direct Phone
-            </span>
-            <h2 className="font-serif text-2xl mb-2 text-brand-navy">Call Us</h2>
-            <p className="text-sm text-brand-gray-500 mb-6 leading-relaxed">
-              Speak directly with our support team during business hours.
-            </p>
-            <p className="font-mono text-base font-medium text-brand-navy mb-6">
-              7088808882
-            </p>
-          </div>
-          <a
-            href="tel:7088808882"
-            className="inline-flex items-center justify-center w-full py-3 px-4 bg-brand-navy text-white text-xs font-mono uppercase tracking-widest hover:bg-brand-blue rounded-xl transition-colors shadow-sm"
-          >
-            Call 7088808882
-          </a>
+    <main className="bg-brand-surface min-h-screen py-12 sm:py-20 lg:py-24">
+      <StoreContainer>
+        {/* Header */}
+        <div className="max-w-3xl mb-14 sm:mb-20">
+          <span className="font-mono text-xs uppercase tracking-[0.25em] text-brand-blue font-semibold block mb-3">
+            CUSTOMER CARE &bull; DEDICATED SUPPORT
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-brand-dark tracking-tight leading-[1.1] mb-6">
+            Get in Touch
+          </h1>
+          <p className="text-neutral-600 text-base sm:text-lg font-light leading-relaxed">
+            Our concierge team is available to assist you with sizing recommendations, order tracking, returns, and bespoke corporate orders.
+          </p>
         </div>
 
-        {/* WhatsApp CTA */}
-        <div className="border border-brand-sky-border/60 bg-gradient-to-b from-white to-brand-sky/20 rounded-2xl p-8 flex flex-col justify-between hover:border-brand-blue/50 hover:shadow-md transition-all">
-          <div>
-            <div className="w-10 h-10 rounded-full bg-brand-sky text-brand-navy flex items-center justify-center mb-6">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-              </svg>
+        {/* 3 Contact Channels */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-16 sm:mb-20">
+          {/* Phone */}
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-10 shadow-xs flex flex-col justify-between hover:border-brand-blue/50 transition-colors">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-brand-sky/40 border border-brand-sky-border flex items-center justify-center text-brand-blue mb-6 shadow-2xs">
+                <Phone size={20} />
+              </div>
+              <span className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-semibold block mb-2">
+                DIRECT LINE
+              </span>
+              <h2 className="font-serif text-2xl text-brand-dark mb-2 font-medium">Telephone</h2>
+              <p className="text-sm text-neutral-500 font-light mb-6 leading-relaxed">
+                Direct phone support for immediate order questions and logistics updates.
+              </p>
+              <p className="font-mono text-lg font-semibold text-neutral-900 mb-8">
+                +91 70888 08882
+              </p>
             </div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-1">
-              Instant Messaging
-            </span>
-            <h2 className="font-serif text-2xl mb-2 text-brand-navy">WhatsApp</h2>
-            <p className="text-sm text-brand-gray-500 mb-6 leading-relaxed">
-              Send a quick message, photos, or unboxing videos for instant assistance.
-            </p>
-            <p className="font-mono text-base font-medium text-brand-navy mb-6">
-              7088808882
-            </p>
-          </div>
-          <a
-            href="https://wa.me/917088808882"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-full py-3 px-4 bg-brand-navy text-white text-xs font-mono uppercase tracking-widest hover:bg-brand-blue rounded-xl transition-colors shadow-sm"
-          >
-            Chat on WhatsApp
-          </a>
-        </div>
-
-        {/* Email CTA */}
-        <div className="border border-brand-sky-border/60 bg-gradient-to-b from-white to-brand-sky/20 rounded-2xl p-8 flex flex-col justify-between hover:border-brand-blue/50 hover:shadow-md transition-all">
-          <div>
-            <div className="w-10 h-10 rounded-full bg-brand-sky text-brand-navy flex items-center justify-center mb-6">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-            </div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-1">
-              Email Support
-            </span>
-            <h2 className="font-serif text-2xl mb-2 text-brand-navy">Email Us</h2>
-            <p className="text-sm text-brand-gray-500 mb-6 leading-relaxed">
-              Send us detailed inquiries or official return/exchange documentation.
-            </p>
-            <p className="font-mono text-xs md:text-sm font-medium text-brand-navy mb-6 break-all">
-              KKSHOECOMPANY@GMAIL.COM
-            </p>
-          </div>
-          <a
-            href="mailto:KKSHOECOMPANY@GMAIL.COM"
-            className="inline-flex items-center justify-center w-full py-3 px-4 bg-brand-navy text-white text-xs font-mono uppercase tracking-widest hover:bg-brand-blue rounded-xl transition-colors shadow-sm"
-          >
-            Send Email
-          </a>
-        </div>
-      </div>
-
-      {/* Official Business Information Section */}
-      <div className="border border-brand-sky-border/60 bg-brand-sky/20 rounded-2xl p-8 md:p-12">
-        <h2 className="font-serif text-2xl md:text-3xl mb-8 text-brand-navy">
-          Business &amp; Operations Details
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-2">
-              Brand &amp; Company
-            </span>
-            <div className="font-medium text-brand-navy text-base">KNOOS</div>
-            <div className="text-sm text-brand-gray-600 mt-1">KRIPA KIRAN SHOE COMPANY</div>
-          </div>
-
-          <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-2">
-              Registered Address
-            </span>
-            <address className="not-italic text-sm text-brand-gray-600 leading-relaxed">
-              15/5 SORON KTRA SHAHGANJ<br />
-              AGRA - 282010
-            </address>
-          </div>
-
-          <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-2">
-              Operating Hours
-            </span>
-            <div className="text-sm text-brand-gray-600">
-              Monday – Sunday<br />
-              <span className="font-medium text-brand-navy">10 AM – 7 PM</span>
-            </div>
-          </div>
-
-          <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-2">
-              Instagram
-            </span>
             <a
-              href="https://www.instagram.com/knoosshoes"
+              href="tel:7088808882"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium shadow-xs"
+            >
+              <span>Call Team</span>
+              <ArrowRight size={13} />
+            </a>
+          </div>
+
+          {/* WhatsApp */}
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-10 shadow-xs flex flex-col justify-between hover:border-brand-blue/50 transition-colors">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 mb-6 shadow-2xs">
+                <MessageCircle size={20} />
+              </div>
+              <span className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-700 font-semibold block mb-2">
+                INSTANT MESSAGING
+              </span>
+              <h2 className="font-serif text-2xl text-brand-dark mb-2 font-medium">WhatsApp</h2>
+              <p className="text-sm text-neutral-500 font-light mb-6 leading-relaxed">
+                Send unboxing photos, fit inquiries, or exchange requests for quick replies.
+              </p>
+              <p className="font-mono text-lg font-semibold text-neutral-900 mb-8">
+                +91 70888 08882
+              </p>
+            </div>
+            <a
+              href="https://wa.me/917088808882"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-mono text-brand-navy hover:text-brand-blue hover:underline transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium shadow-xs"
             >
-              @KNOOSSHOES
+              <span>Chat on WhatsApp</span>
+              <ArrowRight size={13} />
+            </a>
+          </div>
+
+          {/* Email */}
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-10 shadow-xs flex flex-col justify-between hover:border-brand-blue/50 transition-colors">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-brand-sky/40 border border-brand-sky-border flex items-center justify-center text-brand-blue mb-6 shadow-2xs">
+                <Mail size={20} />
+              </div>
+              <span className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-semibold block mb-2">
+                OFFICIAL INBOX
+              </span>
+              <h2 className="font-serif text-2xl text-brand-dark mb-2 font-medium">Email Care</h2>
+              <p className="text-sm text-neutral-500 font-light mb-6 leading-relaxed">
+                Send formal return documentation, corporate gifting, or feedback.
+              </p>
+              <p className="font-mono text-xs sm:text-sm font-semibold text-neutral-900 mb-8 break-all">
+                kkshoeco@gmail.com
+              </p>
+            </div>
+            <a
+              href="mailto:kkshoeco@gmail.com"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium shadow-xs"
+            >
+              <span>Compose Email</span>
+              <ArrowRight size={13} />
             </a>
           </div>
         </div>
-      </div>
 
-      {/* Helpful Links */}
-      <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-brand-sky-border/80 pt-8">
-        <span className="text-xs text-brand-gray-500 font-mono">
-          Looking for policy details?
-        </span>
-        <div className="flex flex-wrap items-center gap-6 text-xs font-mono uppercase tracking-widest">
-          <Link href="/returns-refunds" className="text-brand-gray-600 hover:text-brand-blue transition-colors">
-            Return &amp; Refund Policy &rarr;
-          </Link>
-          <Link href="/terms" className="text-brand-gray-600 hover:text-brand-blue transition-colors">
-            Terms &amp; Conditions &rarr;
-          </Link>
-          <Link href="/privacy" className="text-brand-gray-600 hover:text-brand-blue transition-colors">
-            Privacy Policy &rarr;
-          </Link>
+        {/* Operating Hours & Registered Studio Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-10 shadow-xs">
+            <div className="flex items-center gap-3 mb-6">
+              <MapPin size={22} className="text-brand-blue" />
+              <h3 className="font-serif text-2xl text-brand-dark font-medium">Headquarters &amp; Workshop</h3>
+            </div>
+            <p className="font-mono text-sm text-neutral-900 font-semibold mb-2">
+              KRIPA KIRAN SHOE COMPANY
+            </p>
+            <p className="text-neutral-600 text-sm leading-relaxed font-light mb-6">
+              15/5 Soron Ktra, Shahganj, Agra, Uttar Pradesh - 282010, India
+            </p>
+            <div className="p-4 rounded-xl bg-brand-surface border border-brand-sky-border/60 text-xs font-mono text-neutral-600">
+              Central dispatch hub for all pan-India shipments.
+            </div>
+          </div>
+
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-10 shadow-xs">
+            <div className="flex items-center gap-3 mb-6">
+              <Clock size={22} className="text-brand-blue" />
+              <h3 className="font-serif text-2xl text-brand-dark font-medium">Operating Hours</h3>
+            </div>
+            <div className="space-y-4 font-mono text-xs">
+              <div className="flex justify-between items-center pb-3 border-b border-neutral-100">
+                <span className="text-neutral-500 uppercase tracking-wider">Monday &ndash; Saturday</span>
+                <span className="text-neutral-900 font-semibold">10:00 AM &ndash; 7:00 PM IST</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-neutral-100">
+                <span className="text-neutral-500 uppercase tracking-wider">Sunday</span>
+                <span className="text-neutral-400">Closed (Inquiries answered Monday)</span>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-neutral-500 uppercase tracking-wider">Average Response Time</span>
+                <span className="text-emerald-700 font-semibold">&lt; 2 Hours on WhatsApp</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        {/* Quick Links Help Strip */}
+        <div className="bg-gradient-to-r from-brand-navy to-neutral-950 rounded-3xl p-8 sm:p-12 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-lg">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-widest text-brand-gold block mb-2">
+              SELF-SERVICE RESOURCES
+            </span>
+            <h3 className="font-serif text-2xl sm:text-3xl">Looking for quick answers?</h3>
+            <p className="text-neutral-400 text-sm font-light mt-1">
+              Check our sizing conversions, return procedure, or common ordering questions.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/faq"
+              className="px-6 py-3 bg-white text-neutral-950 font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-brand-blue hover:text-white transition-colors shadow-xs"
+            >
+              Read FAQs
+            </Link>
+            <Link
+              href="/returns-refunds"
+              className="px-6 py-3 border border-white/30 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-white hover:text-neutral-950 transition-colors"
+            >
+              Return Policy
+            </Link>
+          </div>
+        </div>
+      </StoreContainer>
     </main>
   );
 }

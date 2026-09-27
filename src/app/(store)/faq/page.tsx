@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { FaqAccordion } from "@/components/faq/FaqAccordion";
+import { StoreContainer } from "@/components/store/StoreContainer";
 
 const customerFaqs = [
   {
@@ -110,17 +111,22 @@ export default async function FaqPage() {
   ];
 
   return (
-    <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-16 md:py-24">
-      <div className="max-w-3xl mx-auto text-center mb-16">
-        <h1 className="font-serif text-4xl md:text-5xl text-brand-dark mb-6 tracking-tight">
-          Frequently Asked Questions
-        </h1>
-        <p className="font-mono text-xs md:text-sm uppercase tracking-widest text-brand-blue font-medium">
-          Everything you need to know about our products and services.
-        </p>
-      </div>
-      
-      <FaqAccordion faqs={faqs} />
+    <main className="bg-brand-surface min-h-screen py-12 sm:py-20 lg:py-24">
+      <StoreContainer>
+        <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
+          <span className="font-mono text-xs uppercase tracking-[0.25em] text-brand-blue font-semibold block mb-3">
+            CONCIERGE &bull; ASSISTANCE
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-brand-dark mb-4 tracking-tight leading-[1.1]">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-neutral-500 text-sm sm:text-base font-light max-w-xl mx-auto">
+            Everything you need to know regarding fits, artisanal leathers, dispatch, and doorstep exchanges.
+          </p>
+        </div>
+
+        <FaqAccordion faqs={faqs} />
+      </StoreContainer>
     </main>
   );
 }
