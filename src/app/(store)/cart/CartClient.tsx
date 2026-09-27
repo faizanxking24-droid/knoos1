@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CouponEntry } from "@/components/cart/CouponEntry";
 import { APPLIED_COUPON_STORAGE_KEY, type CouponApplication } from "@/lib/coupon";
 import { FallbackImage } from "@/components/ui/FallbackImage";
+import { ArrowRight, Trash2, ShoppingBag, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 
 interface CartItemData {
   id: string;
@@ -87,16 +88,16 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
 
   const handleQuantityUpdate = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    
-    const item = items.find(i => i.id === itemId);
+
+    const item = items.find((i) => i.id === itemId);
     if (!item) return;
-    
+
     if (newQuantity > item.stock) {
       alert(`Only ${item.stock} available in stock.`);
       return;
     }
 
-    setLoadingIds(prev => new Set(prev).add(itemId));
+    setLoadingIds((prev) => new Set(prev).add(itemId));
 
     try {
       const res = await fetch("/api/cart", {
@@ -122,7 +123,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
     } catch (error: any) {
       alert(error.message);
     } finally {
-      setLoadingIds(prev => {
+      setLoadingIds((prev) => {
         const next = new Set(prev);
         next.delete(itemId);
         return next;
@@ -131,7 +132,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
   };
 
   const handleRemove = async (itemId: string) => {
-    setLoadingIds(prev => new Set(prev).add(itemId));
+    setLoadingIds((prev) => new Set(prev).add(itemId));
 
     try {
       const res = await fetch("/api/cart", {
@@ -156,7 +157,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
       router.refresh();
     } catch (error: any) {
       alert(error.message);
-      setLoadingIds(prev => {
+      setLoadingIds((prev) => {
         const next = new Set(prev);
         next.delete(itemId);
         return next;
@@ -166,183 +167,226 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
 
   if (items.length === 0) {
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center py-20 text-center"
-      >
-        <h2 className="font-serif text-3xl mb-4">YOUR CART IS EMPTY</h2>
-        <p className="text-brand-gray-500 font-mono text-sm uppercase tracking-widest mb-10">
-          Discover something worth walking in.
+      <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-10 sm:p-16 text-center max-w-2xl mx-auto shadow-xs">
+        <div className="w-16 h-16 rounded-2xl bg-brand-sky/40 border border-brand-sky-border flex items-center justify-center text-brand-blue mx-auto mb-6 shadow-2xs">
+          <ShoppingBag size={28} />
+        </div>
+        <h2 className="font-serif text-3xl text-brand-dark mb-3">Your Bag is Empty</h2>
+        <p className="text-neutral-500 font-light text-base mb-8 max-w-md mx-auto">
+          Discover handcrafted leather silhouettes engineered for effortless everyday comfort.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link href="/men" className="bg-brand-navy hover:bg-brand-blue text-white px-8 py-4 font-mono text-sm uppercase tracking-widest transition-colors rounded-lg shadow-md text-center">
-            Shop Men
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/men"
+            className="w-full sm:w-auto px-8 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium shadow-sm"
+          >
+            Explore Men
           </Link>
-          <Link href="/women" className="border border-brand-navy text-brand-navy hover:bg-brand-sky/30 px-8 py-4 font-mono text-sm uppercase tracking-widest transition-colors rounded-lg text-center">
-            Shop Women
+          <Link
+            href="/women"
+            className="w-full sm:w-auto px-8 py-3.5 border border-neutral-300 hover:border-neutral-900 bg-neutral-50 hover:bg-white text-neutral-800 font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium"
+          >
+            Explore Women
           </Link>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   const estimatedSubtotal = subtotal - (coupon?.discountAmount ?? 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-      <div className="lg:col-span-2 flex flex-col gap-8">
-        <AnimatePresence>
-          {items.map((item) => {
-            const isLoading = loadingIds.has(item.id);
-            const isUnavailable = item.productStatus !== "ACTIVE";
-            const isOutOfStock = item.stock <= 0;
-            const exceedsStock = item.quantity > item.stock;
-            
-            return (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                key={item.id} 
-                className={`flex flex-col sm:flex-row gap-6 border-b border-brand-sky-border/25 pb-8 ${isLoading ? 'opacity-50' : ''}`}
-              >
-                <div className="w-full sm:w-32 h-40 bg-brand-sky/20 border border-brand-sky-border/30 rounded-xl overflow-hidden relative shrink-0">
-                  {item.imageUrl ? (
-                    <FallbackImage
-                      src={item.imageUrl}
-                      alt={item.productName}
-                      fill
-                      className="object-cover"
-                      fallbackType="product"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-brand-gray-400 font-mono text-xs">No image</div>
-                  )}
-                </div>
-                <div className="flex flex-col flex-grow justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <Link href={`/product/${item.slug}`} className="font-serif text-xl text-brand-dark hover:text-brand-blue transition-colors">
-                        {item.productName}
-                      </Link>
-                      <span className="font-mono text-sm text-brand-dark font-medium">₹{item.price.toLocaleString('en-IN')}</span>
-                    </div>
-                    <p className="font-mono text-xs text-brand-gray-500 uppercase tracking-widest mb-4">
-                      Color: {item.color || "Not specified"} · Size: {item.size}
-                    </p>
-                    
-                    {isUnavailable && <p className="text-red-600 text-sm mb-2 font-medium">This product is no longer available.</p>}
-                    {!isUnavailable && isOutOfStock && <p className="text-red-600 text-sm mb-2 font-medium">Selected size is unavailable.</p>}
-                    {!isUnavailable && !isOutOfStock && exceedsStock && (
-                      <p className="text-amber-700 text-sm mb-2 font-medium">
-                        Only {item.stock} available. Please reduce your quantity.
-                      </p>
+    <div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        {/* Cart Items List (Cols 1-7) */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          <AnimatePresence>
+            {items.map((item) => {
+              const isLoading = loadingIds.has(item.id);
+              const isUnavailable = item.productStatus !== "ACTIVE";
+              const isOutOfStock = item.stock <= 0;
+              const exceedsStock = item.quantity > item.stock;
+
+              return (
+                <motion.div
+                  layout
+                  initial={false}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  key={item.id}
+                  className={`bg-white border border-brand-sky-border/60 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row gap-5 ${
+                    isLoading ? "opacity-50" : ""
+                  }`}
+                >
+                  {/* Thumbnail */}
+                  <div className="w-full sm:w-28 h-36 bg-[#F6F7F9] border border-neutral-200/70 rounded-xl overflow-hidden relative shrink-0">
+                    {item.imageUrl ? (
+                      <FallbackImage
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        fill
+                        className="object-cover p-2"
+                        fallbackType="product"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-neutral-400 font-mono text-xs">
+                        No image
+                      </div>
                     )}
                   </div>
-                  
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center border border-brand-gray-200 rounded-lg overflow-hidden bg-white">
+
+                  {/* Info & Controls */}
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start gap-4 mb-1">
+                        <Link
+                          href={`/product/${item.slug}`}
+                          className="font-serif text-lg sm:text-xl text-brand-dark hover:text-brand-blue transition-colors font-medium"
+                        >
+                          {item.productName}
+                        </Link>
+                        <span className="font-mono text-base font-semibold text-neutral-900 shrink-0">
+                          ₹{item.total.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+
+                      <p className="font-mono text-xs text-neutral-500 uppercase tracking-wider mb-4">
+                        Size: {item.size} {item.color ? `• Color: ${item.color}` : ""}
+                      </p>
+
+                      {isUnavailable && (
+                        <p className="text-red-600 text-xs font-mono mb-2">This product is no longer active.</p>
+                      )}
+                      {!isUnavailable && isOutOfStock && (
+                        <p className="text-red-600 text-xs font-mono mb-2">Selected size is currently out of stock.</p>
+                      )}
+                      {!isUnavailable && !isOutOfStock && exceedsStock && (
+                        <p className="text-amber-700 text-xs font-mono mb-2">
+                          Quantity adjusted to available stock ({item.stock}).
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Stepper & Remove */}
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+                      {/* Stepper */}
+                      <div className="flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-white shadow-2xs">
+                        <button
+                          onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1 || isLoading}
+                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-xs font-mono"
+                          aria-label="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <span className="px-3 py-1 font-mono text-xs w-8 text-center text-neutral-900 font-medium">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock || isLoading}
+                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-xs font-mono"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Remove Button */}
                       <button
-                        onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1 || isLoading}
-                        className="px-3 py-1 text-brand-gray-500 hover:text-brand-navy hover:bg-brand-sky/40 disabled:opacity-30 transition-colors"
+                        onClick={() => handleRemove(item.id)}
+                        disabled={isLoading}
+                        className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-400 hover:text-red-600 transition-colors py-1 px-2 rounded-md hover:bg-red-50"
+                        aria-label={`Remove ${item.productName} from bag`}
                       >
-                        -
-                      </button>
-                      <motion.span 
-                        key={item.quantity} 
-                        initial={{ opacity: 0.5, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="px-3 py-1 font-mono text-sm w-10 text-center text-brand-dark"
-                      >
-                        {item.quantity}
-                      </motion.span>
-                      <button
-                        onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
-                        disabled={item.quantity >= item.stock || isLoading}
-                        className="px-3 py-1 text-brand-gray-500 hover:text-brand-navy hover:bg-brand-sky/40 disabled:opacity-30 transition-colors"
-                      >
-                        +
+                        <Trash2 size={13} />
+                        <span>Remove</span>
                       </button>
                     </div>
-                    
-                    <button
-                      onClick={() => handleRemove(item.id)}
-                      disabled={isLoading}
-                      className="font-mono text-xs text-brand-gray-400 hover:text-red-600 uppercase tracking-widest transition-colors underline underline-offset-4"
-                    >
-                      Remove
-                    </button>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-        
-        {recommendationsSlot && (
-          <div className="mt-8">
-            {recommendationsSlot}
-          </div>
-        )}
-      </div>
-      
-      <div>
-        <div className="bg-gradient-to-b from-brand-sky/40 to-brand-sky/10 border border-brand-sky-border/40 p-8 rounded-2xl sticky top-24 shadow-sm">
-          <h3 className="font-serif text-2xl mb-6 text-brand-dark">Summary</h3>
-          <div className="flex justify-between items-center mb-6 font-mono text-sm text-brand-dark">
-            <span className="uppercase tracking-widest text-brand-gray-600">Subtotal</span>
-            <motion.span
-              key={subtotal}
-              initial={{ opacity: 0.5, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="font-medium"
-            >
-              ₹{subtotal.toLocaleString('en-IN')}
-            </motion.span>
-          </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
-          <CouponEntry
-            code={couponCode}
-            application={coupon}
-            error={couponError}
-            applying={applyingCoupon}
-            onCodeChange={(code) => {
-              setCouponCode(code);
-              setCouponError(null);
-            }}
-            onApply={applyCoupon}
-            onRemove={removeCoupon}
-          />
+        {/* Order Summary Card (Cols 8-12) */}
+        <div className="lg:col-span-5 sticky top-28">
+          <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-6 sm:p-8 shadow-xs">
+            <h2 className="font-serif text-2xl text-brand-dark mb-6 font-medium">Summary</h2>
 
-          {coupon && (
-            <div className="mb-6 space-y-3 border-t border-brand-sky-border/40 pt-5 font-mono text-sm text-brand-dark">
-              <div className="flex justify-between">
-                <span className="text-brand-gray-600">Coupon discount</span>
-                <span className="text-green-700 font-medium">-₹{coupon.discountAmount.toLocaleString("en-IN")}</span>
+            {/* Subtotal Rows */}
+            <div className="space-y-3.5 pb-6 border-b border-neutral-100 font-mono text-xs">
+              <div className="flex justify-between items-center text-neutral-600">
+                <span>Subtotal</span>
+                <span className="font-semibold text-neutral-900">
+                  ₹{subtotal.toLocaleString("en-IN")}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="uppercase tracking-widest text-brand-gray-600">Estimated subtotal</span>
-                <motion.span key={estimatedSubtotal} initial={{ opacity: 0.5 }} animate={{ opacity: 1 }} className="font-medium">
-                  ₹{estimatedSubtotal.toLocaleString("en-IN")}
-                </motion.span>
+
+              {coupon && (
+                <div className="flex justify-between items-center text-emerald-700">
+                  <span>Coupon ({coupon.code})</span>
+                  <span>-₹{coupon.discountAmount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-neutral-600">
+                <span>Estimated Shipping</span>
+                <span className="text-emerald-700 font-medium uppercase tracking-wider">Free</span>
               </div>
             </div>
-          )}
-          
-          <Link href="/checkout" className="block w-full bg-brand-navy hover:bg-brand-blue text-white py-4 font-mono text-sm uppercase tracking-widest text-center transition-all duration-300 rounded-lg shadow-md hover:shadow-lg mb-4">
-            Checkout
-          </Link>
-          
-          <p className="text-xs text-brand-gray-500 font-mono uppercase tracking-widest text-center">
-            Shipping & taxes calculated at checkout
-          </p>
+
+            {/* Total Row */}
+            <div className="flex justify-between items-baseline py-5 border-b border-neutral-100 mb-6">
+              <span className="font-serif text-lg text-brand-dark font-medium">Total</span>
+              <span className="font-serif text-2xl text-neutral-950 font-semibold">
+                ₹{Math.max(0, estimatedSubtotal).toLocaleString("en-IN")}
+              </span>
+            </div>
+
+            {/* Coupon Entry Component */}
+            <div className="mb-6">
+              <CouponEntry
+                code={couponCode}
+                setCode={setCouponCode}
+                onApply={applyCoupon}
+                onRemove={removeCoupon}
+                appliedCoupon={coupon}
+                error={couponError}
+                loading={applyingCoupon}
+              />
+            </div>
+
+            {/* Primary Checkout CTA */}
+            <Link
+              href="/checkout"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-xl transition-all shadow-md active:scale-[0.99]"
+            >
+              <span>Proceed to Checkout</span>
+              <ArrowRight size={14} />
+            </Link>
+
+            {/* Reassurance Micro-items */}
+            <div className="mt-6 pt-5 border-t border-neutral-100 space-y-2 text-xs font-mono text-neutral-500">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} className="text-brand-blue shrink-0" />
+                <span>256-bit Encrypted Checkout</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck size={14} className="text-brand-blue shrink-0" />
+                <span>Complimentary Insured Shipping</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <RotateCcw size={14} className="text-brand-blue shrink-0" />
+                <span>3-Day Hassle-Free Exchange Window</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {recommendationsSlot}
     </div>
   );
 }
-
