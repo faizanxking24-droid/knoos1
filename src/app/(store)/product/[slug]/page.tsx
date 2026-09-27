@@ -6,6 +6,7 @@ import { ProductInfo } from "@/components/product/ProductInfo";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { ProductRecommendations } from "@/components/product/ProductRecommendations";
 import { getRecommendations } from "@/lib/recommendations";
+import { StoreContainer } from "@/components/store/StoreContainer";
 interface ProductPageProps {
   params: Promise<{
     slug: string;
@@ -169,19 +170,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
   });
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-12 md:py-20">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-        <div className="w-full">
-          <ProductGallery images={product.images} productName={product.name} />
+    <div className="bg-white min-h-screen py-8 sm:py-12 lg:py-16 border-b border-neutral-100">
+      <StoreContainer>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+          <div className="w-full lg:col-span-7">
+            <ProductGallery images={product.images} productName={product.name} />
+          </div>
+          <div className="w-full lg:col-span-5 lg:sticky lg:top-28">
+            <ProductInfo product={product} variants={product.variants} colorSiblings={colorSiblings} />
+          </div>
         </div>
-        <div className="w-full lg:sticky lg:top-24">
-          <ProductInfo product={product} variants={product.variants} colorSiblings={colorSiblings} />
-        </div>
-      </div>
-      
-      <ProductReviews productId={product.id} reviews={formattedReviews} />
-      
-      <ProductRecommendations products={recommendedProducts} mode="product-page" />
-    </main>
+        
+        <ProductReviews productId={product.id} reviews={formattedReviews} />
+        
+        <ProductRecommendations products={recommendedProducts} mode="product-page" />
+      </StoreContainer>
+    </div>
   );
 }

@@ -176,7 +176,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         {/* Desktop Main Image Container (>= md) */}
         <div
           ref={imageContainerRef}
-          className="relative w-full aspect-square md:aspect-[4/5] bg-gradient-to-b from-brand-sky/30 to-brand-sky/10 border border-brand-sky-border/40 overflow-hidden cursor-zoom-in group rounded-2xl shadow-sm hidden md:block"
+          className="relative w-full aspect-square md:aspect-[4/5] bg-[#F6F7F9] border border-neutral-200/80 overflow-hidden cursor-zoom-in group rounded-3xl shadow-xs hidden md:block"
           onClick={() => {
             setIsLightboxOpen(true);
             setIsMagnifying(false);
@@ -188,10 +188,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              initial={false}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               className="absolute inset-0 p-4 md:p-8"
             >
               <FallbackImage
