@@ -177,6 +177,19 @@ export async function POST(request: Request) {
           cart = await prisma.cart.findUnique({
             where: { userId: dbUser.id },
           });
+        } else if (err?.code === "P2003") {
+          // A valid user was resolved immediately above, so a Cart.userId FK
+          // violation indicates production schema drift rather than bad input.
+          // The repair migration recreates this constraint. Keep the response
+          // explicit if a host has not applied migrations yet.
+          logCartP0("cart_user_fk", err, { productId, variantId });
+          return NextResponse.json(
+            {
+              error: "Cart storage is being updated. Please retry after the deployment finishes.",
+              code: "CART_USER_LINK_UNAVAILABLE",
+            },
+            { status: 503 }
+          );
         } else {
           logCartP0("cart_upsert", err, { productId, variantId });
           throw err;
