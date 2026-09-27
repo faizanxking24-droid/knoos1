@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Save, X, CheckCircle, AlertCircle, Lock } from "lucide-react";
-
+import { Eye, EyeOff, Save, CheckCircle, AlertCircle, Lock } from "lucide-react";
 import AccountShell from "../AccountShell";
 
 export default function SecurityPage() {
   return (
-    <AccountShell title="Security" subtitle="Manage your password and account security" active="security">
+    <AccountShell
+      title="Security"
+      subtitle="Manage your password and account security"
+      active="security"
+    >
       <SecurityForm />
     </AccountShell>
   );
@@ -21,7 +24,10 @@ function SecurityForm() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -34,15 +40,20 @@ function SecurityForm() {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
 
-    if (!currentPassword.trim()) errs.currentPassword = "Current password is required.";
+    if (!currentPassword.trim())
+      errs.currentPassword = "Current password is required.";
     if (!newPassword.trim()) errs.newPassword = "New password is required.";
-    else if (newPassword.length < 8) errs.newPassword = "Password must be at least 8 characters.";
+    else if (newPassword.length < 8)
+      errs.newPassword = "Password must be at least 8 characters.";
     else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-      errs.newPassword = "Password must contain uppercase, lowercase, and a number.";
+      errs.newPassword =
+        "Password must contain uppercase, lowercase, and a number.";
     }
-    if (newPassword !== confirmPassword) errs.confirmPassword = "Passwords do not match.";
+    if (newPassword !== confirmPassword)
+      errs.confirmPassword = "Passwords do not match.";
     if (newPassword === currentPassword && currentPassword) {
-      errs.newPassword = "New password must be different from the current password.";
+      errs.newPassword =
+        "New password must be different from the current password.";
     }
 
     setErrors(errs);
@@ -66,7 +77,10 @@ function SecurityForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage({ type: "error", text: data.error || "Failed to update password." });
+        setMessage({
+          type: "error",
+          text: data.error || "Failed to update password.",
+        });
         return;
       }
 
@@ -76,39 +90,48 @@ function SecurityForm() {
       setConfirmPassword("");
       setErrors({});
     } catch {
-      setMessage({ type: "error", text: "Something went wrong. Please try again." });
+      setMessage({
+        type: "error",
+        text: "Something went wrong. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-[760px] w-full">
       {message && (
         <div
-          className={`flex items-center gap-2 px-4 py-3 rounded-md border mb-6 text-sm ${
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl border mb-6 text-sm ${
             message.type === "success"
               ? "bg-green-50 border-green-200 text-green-700"
               : "bg-red-50 border-red-200 text-red-700"
           }`}
         >
-          {message.type === "success" ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-          {message.text}
+          {message.type === "success" ? (
+            <CheckCircle size={16} />
+          ) : (
+            <AlertCircle size={16} />
+          )}
+          <span>{message.text}</span>
         </div>
       )}
 
-      <div className="border border-brand-sky-border/60 rounded-xl bg-white p-5 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-brand-sky text-brand-navy flex items-center justify-center">
+      <div className="border border-brand-sky-border/60 rounded-xl bg-white p-6 sm:p-7 shadow-xs">
+        <div className="flex items-center gap-3.5 mb-6 pb-5 border-b border-brand-sky-border/40">
+          <div className="w-10 h-10 rounded-xl bg-brand-sky text-brand-navy flex items-center justify-center shrink-0">
             <Lock size={18} />
           </div>
           <div>
-            <h2 className="font-medium text-base text-brand-navy">Change Password</h2>
-            <p className="text-xs text-brand-gray-500">Update your account password</p>
+            <h2 className="font-serif text-lg text-brand-navy">Change Password</h2>
+            <p className="text-xs text-brand-gray-500">
+              Update your account password
+            </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           <PasswordField
             label="Current Password"
             value={currentPassword}
@@ -137,14 +160,16 @@ function SecurityForm() {
             onToggle={() => setShowConfirm(!showConfirm)}
           />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center gap-2 bg-brand-navy text-white px-6 py-3 text-sm font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-sm disabled:opacity-50 mt-2"
-          >
-            <Save size={16} />
-            {loading ? "Updating..." : "Update Password"}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-2 bg-brand-navy text-white px-6 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-xs disabled:opacity-50 font-medium"
+            >
+              <Save size={15} />
+              <span>{loading ? "Updating..." : "Update Password"}</span>
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -170,7 +195,7 @@ function PasswordField({
 }) {
   return (
     <div>
-      <label className="block font-mono text-xs uppercase tracking-widest text-brand-blue font-medium mb-2">
+      <label className="block font-mono text-xs uppercase tracking-widest text-brand-blue font-medium mb-1.5">
         {label}
       </label>
       <div className="relative">
@@ -178,19 +203,23 @@ function PasswordField({
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full border ${error ? "border-red-300" : "border-brand-sky-border/60"} rounded-xl px-4 py-3 pr-12 text-sm bg-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 transition-colors`}
+          className={`w-full h-12 border ${
+            error ? "border-red-300" : "border-brand-sky-border/80"
+          } rounded-xl px-4 pr-12 text-sm bg-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 transition-colors placeholder:text-brand-gray-300`}
         />
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-gray-400 hover:text-brand-navy"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-gray-400 hover:text-brand-navy p-1"
           aria-label={show ? "Hide password" : "Show password"}
         >
-          {show ? <EyeOff size={18} /> : <Eye size={18} />}
+          {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
       {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}
-      {hint && !error && <p className="text-brand-gray-400 text-xs mt-1.5">{hint}</p>}
+      {hint && !error && (
+        <p className="text-brand-gray-400 text-xs mt-1.5">{hint}</p>
+      )}
     </div>
   );
 }

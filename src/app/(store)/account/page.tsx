@@ -2,6 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import {
+  User,
+  MapPin,
+  Package,
+  HelpCircle,
+  ArrowRight,
+  ShoppingBag,
+} from "lucide-react";
 import AccountShell from "./AccountShell";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -72,10 +80,13 @@ export default function AccountOverviewClient() {
 
       if (ordersRes.ok && !cancelled) {
         const orders = await ordersRes.json();
-        const active = orders.filter((o: { orderStatus: string }) =>
-          !["CANCELLED", "DELIVERED"].includes(o.orderStatus)
+        const active = orders.filter(
+          (o: { orderStatus: string }) =>
+            !["CANCELLED", "DELIVERED"].includes(o.orderStatus)
         ).length;
-        const delivered = orders.filter((o: { orderStatus: string }) => o.orderStatus === "DELIVERED").length;
+        const delivered = orders.filter(
+          (o: { orderStatus: string }) => o.orderStatus === "DELIVERED"
+        ).length;
         setSummary({
           total: orders.length,
           active,
@@ -87,110 +98,159 @@ export default function AccountOverviewClient() {
 
       if (addressesRes.ok && !cancelled) {
         const addresses = await addressesRes.json();
-        setSummary(prev => prev ? { ...prev, addressCount: addresses.length } : null);
+        setSummary((prev) =>
+          prev ? { ...prev, addressCount: addresses.length } : null
+        );
       }
     } catch {
       // silent
     } finally {
       if (!cancelled) setLoading(false);
     }
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useEffect(() => { void fetchData(); }, [fetchData]);
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
-  const firstName = profile?.name?.split(" ")[0] || "there";
+  const firstName = profile?.name?.trim()?.split(" ")[0] || "there";
 
   return (
-    <div className="space-y-10">
-      {/* Welcome */}
-      <div>
-        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl mb-2 text-brand-dark">
-          Welcome back, {firstName}
-        </h2>
-        <p className="text-brand-gray-500 text-sm">
-          Here&apos;s what&apos;s happening with your account.
-        </p>
-      </div>
-
-      {/* Non-blocking Onboarding Prompt for Let Us Know Preferences */}
-      {!isPrefConfigured && !loading && (
-        <div className="bg-brand-sky/25 border border-brand-sky-border/80 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-brand-blue font-semibold">
-                Shopping Preferences
-              </span>
+    <AccountShell
+      title={`Welcome back, ${firstName}`}
+      subtitle="Here's what's happening with your account."
+      active="overview"
+    >
+      <div className="w-full space-y-9 sm:space-y-10">
+        {/* Non-blocking Onboarding Prompt for Let Us Know Preferences */}
+        {!isPrefConfigured && !loading && (
+          <div className="bg-brand-sky/30 border border-brand-sky-border/80 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-brand-blue font-semibold">
+                  Shopping Preferences
+                </span>
+              </div>
+              <h3 className="font-serif text-lg text-brand-navy">
+                Personalize Your Fit: Let Us Know
+              </h3>
+              <p className="text-xs sm:text-sm text-brand-gray-500 mt-0.5 max-w-xl">
+                Tell us your shoe size and style preferences to get curated
+                recommendations tailored to you.
+              </p>
             </div>
-            <h3 className="font-serif text-lg text-brand-navy">
-              Personalize Your Fit: Let Us Know
-            </h3>
-            <p className="text-xs sm:text-sm text-brand-gray-500 mt-0.5 max-w-xl">
-              Tell us your shoe size and style preferences to get curated recommendations tailored to you.
-            </p>
+            <Link
+              href="/account/profile"
+              className="inline-flex items-center justify-center whitespace-nowrap bg-brand-navy text-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-brand-blue transition-colors shrink-0 shadow-xs"
+            >
+              Complete Preferences
+            </Link>
           </div>
-          <Link
-            href="/account/profile"
-            className="inline-flex items-center justify-center whitespace-nowrap bg-brand-navy text-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-brand-blue transition-colors shrink-0 shadow-sm"
-          >
-            Complete Preferences
-          </Link>
-        </div>
-      )}
+        )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Total Orders" value={(summary?.total ?? 0).toString()} />
-        <StatCard label="Active Orders" value={(summary?.active ?? 0).toString()} />
-        <StatCard label="Delivered" value={(summary?.delivered ?? 0).toString()} />
-        <StatCard label="Addresses" value={(summary?.addressCount ?? 0).toString()} />
+        {/* 4 Stats Cards */}
+        <section aria-label="Account Summary Stats">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
+            <StatCard
+              label="Total Orders"
+              value={(summary?.total ?? 0).toString()}
+            />
+            <StatCard
+              label="Active Orders"
+              value={(summary?.active ?? 0).toString()}
+            />
+            <StatCard
+              label="Delivered"
+              value={(summary?.delivered ?? 0).toString()}
+            />
+            <StatCard
+              label="Addresses"
+              value={(summary?.addressCount ?? 0).toString()}
+            />
+          </div>
+        </section>
+
+        {/* Recent Order */}
+        <section aria-label="Recent Order">
+          <p className="font-mono text-xs uppercase tracking-widest text-brand-blue font-semibold mb-3">
+            Recent Order
+          </p>
+          {recentOrder ? (
+            <RecentOrderCard order={recentOrder} />
+          ) : (
+            <EmptyState />
+          )}
+        </section>
+
+        {/* Quick Actions */}
+        <section aria-label="Quick Actions" className="pt-2">
+          <p className="font-mono text-xs uppercase tracking-widest text-brand-blue font-semibold mb-3.5">
+            Quick Actions
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <QuickLink
+              href="/account/profile"
+              label="Profile & Preferences"
+              icon={User}
+            />
+            <QuickLink
+              href="/account/addresses"
+              label="Manage Addresses"
+              icon={MapPin}
+            />
+            <QuickLink
+              href="/account/orders"
+              label="View All Orders"
+              icon={Package}
+            />
+            <QuickLink
+              href="/account/help"
+              label="Help & Support"
+              icon={HelpCircle}
+            />
+          </div>
+        </section>
       </div>
-
-      {/* Recent Order or Empty State */}
-      {recentOrder ? (
-        <RecentOrderCard order={recentOrder} />
-      ) : (
-        <EmptyState />
-      )}
-
-      {/* Quick Actions */}
-      <div className="border-t border-brand-sky-border/80 pt-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium mb-4">
-          Quick Actions
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <QuickLink href="/account/profile" label="Profile &amp; Preferences" />
-          <QuickLink href="/account/addresses" label="Manage Addresses" />
-          <QuickLink href="/account/orders" label="View All Orders" />
-          <QuickLink href="/account/help" label="Help & Support" />
-        </div>
-      </div>
-    </div>
+    </AccountShell>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-brand-sky-border/60 rounded-xl bg-gradient-to-b from-white to-brand-sky/15 p-4 sm:p-5 hover:border-brand-blue/30 transition-all shadow-sm">
-      <p className="text-xl sm:text-2xl font-serif text-brand-navy">{value}</p>
-      <p className="text-xs text-brand-gray-500 mt-1 font-mono uppercase tracking-wider">{label}</p>
+    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-blue/40 transition-colors">
+      <p className="font-serif text-2xl sm:text-3xl lg:text-4xl text-brand-navy font-normal">
+        {value}
+      </p>
+      <p className="font-mono text-xs uppercase tracking-wider text-brand-gray-500 mt-1.5">
+        {label}
+      </p>
     </div>
   );
 }
 
 function RecentOrderCard({ order }: { order: RecentOrder }) {
   return (
-    <div className="border border-brand-sky-border/60 rounded-xl bg-white overflow-hidden shadow-sm">
-      <div className="px-5 sm:px-6 py-4 bg-brand-sky/20 border-b border-brand-sky-border/40">
-        <p className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium mb-2">
-          Recent Order
-        </p>
-        <div className="flex items-start justify-between gap-4">
+    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Metadata columns */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 flex-1">
           <div>
-            <p className="font-mono text-sm text-brand-navy font-medium">
-              #{order.id.slice(0, 12)}
+            <p className="font-mono text-[11px] uppercase tracking-wider text-brand-gray-400 mb-1">
+              Order #
             </p>
-            <p className="text-xs text-brand-gray-400 mt-0.5">
+            <p className="font-mono text-sm font-semibold text-brand-navy">
+              #{order.id.slice(0, 10).toUpperCase()}
+            </p>
+          </div>
+
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-wider text-brand-gray-400 mb-1">
+              Date
+            </p>
+            <p className="text-sm text-brand-dark font-medium">
               {new Date(order.createdAt).toLocaleDateString("en-IN", {
                 day: "2-digit",
                 month: "short",
@@ -198,94 +258,97 @@ function RecentOrderCard({ order }: { order: RecentOrder }) {
               })}
             </p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-sm font-semibold text-brand-navy">₹{order.total.toLocaleString("en-IN")}</p>
+
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-wider text-brand-gray-400 mb-1">
+              Status
+            </p>
             <span
-              className={`inline-block mt-1.5 px-2 py-0.5 rounded text-xs font-medium border ${
-                STATUS_COLORS[order.orderStatus] || "bg-gray-100 text-gray-800 border-gray-200"
+              className={`inline-block px-2.5 py-0.5 rounded text-xs font-medium border ${
+                STATUS_COLORS[order.orderStatus] ||
+                "bg-gray-100 text-gray-800 border-gray-200"
               }`}
             >
               {STATUS_LABELS[order.orderStatus] || order.orderStatus}
             </span>
           </div>
+
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-wider text-brand-gray-400 mb-1">
+              Total
+            </p>
+            <p className="text-sm font-semibold text-brand-navy">
+              ₹{order.total.toLocaleString("en-IN")}
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="px-5 sm:px-6 py-3">
-        <Link
-          href={`/account/orders/${order.id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-mono uppercase tracking-widest text-brand-navy hover:text-brand-blue transition-colors"
-        >
-          View Order <ChevronRightIcon />
-        </Link>
+
+        {/* Action Button */}
+        <div className="pt-2 sm:pt-0 sm:pl-4 sm:border-l sm:border-brand-sky-border/40 shrink-0">
+          <Link
+            href={`/account/orders/${order.id}`}
+            className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-brand-navy hover:text-brand-blue font-semibold transition-colors group"
+          >
+            <span>View Order</span>
+            <ArrowRight
+              size={14}
+              className="group-hover:translate-x-1 transition-transform"
+            />
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-function QuickLink({ href, label }: { href: string; label: string }) {
+function QuickLink({
+  href,
+  label,
+  icon: Icon,
+}: {
+  href: string;
+  label: string;
+  icon: typeof User;
+}) {
   return (
     <Link
       href={href}
-      className="flex items-center justify-between border border-brand-sky-border/60 rounded-xl px-5 py-4 hover:border-brand-blue/40 hover:bg-brand-sky/15 transition-all group bg-white shadow-sm"
+      className="flex items-center justify-between min-h-[72px] sm:min-h-[76px] px-5 py-4 bg-white border border-brand-sky-border/60 rounded-xl hover:border-brand-blue/50 hover:bg-brand-sky/20 transition-all group shadow-xs"
     >
-      <span className="text-sm font-medium text-brand-dark group-hover:text-brand-blue transition-colors">{label}</span>
-      <ChevronRightIcon />
+      <div className="flex items-center gap-3.5">
+        <div className="w-10 h-10 rounded-xl bg-brand-sky/50 text-brand-navy flex items-center justify-center shrink-0 group-hover:bg-brand-navy group-hover:text-white transition-colors">
+          <Icon size={18} strokeWidth={1.75} />
+        </div>
+        <span className="text-sm font-medium text-brand-dark group-hover:text-brand-blue transition-colors">
+          {label}
+        </span>
+      </div>
+      <ArrowRight
+        size={16}
+        className="text-brand-gray-400 group-hover:text-brand-blue group-hover:translate-x-1 transition-all shrink-0"
+      />
     </Link>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="border border-brand-sky-border/60 rounded-xl bg-white py-16 px-6 text-center shadow-sm">
-      <ShoppingBagIcon />
-      <h3 className="font-serif text-2xl mb-2 text-brand-navy">No orders yet</h3>
-      <p className="text-brand-gray-500 text-sm mb-6 max-w-sm mx-auto">
-        Your orders will appear here once you make a purchase.
+    <div className="border border-brand-sky-border/60 rounded-xl bg-white py-12 px-6 text-center shadow-xs">
+      <div className="w-12 h-12 rounded-full bg-brand-sky/40 text-brand-navy flex items-center justify-center mx-auto mb-3">
+        <ShoppingBag size={22} strokeWidth={1.75} />
+      </div>
+      <h3 className="font-serif text-xl mb-1.5 text-brand-navy">
+        No orders yet
+      </h3>
+      <p className="text-brand-gray-500 text-sm mb-5 max-w-sm mx-auto">
+        Your orders will appear here once you make your first purchase.
       </p>
       <Link
         href="/search"
-        className="inline-block bg-brand-navy text-white px-8 py-3 text-sm font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-sm"
+        className="inline-block bg-brand-navy text-white px-6 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-xs"
       >
         Start Shopping
       </Link>
     </div>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg
-      className="shrink-0 text-brand-gray-400 group-hover:text-brand-blue group-hover:translate-x-1 transition-all"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
-}
-
-function ShoppingBagIcon() {
-  return (
-    <svg
-      className="text-brand-gray-300 mb-4 mx-auto"
-      width="40"
-      height="40"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-      <path d="M3 6h18" />
-      <path d="M16 10a4 4 0 0 1-8 0" />
-    </svg>
   );
 }

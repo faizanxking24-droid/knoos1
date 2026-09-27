@@ -220,9 +220,9 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   if (loading) {
     return (
       <AccountShell title="Order Details" subtitle="" active="orders" backHref="/account/orders">
-        <div className="animate-pulse space-y-6">
-          <div className="h-48 bg-brand-gray-100 rounded-lg" />
-          <div className="h-64 bg-brand-gray-100 rounded-lg" />
+        <div className="max-w-[1100px] w-full animate-pulse space-y-6">
+          <div className="h-48 bg-brand-sky/20 rounded-xl" />
+          <div className="h-64 bg-brand-sky/20 rounded-xl" />
         </div>
       </AccountShell>
     );
@@ -231,84 +231,96 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   if (error || !order) {
     return (
       <AccountShell title="Order Details" active="orders" backHref="/account/orders">
-        <div className="bg-red-50 text-red-700 p-4 rounded border border-red-200 text-sm">
-          {error || "Order not found"}
+        <div className="max-w-[1100px] w-full">
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 text-sm">
+            {error || "Order not found"}
+          </div>
+          <Link href="/account/orders" className="inline-block mt-4 text-xs font-mono uppercase tracking-wider text-brand-navy hover:underline">
+            Back to Orders
+          </Link>
         </div>
-        <Link href="/account/orders" className="inline-block mt-4 text-sm font-mono underline">
-          Back to Orders
-        </Link>
       </AccountShell>
     );
   }
 
   return (
-    <AccountShell title={`Order #${order.id.slice(0, 12)}`} active="orders" backHref="/account/orders">
-      {message && (
-        <div
-          className={`flex items-center gap-2 px-4 py-3 rounded-md border mb-6 text-sm ${
-            message.type === "success"
-              ? "bg-green-50 border-green-200 text-green-700"
-              : "bg-red-50 border-red-200 text-red-700"
-          }`}
-        >
-          {message.type === "success" ? <CheckIcon /> : <AlertIcon />}
-          {message.text}
-        </div>
-      )}
-
-      {order.paymentStatus === "FAILED" && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200 mb-6">
-          <h3 className="font-bold mb-1">Payment Failed</h3>
-          <p className="text-sm">Your payment could not be completed. Please try again or contact support.</p>
-        </div>
-      )}
-
-      {/* Status Badge */}
-      <div className="flex items-center gap-3 mb-8">
-        <span className={`px-3 py-1 rounded text-sm font-medium border ${STATUS_COLORS[order.orderStatus] || "bg-gray-100 text-gray-800 border-gray-200"}`}>
-          {STATUS_LABELS[order.orderStatus] || order.orderStatus}
-        </span>
-        <span className="text-sm text-brand-gray-500">
-          {order.deliveryMethod === "FAST" ? "Fast Delivery" : "Standard Delivery"} &bull;{" "}
-          {order.paymentMethod === "COD"
-            ? (order.paymentStatus === "PAID" ? "Paid on delivery" : "Payment will be collected on delivery")
-            : (order.paymentStatus === "PAID" ? "Prepaid" : order.paymentStatus)}
-        </span>
-      </div>
-
-      {/* Timeline */}
-      <div className="bg-brand-sky/20 p-5 sm:p-8 rounded-xl border border-brand-sky-border/50 mb-8">
-        <OrderTimeline currentStatus={order.orderStatus} />
-      </div>
-
-      {/* Actions */}
-      {isCancellable && (
-        <div className="mb-8">
-          <button
-            onClick={handleCancel}
-            disabled={actionLoading}
-            className="inline-flex items-center gap-2 border border-red-200 text-red-600 px-6 py-3 text-sm font-mono tracking-widest uppercase hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50"
+    <AccountShell
+      title={`Order #${order.id.slice(0, 10).toUpperCase()}`}
+      subtitle={`Placed on ${new Date(order.createdAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`}
+      active="orders"
+      backHref="/account/orders"
+    >
+      <div className="max-w-[1100px] w-full">
+        {message && (
+          <div
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border mb-6 text-sm ${
+              message.type === "success"
+                ? "bg-green-50 border-green-200 text-green-700"
+                : "bg-red-50 border-red-200 text-red-700"
+            }`}
           >
-            <XCircle size={16} />
-            {actionLoading ? "Cancelling..." : "Cancel Order"}
-          </button>
-        </div>
-      )}
+            {message.type === "success" ? <CheckIcon /> : <AlertIcon />}
+            {message.text}
+          </div>
+        )}
 
-      {order.orderStatus === "DELIVERED" && (
-        <div className="mb-8">
-          <button
-            onClick={handleReorder}
-            disabled={actionLoading}
-            className="inline-flex items-center gap-2 bg-brand-navy text-white px-6 py-3 text-sm font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-sm disabled:opacity-50"
-          >
-            <PackageX size={16} />
-            {actionLoading ? "Adding to Cart..." : "Buy Again"}
-          </button>
-        </div>
-      )}
+        {order.paymentStatus === "FAILED" && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 mb-6">
+            <h3 className="font-bold mb-1">Payment Failed</h3>
+            <p className="text-sm">Your payment could not be completed. Please try again or contact support.</p>
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        {/* Status Badge */}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <span className={`px-3 py-1 rounded text-xs font-medium border ${STATUS_COLORS[order.orderStatus] || "bg-gray-100 text-gray-800 border-gray-200"}`}>
+            {STATUS_LABELS[order.orderStatus] || order.orderStatus}
+          </span>
+          <span className="text-sm text-brand-gray-500">
+            {order.deliveryMethod === "FAST" ? "Fast Delivery" : "Standard Delivery"} &bull;{" "}
+            {order.paymentMethod === "COD"
+              ? (order.paymentStatus === "PAID" ? "Paid on delivery" : "Payment will be collected on delivery")
+              : (order.paymentStatus === "PAID" ? "Prepaid" : order.paymentStatus)}
+          </span>
+        </div>
+
+        {/* Timeline */}
+        <div className="bg-white p-5 sm:p-7 rounded-xl border border-brand-sky-border/60 mb-8 shadow-xs">
+          <OrderTimeline currentStatus={order.orderStatus} />
+        </div>
+
+        {/* Actions */}
+        {isCancellable && (
+          <div className="mb-8">
+            <button
+              onClick={handleCancel}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 border border-red-200 text-red-600 px-5 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50"
+            >
+              <XCircle size={15} />
+              {actionLoading ? "Cancelling..." : "Cancel Order"}
+            </button>
+          </div>
+        )}
+
+        {order.orderStatus === "DELIVERED" && (
+          <div className="mb-8">
+            <button
+              onClick={handleReorder}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 bg-brand-navy text-white px-5 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-xs disabled:opacity-50"
+            >
+              <PackageX size={15} />
+              {actionLoading ? "Adding to Cart..." : "Buy Again"}
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
         {/* Items + Address */}
         <div className="lg:col-span-2 space-y-8">
           {/* Items */}
@@ -402,8 +414,9 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </div>
-    </AccountShell>
-  );
+    </div>
+  </AccountShell>
+);
 }
 
 function CheckIcon() {

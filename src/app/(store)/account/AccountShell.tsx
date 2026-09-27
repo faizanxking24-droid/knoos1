@@ -2,128 +2,96 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { User, Package, MapPin, Lock, HelpCircle, LogOut, ChevronRight } from "lucide-react";
-
-type Tab = "overview" | "profile" | "addresses" | "orders" | "security" | "help" | "signout";
-
-interface NavItem {
-  id: Tab;
-  label: string;
-  icon: typeof User;
-  href: string;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { id: "overview", label: "Overview", icon: User, href: "/account" },
-  { id: "profile", label: "My Profile", icon: User, href: "/account/profile" },
-  { id: "addresses", label: "My Addresses", icon: MapPin, href: "/account/addresses" },
-  { id: "orders", label: "My Orders", icon: Package, href: "/account/orders" },
-  { id: "security", label: "Security", icon: Lock, href: "/account/security" },
-  { id: "help", label: "Help", icon: HelpCircle, href: "/account/help" },
-];
+import {
+  AccountSidebar,
+  ACCOUNT_NAV_ITEMS,
+  AccountTab,
+} from "./AccountSidebar";
+import { AccountPageHeader } from "./AccountPageHeader";
 
 interface AccountShellProps {
   children: React.ReactNode;
-  active?: Tab;
+  active?: AccountTab;
   title: string;
   subtitle?: string;
   backHref?: string;
 }
 
-export default function AccountShell({ children, active, title, subtitle, backHref }: AccountShellProps) {
+export default function AccountShell({
+  children,
+  active,
+  title,
+  subtitle,
+  backHref,
+}: AccountShellProps) {
   const pathname = usePathname();
-  const currentTab = active ?? NAV_ITEMS.find(i => i.href === pathname)?.id ?? "overview";
+
+  // Determine current active tab
+  const currentTab: AccountTab =
+    active ??
+    ACCOUNT_NAV_ITEMS.find((item) => item.href === pathname)?.id ??
+    "overview";
 
   return (
-    <>
-      {/* Mobile header */}
-      <div className="lg:hidden mb-6">
-        {backHref && (
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-1 mb-3 text-sm font-mono text-brand-gray-600 hover:text-brand-navy transition-colors"
-          >
-            <ChevronRight size={16} className="rotate-180" />
-            Back
-          </Link>
-        )}
-        <h1 className="font-serif text-2xl sm:text-3xl text-brand-dark">{title}</h1>
-        {subtitle && <p className="text-brand-gray-500 text-xs mt-0.5">{subtitle}</p>}
+    <div className="w-full min-h-[calc(100vh-140px)] flex flex-col justify-between pt-10 sm:pt-12 lg:pt-16 pb-16 lg:pb-24">
+      <div className="max-w-[1440px] mx-auto px-5 sm:px-6 lg:px-8 xl:px-10 w-full">
+        {/* Mobile / Tablet Horizontal Navigation (< lg) */}
+        <div className="lg:hidden mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-semibold">
+              Account
+            </span>
+            <form action="/api/auth/signout" method="POST">
+              <button
+                type="submit"
+                className="font-mono text-xs uppercase tracking-wider text-brand-gray-500 hover:text-red-600 transition-colors"
+              >
+                Sign Out
+              </button>
+            </form>
+          </div>
 
-        <div className="border-b border-brand-sky-border/80 mt-4 overflow-x-auto -mx-4 px-4">
-          <div className="flex gap-0 min-w-max">
-            {NAV_ITEMS.map((item) => {
+          <nav
+            className="overflow-x-auto no-scrollbar flex items-center gap-1.5 p-1.5 bg-brand-sky/25 border border-brand-sky-border/60 rounded-2xl"
+            aria-label="Account navigation tabs"
+          >
+            {ACCOUNT_NAV_ITEMS.map((item) => {
               const isActive = currentTab === item.id;
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 transition-all ${
                     isActive
-                      ? "border-brand-navy text-brand-navy font-semibold"
-                      : "border-transparent text-brand-gray-500 hover:text-brand-navy"
+                      ? "bg-brand-navy text-white shadow-xs font-semibold"
+                      : "text-brand-gray-600 hover:text-brand-navy hover:bg-brand-sky/40"
                   }`}
                 >
-                  <item.icon size={14} strokeWidth={1.5} />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon size={15} strokeWidth={isActive ? 2 : 1.75} />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
-          </div>
+          </nav>
+        </div>
+
+        {/* Responsive Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)] gap-8 lg:gap-12 xl:gap-14 items-start">
+          {/* Desktop Sticky Sidebar (lg+) */}
+          <AccountSidebar currentTab={currentTab} />
+
+          {/* Main Account Content Column */}
+          <main className="min-w-0 flex-1">
+            <AccountPageHeader
+              title={title}
+              subtitle={subtitle}
+              backHref={backHref}
+            />
+            {children}
+          </main>
         </div>
       </div>
-
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-60 shrink-0">
-          <div className="sticky top-24">
-            <p className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium mb-4 px-1">
-              Account
-            </p>
-            <nav className="space-y-1">
-              {NAV_ITEMS.map((item) => {
-                const isActive = currentTab === item.id;
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm ${
-                      isActive
-                        ? "bg-brand-navy text-white shadow-sm"
-                        : "text-brand-gray-600 hover:bg-brand-sky/80 hover:text-brand-navy"
-                    }`}
-                  >
-                    <item.icon size={16} strokeWidth={1.5} />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="mt-6 pt-6 border-t border-brand-sky-border/80">
-              <form action="/api/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="flex items-center gap-3 px-4 py-3 text-brand-gray-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors w-full"
-                >
-                  <LogOut size={16} strokeWidth={1.5} />
-                  <span className="text-sm font-medium">Sign Out</span>
-                </button>
-              </form>
-            </div>
-          </div>
-        </aside>
-
-        {/* Content */}
-        <section className="flex-1 min-w-0">
-          {/* Desktop heading */}
-          <div className="hidden lg:block mb-8">
-            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-brand-dark">{title}</h1>
-            {subtitle && <p className="text-brand-gray-500 text-sm mt-1">{subtitle}</p>}
-          </div>
-          {children}
-        </section>
-      </div>
-    </>
+    </div>
   );
 }
