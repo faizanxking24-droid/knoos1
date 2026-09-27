@@ -246,6 +246,54 @@ async function main() {
     console.log("\nprisma migrate deploy:");
     console.log("SUCCESS\n");
 
+    // ==================================================
+    // STEP 15 — HOSTINGER ADDRESS SCHEMA VERIFICATION (SECTION 9)
+    // ==================================================
+    console.log("=== VERIFYING ADDRESS TABLE COLUMNS (SECTION 9) ===");
+    const addressCols = await prisma.$queryRaw`
+      SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'Address'
+      ORDER BY ORDINAL_POSITION;
+    `;
+    const colNames = addressCols.map(c => c.COLUMN_NAME);
+    console.log("Current Address columns:", colNames.join(", "));
+
+    const hasFullName = colNames.includes("fullName");
+    const hasAddressLine1 = colNames.includes("addressLine1");
+    const hasPostalCode = colNames.includes("postalCode");
+    const hasLegacyName = colNames.includes("name");
+    const hasLegacyAddress = colNames.includes("address");
+    const hasLegacyPincode = colNames.includes("pincode");
+
+    console.log(`- fullName exists: ${hasFullName ? "YES" : "NO"}`);
+    console.log(`- addressLine1 exists: ${hasAddressLine1 ? "YES" : "NO"}`);
+    console.log(`- postalCode exists: ${hasPostalCode ? "YES" : "NO"}`);
+    console.log(`- legacy name removed: ${!hasLegacyName ? "YES" : "NO"}`);
+    console.log(`- legacy address removed: ${!hasLegacyAddress ? "YES" : "NO"}`);
+    console.log(`- legacy pincode removed: ${!hasLegacyPincode ? "YES" : "NO"}`);
+
+    const addressIndexes = await prisma.$queryRaw`
+      SELECT DISTINCT INDEX_NAME
+      FROM information_schema.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'Address';
+    `;
+    const idxNames = addressIndexes.map(i => i.INDEX_NAME);
+    console.log("Address indexes:", idxNames.join(", "));
+    const hasCompoundIdx = idxNames.includes("Address_userId_isDefault_idx");
+    console.log(`- compound index (userId, isDefault) exists: ${hasCompoundIdx ? "YES" : "NO"}`);
+
+    const addrCount = await prisma.$queryRaw`SELECT COUNT(*) as c FROM \`Address\``;
+    console.log(`- address row count (preserved): ${Number(addrCount[0]?.c ?? 0)}\n`);
+
+    if (!hasFullName || !hasAddressLine1 || !hasPostalCode || hasLegacyName || hasLegacyAddress || hasLegacyPincode) {
+      console.error("\nCRITICAL: Address schema does not match required columns after migration!");
+      process.exit(1);
+    }
+
+
   } catch (err) {
     console.error("Diagnosis & repair error:", err.message || err);
     process.exit(1);
