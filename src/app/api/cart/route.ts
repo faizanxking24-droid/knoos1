@@ -183,6 +183,72 @@ export async function POST(request: Request) {
           // The repair migration recreates this constraint. Keep the response
           // explicit if a host has not applied migrations yet.
           logCartP0("cart_user_fk", err, { productId, variantId });
+
+          try {
+            const dbNameRes: any[] = await prisma.$queryRaw`SELECT DATABASE() AS db;`;
+            const fkInfoRes: any[] = await prisma.$queryRaw`
+              SELECT
+                CONSTRAINT_NAME,
+                TABLE_SCHEMA,
+                REFERENCED_TABLE_SCHEMA,
+                REFERENCED_TABLE_NAME,
+                REFERENCED_COLUMN_NAME
+              FROM information_schema.KEY_COLUMN_USAGE
+              WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'Cart'
+                AND COLUMN_NAME = 'userId'
+                AND REFERENCED_TABLE_NAME IS NOT NULL;
+            `;
+            const userCheckRes: any[] = await prisma.$queryRaw`
+              SELECT COUNT(*) AS c
+              FROM User
+              WHERE id = ${dbUser.id};
+            `;
+            const columnsRes: any[] = await prisma.$queryRaw`
+              SELECT
+                COLUMN_NAME,
+                COLUMN_TYPE,
+                IS_NULLABLE,
+                COLLATION_NAME
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME IN ('Cart', 'User')
+                AND (
+                  (TABLE_NAME = 'Cart' AND COLUMN_NAME = 'userId')
+                  OR
+                  (TABLE_NAME = 'User' AND COLUMN_NAME = 'id')
+                );
+            `;
+            const triggersRes: any[] = await prisma.$queryRaw`
+              SELECT
+                TRIGGER_NAME,
+                EVENT_MANIPULATION,
+                ACTION_TIMING
+              FROM information_schema.TRIGGERS
+              WHERE TRIGGER_SCHEMA = DATABASE()
+                AND EVENT_OBJECT_TABLE = 'Cart';
+            `;
+
+            const userExists = Number(userCheckRes[0]?.c ?? 0);
+
+            console.error(
+              "[CART_RUNTIME_DIAG]",
+              JSON.stringify(
+                {
+                  runtimeMarker: "cart-runtime-diag-104e1da-v1",
+                  database: dbNameRes[0]?.db ?? null,
+                  fk: fkInfoRes,
+                  userExists,
+                  columns: columnsRes,
+                  triggers: triggersRes,
+                },
+                (_key, val) => (typeof val === "bigint" ? Number(val) : val)
+              )
+            );
+          } catch (diagErr: any) {
+            console.error("[CART_RUNTIME_DIAG_ERROR]", diagErr?.message || diagErr);
+          }
+
           return NextResponse.json(
             {
               error: "Cart storage is being updated. Please retry after the deployment finishes.",
