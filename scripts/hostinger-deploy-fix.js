@@ -1,9 +1,15 @@
 const { execSync } = require('child_process');
 const { PrismaClient } = require('@prisma/client');
-const fs = require('fs');
-const path = require('path');
 
 const prisma = new PrismaClient();
+
+function stringifySafe(value) {
+  return JSON.stringify(
+    value,
+    (_key, val) => typeof val === "bigint" ? Number(val) : val,
+    2
+  );
+}
 
 async function main() {
   console.log("=== STARTING HOSTINGER DB DIAGNOSIS & REPAIR ===");
@@ -25,7 +31,7 @@ async function main() {
       started_at: r.started_at,
       finished_at: r.finished_at,
       rolled_back_at: r.rolled_back_at,
-      applied_steps_count: r.applied_steps_count
+      applied_steps_count: r.applied_steps_count == null ? null : Number(r.applied_steps_count)
     }));
 
     const orphans = await prisma.$queryRaw`SELECT COUNT(*) as c FROM Cart c LEFT JOIN User u ON c.userId = u.id WHERE u.id IS NULL`;
@@ -57,14 +63,14 @@ async function main() {
       }
     }
 
-    fs.mkdirSync(path.join(__dirname, '../public'), { recursive: true });
-    fs.writeFileSync(path.join(__dirname, '../public/diag.json'), JSON.stringify(diagData, null, 2));
+    console.log("Diagnostic Summary:");
+    console.log(stringifySafe(diagData));
 
   } catch (err) {
     console.error("Diagnosis error:", err);
     diagData.error = err.message;
-    fs.mkdirSync(path.join(__dirname, '../public'), { recursive: true });
-    fs.writeFileSync(path.join(__dirname, '../public/diag.json'), JSON.stringify(diagData, null, 2));
+    console.log("Diagnostic Error Summary:");
+    console.log(stringifySafe(diagData));
     abortDeployment = true;
   } finally {
     await prisma.$disconnect();
