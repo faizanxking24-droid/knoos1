@@ -67,7 +67,7 @@ export function ProductRecommendations({
         <StaggerContainer className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5">
           {products.slice(0, 4).map((product) => (
             <StaggerItem key={product.id} className="min-w-0 max-w-[280px]">
-              <ProductCard product={product} />
+              <ProductCard product={product} imageFit="contain" compact />
             </StaggerItem>
           ))}
         </StaggerContainer>
@@ -75,22 +75,33 @@ export function ProductRecommendations({
     );
   }
 
+  const displayedProducts = products.slice(0, 4);
+
   return (
-    <section className="w-full border-t border-brand-sky-border/60 py-16 md:py-24">
-      <Reveal>
-        <h2 className="font-serif text-2xl md:text-3xl mb-8 md:mb-12 text-center text-brand-navy uppercase tracking-widest">{title}</h2>
-      </Reveal>
-      
-      {/* Mobile scrollable row, Desktop grid */}
-      <StaggerContainer className="flex overflow-x-auto snap-x snap-mandatory md:grid hide-scrollbar pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
-        <div className="flex w-max gap-4 md:contents md:w-auto">
-          {products.map((product) => (
-            <StaggerItem key={product.id} className="snap-start w-[60vw] md:w-auto flex-shrink-0">
-              <ProductCard product={product} />
+    <section className="w-full border-t border-brand-sky-border/60 py-12 md:py-16">
+      <div className="max-w-[1280px] mx-auto">
+        <Reveal>
+          <h2 className="font-serif text-2xl md:text-3xl mb-7 md:mb-9 text-center text-brand-navy uppercase tracking-widest">
+            {title}
+          </h2>
+        </Reveal>
+        
+        {/* Mobile scrollable row (snap-start, max-w 260px), Tablet 3-col, Desktop 4-col */}
+        <StaggerContainer className="flex overflow-x-auto snap-x snap-mandatory gap-5 sm:gap-6 pb-4 md:pb-0 -mx-5 px-5 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 no-scrollbar hide-scrollbar md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible md:snap-none">
+          {displayedProducts.map((product) => (
+            <StaggerItem 
+              key={product.id} 
+              className="w-[72vw] max-w-[260px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink"
+            >
+              <ProductCard 
+                product={product} 
+                imageFit="contain" 
+                compact 
+              />
             </StaggerItem>
           ))}
-        </div>
-      </StaggerContainer>
+        </StaggerContainer>
+      </div>
     </section>
   );
 }
