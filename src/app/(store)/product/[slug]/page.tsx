@@ -24,6 +24,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   if (!product) {
+    const { FALLBACK_PRODUCTS } = await import("@/lib/fallback-data");
+    const fb = FALLBACK_PRODUCTS.find((p) => p.slug === resolvedParams.slug);
+    if (fb) {
+      product = fb as any;
+    }
+  }
+
+  if (!product) {
     return {
       title: "Product Not Found | KNOOS",
     };
@@ -72,6 +80,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
     });
   } catch (error) {
     console.error("Error fetching product by slug:", error);
+  }
+
+  if (!product) {
+    const { FALLBACK_PRODUCTS } = await import("@/lib/fallback-data");
+    const fb = FALLBACK_PRODUCTS.find((p) => p.slug === resolvedParams.slug);
+    if (fb) {
+      product = fb as any;
+    }
   }
 
   if (!product) {
@@ -132,16 +148,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
         status: product.status,
         price: product.price,
         salePrice: product.salePrice,
-        images: product.images.slice(0, 1).map((img) => ({ id: img.id, imageUrl: img.imageUrl })),
-        variants: product.variants.map((variant) => ({ stock: variant.stock })),
+        images: product.images.slice(0, 1).map((img: any) => ({ id: img.id, imageUrl: img.imageUrl })),
+        variants: product.variants.map((variant: any) => ({ stock: variant.stock })),
       });
     }
   }
 
   // Format reviews to match the props structure expected by ProductReviews
-  const formattedReviews = product.reviews.map(r => ({
+  const formattedReviews = (product.reviews || []).map((r: any) => ({
     ...r,
-    createdAt: r.createdAt.toISOString()
+    createdAt: typeof r.createdAt === "string" ? r.createdAt : r.createdAt.toISOString()
   }));
 
   const recommendedProducts = await getRecommendations({

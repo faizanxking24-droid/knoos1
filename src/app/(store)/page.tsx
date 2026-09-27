@@ -80,6 +80,13 @@ export default async function HomePage() {
     console.error("Error loading homepage products:", error);
   }
 
+  if (newArrivals.length === 0) {
+    const { FALLBACK_PRODUCTS } = await import("@/lib/fallback-data");
+    newArrivals = FALLBACK_PRODUCTS.slice(0, 8);
+    bestSellers = FALLBACK_PRODUCTS.slice(0, 4);
+    promoProduct = FALLBACK_PRODUCTS[0];
+  }
+
   return (
     <main className="overflow-x-hidden">
       {/* 1. HERO (Phase 1 Owned Component) */}

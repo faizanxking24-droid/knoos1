@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { easings } from "../motion/constants";
-import { ChevronDown } from "lucide-react";
+import { X, ChevronDown, User, ShoppingBag, ArrowRight, Phone, MessageCircle, Shield } from "lucide-react";
 
 interface Category {
   id: string;
@@ -57,124 +57,261 @@ export function MobileMenu({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 bg-white md:hidden"
-        >
-          <div className="flex flex-col items-center justify-center h-full gap-8">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.05, duration: 0.5, ease: easings.premium }}
-            >
-              <Link href="/men" onClick={onClose} className="font-serif text-4xl text-brand-dark hover:text-brand-blue transition-colors">
-                Men
-              </Link>
-            </motion.div>
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.5, ease: easings.premium }}
-            >
-              <Link href="/women" onClick={onClose} className="font-serif text-4xl text-brand-dark hover:text-brand-blue transition-colors">
-                Women
-              </Link>
-            </motion.div>
+        <div className="fixed inset-0 z-[100] md:hidden">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm"
+          />
 
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.5, ease: easings.premium }}
-              className="flex flex-col items-center gap-1"
-            >
-              <button
-                onClick={() => setIsShopByOpen(!isShopByOpen)}
-                className="font-serif text-4xl flex items-center gap-2 text-brand-dark hover:text-brand-blue transition-colors"
-              >
-                Shop By
-                <ChevronDown
-                  size={20}
-                  className={`transition-transform duration-200 ${isShopByOpen ? "rotate-180 text-brand-blue" : ""}`}
-                />
-              </button>
-              <AnimatePresence>
-                {isShopByOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden flex flex-col items-center gap-2 mt-2"
-                  >
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.id}
-                        href={`/search?category=${cat.slug}`}
-                        onClick={onClose}
-                        className="font-serif text-xl text-brand-gray-600 hover:text-brand-blue transition-colors"
-                      >
-                        {cat.name}
-                      </Link>
-                    ))}
-                    <div className="border-t border-brand-sky-border/40 w-16 my-1" />
-                    <Link
-                      href="/search?sort=Newest"
-                      onClick={onClose}
-                      className="font-mono text-xs uppercase tracking-widest text-brand-gray-500 hover:text-brand-blue transition-colors"
-                    >
-                      New Arrivals
-                    </Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5, ease: easings.premium }}
-              className="mt-8 flex flex-col items-center gap-6"
-            >
-              <form action="/search" method="GET" className="relative flex items-center mb-4" onSubmit={onClose}>
-                <input
-                  type="text"
-                  name="q"
-                  placeholder="Search..."
-                  className="w-64 px-3 py-2 text-center text-sm font-mono border-b border-brand-gray-300 focus:border-brand-blue focus:outline-none placeholder:text-brand-gray-400 text-brand-dark transition-colors"
-                />
-              </form>
-
-              {userName ? (
-                <>
-                  <Link href="/account" onClick={onClose} className="font-mono text-sm uppercase tracking-widest text-brand-gray-600 hover:text-brand-blue transition-colors">
-                    {userName}
-                  </Link>
-                  <button onClick={() => { signOutAction(); onClose(); }} className="font-mono text-sm uppercase tracking-widest text-brand-gray-600 hover:text-brand-navy transition-colors">
-                    Sign Out
-                  </button>
-                </>
-              ) : (
+          {/* Drawer content */}
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-0 bottom-0 left-0 w-[88vw] max-w-sm bg-white shadow-2xl flex flex-col justify-between overflow-y-auto"
+          >
+            {/* Top Bar */}
+            <div>
+              <div className="flex items-center justify-between px-6 py-5 border-b border-brand-gray-100">
+                <Link href="/" onClick={onClose} className="flex items-center">
+                  <Image
+                    src="/knoos-logo.png"
+                    alt="KNOOS"
+                    width={110}
+                    height={36}
+                    priority
+                    className="h-8 w-auto object-contain"
+                  />
+                </Link>
                 <button
-                  onClick={() => {
-                    if (openLoginModal && process.env.NEXT_PUBLIC_OTP_ENABLED === "true") {
-                      openLoginModal();
-                    } else {
-                      signInAction();
-                    }
-                    onClose();
-                  }}
-                  className="font-mono text-sm uppercase tracking-widest text-brand-gray-600 hover:text-brand-blue transition-colors"
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close menu"
+                  className="w-9 h-9 rounded-full bg-brand-sky/40 border border-brand-sky-border/40 flex items-center justify-center text-brand-dark hover:text-brand-blue transition-colors"
                 >
-                  Sign In
+                  <X size={18} />
                 </button>
-              )}
-            </motion.div>
-          </div>
-        </motion.div>
+              </div>
+
+              {/* Main Editorial Nav */}
+              <div className="px-6 py-6 space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Link
+                    href="/men"
+                    onClick={onClose}
+                    className="group flex items-center justify-between font-serif text-3xl text-brand-dark hover:text-brand-blue py-1 transition-colors"
+                  >
+                    <span>Men</span>
+                    <ArrowRight size={18} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-brand-blue" />
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <Link
+                    href="/women"
+                    onClick={onClose}
+                    className="group flex items-center justify-between font-serif text-3xl text-brand-dark hover:text-brand-blue py-1 transition-colors"
+                  >
+                    <span>Women</span>
+                    <ArrowRight size={18} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-brand-blue" />
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Link
+                    href="/search?sort=Newest"
+                    onClick={onClose}
+                    className="group flex items-center justify-between font-serif text-3xl text-brand-dark hover:text-brand-blue py-1 transition-colors"
+                  >
+                    <span>New Arrivals</span>
+                    <ArrowRight size={18} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-brand-blue" />
+                  </Link>
+                </motion.div>
+
+                {/* Shop By Accordion */}
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="pt-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setIsShopByOpen(!isShopByOpen)}
+                    className="w-full flex items-center justify-between font-mono text-xs uppercase tracking-widest text-brand-gray-500 hover:text-brand-blue py-2 transition-colors"
+                  >
+                    <span>Categories</span>
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform duration-200 ${isShopByOpen ? "rotate-180 text-brand-blue" : ""}`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {isShopByOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden pl-3 border-l border-brand-sky-border/50 space-y-2 mt-2"
+                      >
+                        <Link
+                          href="/search?category=sneakers"
+                          onClick={onClose}
+                          className="block text-sm text-brand-gray-600 hover:text-brand-blue py-1 transition-colors"
+                        >
+                          Sneakers &amp; Trainers
+                        </Link>
+                        <Link
+                          href="/search?category=loafers"
+                          onClick={onClose}
+                          className="block text-sm text-brand-gray-600 hover:text-brand-blue py-1 transition-colors"
+                        >
+                          Classic Loafers
+                        </Link>
+                        <Link
+                          href="/search?category=boots"
+                          onClick={onClose}
+                          className="block text-sm text-brand-gray-600 hover:text-brand-blue py-1 transition-colors"
+                        >
+                          Boots
+                        </Link>
+                        {categories.map((cat) => (
+                          <Link
+                            key={cat.id}
+                            href={`/search?category=${cat.slug}`}
+                            onClick={onClose}
+                            className="block text-sm text-brand-gray-600 hover:text-brand-blue py-1 transition-colors"
+                          >
+                            {cat.name}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </div>
+
+              {/* Secondary Navigation Section */}
+              <div className="px-6 py-4 border-t border-brand-gray-100 space-y-3 font-mono text-xs uppercase tracking-widest text-brand-gray-600">
+                {userName ? (
+                  <>
+                    <Link
+                      href="/account"
+                      onClick={onClose}
+                      className="flex items-center gap-3 py-1.5 hover:text-brand-blue transition-colors"
+                    >
+                      <User size={15} className="text-brand-blue" />
+                      <span>{userName}</span>
+                    </Link>
+                    <Link
+                      href="/account/orders"
+                      onClick={onClose}
+                      className="flex items-center gap-3 py-1.5 hover:text-brand-blue transition-colors"
+                    >
+                      <ShoppingBag size={15} className="text-brand-blue" />
+                      <span>My Orders</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        signOutAction();
+                        onClose();
+                      }}
+                      className="flex items-center gap-3 py-1.5 text-rose-600 hover:underline"
+                    >
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (openLoginModal && process.env.NEXT_PUBLIC_OTP_ENABLED === "true") {
+                          openLoginModal();
+                        } else {
+                          signInAction();
+                        }
+                        onClose();
+                      }}
+                      className="flex items-center gap-3 py-1.5 text-brand-navy hover:text-brand-blue font-semibold transition-colors"
+                    >
+                      <User size={15} className="text-brand-blue" />
+                      <span>Sign In / Register</span>
+                    </button>
+                    <Link
+                      href="/account/orders"
+                      onClick={onClose}
+                      className="flex items-center gap-3 py-1.5 hover:text-brand-blue transition-colors"
+                    >
+                      <ShoppingBag size={15} className="text-brand-blue" />
+                      <span>Track Orders</span>
+                    </Link>
+                  </>
+                )}
+
+                <Link
+                  href="/about"
+                  onClick={onClose}
+                  className="flex items-center gap-3 py-1.5 hover:text-brand-blue transition-colors"
+                >
+                  <Shield size={15} className="text-brand-blue" />
+                  <span>About KNOOS</span>
+                </Link>
+
+                <Link
+                  href="/contact"
+                  onClick={onClose}
+                  className="flex items-center gap-3 py-1.5 hover:text-brand-blue transition-colors"
+                >
+                  <Phone size={15} className="text-brand-blue" />
+                  <span>Contact &amp; Support</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Bottom Brand Details */}
+            <div className="p-6 bg-brand-sky/20 border-t border-brand-sky-border/40">
+              <p className="font-serif italic text-brand-navy text-sm mb-1">
+                Comfort In Every Step
+              </p>
+              <div className="flex items-center gap-3 text-xs text-brand-gray-500 pt-2">
+                <a href="tel:7088808882" className="hover:text-brand-blue transition-colors">
+                  7088808882
+                </a>
+                <span>&bull;</span>
+                <a
+                  href="https://wa.me/917088808882"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand-blue transition-colors"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

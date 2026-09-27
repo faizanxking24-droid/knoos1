@@ -19,25 +19,32 @@ export async function getRecommendations(options: RecommendationOptions) {
   }
 
   // Fetch a pool of active products to score
-  // We limit the pool size for performance (e.g., latest 50 active products)
-  const pool = await prisma.product.findMany({
-    where: {
-      status: "ACTIVE",
-      id: { notIn: excludeIds },
-    },
-    include: {
-      images: {
-        orderBy: { sortOrder: "asc" },
+  let pool: any[] = [];
+  try {
+    pool = await prisma.product.findMany({
+      where: {
+        status: "ACTIVE",
+        id: { notIn: excludeIds },
       },
-      categoryRel: {
-        select: { name: true },
+      include: {
+        images: {
+          orderBy: { sortOrder: "asc" },
+        },
+        categoryRel: {
+          select: { name: true },
+        },
       },
-    },
-    take: 50,
-    orderBy: { createdAt: "desc" },
-  });
+      take: 50,
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.warn("Could not query recommendations from database:", err instanceof Error ? err.message : err);
+  }
 
-  if (pool.length === 0) return [];
+  if (pool.length === 0) {
+    const { FALLBACK_PRODUCTS } = await import("./fallback-data");
+    pool = FALLBACK_PRODUCTS.filter((p) => !excludeIds.includes(p.id));
+  }
 
   // If we don't have specific targeting, just return the most recent active products
   if (!category && !subCategory && !gender) {

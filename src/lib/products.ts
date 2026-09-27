@@ -137,7 +137,20 @@ export async function getProducts(params: ProductSearchParams): Promise<ProductW
 
     return limit ? products.slice(0, limit) : products;
   } catch (error) {
-    console.error("Error in getProducts:", error);
-    return [];
+    console.warn("Database unavailable in getProducts, using fallback catalog:", error instanceof Error ? error.message : error);
+    const { FALLBACK_PRODUCTS } = await import("./fallback-data");
+    let filtered = [...FALLBACK_PRODUCTS];
+    if (params.gender === "MEN" || params.gender === "WOMEN") {
+      filtered = filtered.filter(p => p.gender === params.gender);
+    }
+    if (params.q) {
+      const query = params.q.toLowerCase().trim();
+      filtered = filtered.filter(p => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query));
+    }
+    if (params.category) {
+      const cat = params.category.toLowerCase().trim();
+      filtered = filtered.filter(p => p.category?.toLowerCase() === cat || p.categoryRel?.slug === cat);
+    }
+    return params.limit ? filtered.slice(0, params.limit) : filtered;
   }
 }

@@ -84,15 +84,20 @@ export const metadata: Metadata = {
 export const revalidate = 60; // Revalidate every minute
 
 export default async function FaqPage() {
-  const managedFaqs = await prisma.fAQ.findMany({
-    where: { isActive: true },
-    orderBy: { order: "asc" },
-    select: {
-      id: true,
-      question: true,
-      answer: true,
-    }
-  });
+  let managedFaqs: Array<{ id: string; question: string; answer: string }> = [];
+  try {
+    managedFaqs = await prisma.fAQ.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        question: true,
+        answer: true,
+      }
+    });
+  } catch (error) {
+    console.warn("Could not query FAQs from database:", error instanceof Error ? error.message : error);
+  }
 
   const customerQuestions = new Set(
     customerFaqs.map((faq) => faq.question.trim().toLocaleLowerCase())
