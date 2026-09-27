@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth-helpers';
 
-const execAsync = promisify(exec);
-
 export const dynamic = 'force-dynamic';
 
-function replacer(key: string, value: any) {
-  return typeof value === 'bigint' ? value.toString() : value;
+function serializeRow(row: any) {
+  const result: any = {};
+  for (const [key, value] of Object.entries(row)) {
+    result[key] = typeof value === 'bigint' ? value.toString() : value;
+  }
+  return result;
 }
 
 export async function GET(request: Request) {
@@ -17,15 +17,7 @@ export async function GET(request: Request) {
     const adminCheck = await requireAdmin();
     if (adminCheck instanceof Response) return adminCheck;
 
-    let migrateStatus = '';
-    try {
-      const { stdout, stderr } = await execAsync('npx prisma migrate status');
-      migrateStatus = stdout + '\n' + stderr;
-    } catch (e: any) {
-      migrateStatus = (e.stdout || '') + '\n' + (e.stderr || '') + '\n' + e.message;
-    }
-
-    const migrationHistory: any = await prisma.$queryRaw`
+    const migrationHistory: any[] = await prisma.$queryRaw`
       SELECT migration_name, started_at, finished_at, rolled_back_at, applied_steps_count, logs
       FROM \`_prisma_migrations\`
       WHERE migration_name IN (
@@ -34,9 +26,9 @@ export async function GET(request: Request) {
       )
     `;
 
-    const showCreateTable: any = await prisma.$queryRaw`SHOW CREATE TABLE \`Cart\``;
+    const showCreateTable: any[] = await prisma.$queryRaw`SHOW CREATE TABLE \`Cart\``;
     
-    const fkInfo: any = await prisma.$queryRaw`
+    const fkInfo: any[] = await prisma.$queryRaw`
       SELECT CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
       FROM information_schema.KEY_COLUMN_USAGE
       WHERE TABLE_SCHEMA = DATABASE()
@@ -45,14 +37,14 @@ export async function GET(request: Request) {
         AND REFERENCED_TABLE_NAME IS NOT NULL
     `;
 
-    const orphanCarts: any = await prisma.$queryRaw`
+    const orphanCarts: any[] = await prisma.$queryRaw`
       SELECT COUNT(*) AS total_orphans
       FROM \`Cart\` c
       LEFT JOIN \`User\` u ON u.id = c.userId
       WHERE u.id IS NULL
     `;
 
-    const googleMappable: any = await prisma.$queryRaw`
+    const googleMappable: any[] = await prisma.$queryRaw`
       SELECT COUNT(*) AS google_mappable_orphans
       FROM \`Cart\` c
       JOIN \`User\` u ON c.userId = u.googleId
@@ -61,18 +53,15 @@ export async function GET(request: Request) {
     `;
 
     const rawData = {
-      migrateStatus,
-      migrationHistory,
-      showCreateTable: showCreateTable[0],
-      fkInfo,
-      total_orphans: orphanCarts[0]?.total_orphans,
-      google_mappable_orphans: googleMappable[0]?.google_mappable_orphans
+      migrationHistory: migrationHistory.map(serializeRow),
+      showCreateTable: showCreateTable[0] ? serializeRow(showCreateTable[0]) : null,
+      fkInfo: fkInfo.map(serializeRow),
+      total_orphans: orphanCarts[0] ? Number(orphanCarts[0].total_orphans) : 0,
+      google_mappable_orphans: googleMappable[0] ? Number(googleMappable[0].google_mappable_orphans) : 0
     };
 
-    return new Response(JSON.stringify(rawData, replacer), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return NextResponse.json(rawData);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
