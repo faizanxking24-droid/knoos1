@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getColorSwatch } from "@/lib/colors";
 import { ProductStatus } from "@/lib/constants";
+import {
+  detectLegacyCombinedColors,
+  parseLegacyColors,
+  parseLegacySkus,
+  mapColorsToSkus,
+} from "@/lib/legacy-colors";
+import { EditColorwayModal } from "./EditColorwayModal";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Colorway {
   id: string;
@@ -22,14 +29,25 @@ interface Colorway {
   isCurrent: boolean;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ColorVariantsPanel({ productId }: { productId: string }) {
   const [colorways, setColorways] = useState<Colorway[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingColorway, setEditingColorway] = useState<Colorway | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sourceProduct, setSourceProduct] = useState<{
+    color: string | null;
+    sku: string | null;
+    colorGroupKey: string | null;
+  } | null>(null);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [legacyColors, setLegacyColors] = useState<string[]>([]);
+  const [skuInputs, setSkuInputs] = useState<Record<string, string>>({});
+  const [convertSubmitting, setConvertSubmitting] = useState(false);
+  const [convertError, setConvertError] = useState<string | null>(null);
 
   const loadColorways = async () => {
     setLoading(true);
@@ -40,7 +58,7 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
         setColorways(data.colorways);
       }
     } catch {
-      // silently fail — panel will be empty
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -50,7 +68,35 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
     loadColorways();
   }, [productId]);
 
-  const handleAddColor = async (input: { color: string; name: string; slug: string; sku: string }) => {
+  // Load source product for legacy detection
+  useEffect(() => {
+    async function loadSource() {
+      try {
+        const res = await fetch(`/api/admin/products/${productId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSourceProduct({
+            color: data.color,
+            sku: data.sku,
+            colorGroupKey: data.colorGroupKey,
+          });
+        }
+      } catch {
+        // silently fail
+      }
+    }
+    loadSource();
+  }, [productId]);
+
+  const hasLegacyCombined =
+    sourceProduct?.color && detectLegacyCombinedColors(sourceProduct.color);
+
+  const handleAddColor = async (input: {
+    color: string;
+    name: string;
+    slug: string;
+    sku: string;
+  }) => {
     setSubmitting(true);
     setError(null);
     try {
@@ -76,6 +122,10 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
     }
   };
 
+  const handleEditUpdate = async () => {
+    await loadColorways();
+  };
+
   const handleRemove = async (colorwayId: string) => {
     if (!confirm("Remove this color variant? The product will be deactivated.")) return;
     try {
@@ -88,6 +138,63 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
     } catch {
       // silently fail
     }
+  };
+
+  const handleConvertClick = () => {
+    if (!sourceProduct?.color) return;
+    const parsedColors = parseLegacyColors(sourceProduct.color);
+    const parsedSkus = sourceProduct.sku ? parseLegacySkus(sourceProduct.sku) : [];
+    const mapped = mapColorsToSkus(parsedColors, parsedSkus);
+
+    setLegacyColors(parsedColors);
+    const initialSkuInputs: Record<string, string> = {};
+    mapped.forEach((entry) => {
+      if (entry.sku) {
+        initialSkuInputs[entry.color] = entry.sku;
+      }
+    });
+    setSkuInputs(initialSkuInputs);
+    setShowConvertModal(true);
+    setConvertError(null);
+  };
+
+  const handleConvertConfirm = async () => {
+    setConvertSubmitting(true);
+    setConvertError(null);
+
+    const skuMap = legacyColors.map((color) => ({
+      color,
+      sku: skuInputs[color] || undefined,
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/admin/products/${productId}/convert-legacy-colors`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ colors: legacyColors, skuMap }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setConvertError(data.error || "Conversion failed");
+        setConvertSubmitting(false);
+        return;
+      }
+
+      setShowConvertModal(false);
+      await loadColorways();
+    } catch {
+      setConvertError("Network error. Please try again.");
+      setConvertSubmitting(false);
+    }
+  };
+
+  const updateSkuInput = (color: string, value: string) => {
+    setSkuInputs((prev) => ({ ...prev, [color]: value }));
   };
 
   if (loading) {
@@ -103,6 +210,31 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
     <div className="bg-white border border-brand-gray-200 p-6 mb-6">
       <h2 className="font-serif text-lg pb-4 border-b border-brand-gray-100">Color Variants</h2>
 
+      {/* Legacy combined-color warning */}
+      {hasLegacyCombined && (
+        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="text-sm text-amber-800 font-medium">
+                Combined legacy colors detected
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                This product has multiple colors stored in a single field: &ldquo;
+                {sourceProduct?.color}&rdquo;
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleConvertClick}
+              className="text-xs font-mono uppercase tracking-wide bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 hover:bg-amber-200 transition-colors flex-shrink-0"
+            >
+              Convert Colors
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Colorways list */}
       {colorways.length > 0 ? (
         <div className="mt-4 space-y-3">
           {colorways.map((cw) => {
@@ -158,14 +290,16 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link
-                    href={`/admin/products/${cw.id}`}
+                  <button
+                    type="button"
+                    onClick={() => setEditingColorway(cw)}
                     className="text-xs font-mono uppercase tracking-wide border border-brand-gray-200 px-3 py-1.5 hover:border-brand-black transition-colors"
                   >
                     Edit
-                  </Link>
+                  </button>
                   {!cw.isCurrent && (
                     <button
+                      type="button"
                       onClick={() => handleRemove(cw.id)}
                       className="text-xs font-mono uppercase tracking-wide text-red-600 border border-red-200 px-3 py-1.5 hover:bg-red-50 transition-colors"
                     >
@@ -185,6 +319,7 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
 
       {/* Add Color Button */}
       <button
+        type="button"
         onClick={() => setShowAddModal(true)}
         className="mt-4 text-xs font-mono uppercase tracking-wide border border-brand-gray-200 px-4 py-2 hover:border-brand-black transition-colors"
       >
@@ -204,11 +339,111 @@ export function ColorVariantsPanel({ productId }: { productId: string }) {
           error={error}
         />
       )}
+
+      {/* Edit Colorway Modal */}
+      {editingColorway && (
+        <EditColorwayModal
+          colorway={editingColorway}
+          onClose={() => {
+            setEditingColorway(null);
+            setError(null);
+          }}
+          onUpdated={handleEditUpdate}
+          submitting={submitting}
+        />
+      )}
+
+      {/* Legacy Convert Modal */}
+      {showConvertModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="font-serif text-lg pb-4 border-b border-brand-gray-100">
+                Convert Legacy Colors
+              </h3>
+
+              {convertError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm mt-4">
+                  {convertError}
+                </div>
+              )}
+
+              <div className="mt-4 space-y-3">
+                <p className="text-xs text-brand-gray-500 font-mono">
+                  Current combined value: &ldquo;{sourceProduct?.color}&rdquo;
+                </p>
+
+                <p className="text-xs text-brand-gray-500 font-mono uppercase tracking-wider">
+                  Proposed color variants:
+                </p>
+
+                {legacyColors.map((color, index) => (
+                  <div
+                    key={color}
+                    className="border border-brand-gray-200 rounded-lg p-3 space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-4 h-4 rounded-full flex-shrink-0 ${
+                          getColorSwatch(color).isLight ? "border border-black/20" : ""
+                        }`}
+                        style={{ backgroundColor: getColorSwatch(color).hex }}
+                      />
+                      <span className="font-mono text-sm font-medium">
+                        {color}
+                      </span>
+                      {index === 0 && (
+                        <span className="text-[10px] font-mono uppercase tracking-wider bg-brand-navy/10 text-brand-navy px-2 py-0.5 rounded">
+                          Current Product
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block font-mono text-[10px] uppercase tracking-wide text-brand-gray-500 mb-1">
+                        SKU
+                      </label>
+                      <input
+                        type="text"
+                        value={skuInputs[color] || ""}
+                        onChange={(e) => updateSkuInput(color, e.target.value)}
+                        placeholder="Enter SKU for this color"
+                        className="w-full border border-brand-gray-200 px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-brand-gray-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConvertModal(false);
+                    setConvertError(null);
+                  }}
+                  disabled={convertSubmitting}
+                  className="px-4 py-2 text-sm font-mono border border-brand-gray-200 hover:border-brand-black transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConvertConfirm}
+                  disabled={convertSubmitting}
+                  className="px-4 py-2 text-sm font-mono bg-brand-black text-white hover:bg-brand-gray-800 transition-colors disabled:opacity-50"
+                >
+                  {convertSubmitting ? "Converting..." : "Confirm Convert"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Add Color Modal ─────────────────────────────────────────────────────────
+// ─── Add Color Modal ──────────────────────────────────────────────────────────
 
 function AddColorModal({
   sourceProductId,
