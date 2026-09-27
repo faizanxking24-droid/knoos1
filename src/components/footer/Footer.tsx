@@ -5,7 +5,7 @@ import { StoreContainer } from "@/components/store/StoreContainer";
 import { Reveal, StaggerContainer, StaggerItem } from "@/components/motion";
 
 export function Footer() {
-  const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim();
+  const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim() || "https://www.facebook.com/knoosshoes";
 
   return (
     <footer className="relative bg-brand-navy-dark text-white border-t border-white/10 overflow-hidden">
@@ -94,7 +94,7 @@ export function Footer() {
                     >
                       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                     </svg>
-                    <span className="hover:underline">Facebook</span>
+                    <span className="hover:underline">@KNOOSSHOES</span>
                   </a>
                 )}
               </div>
