@@ -2,9 +2,32 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import {
+  ORDER_STATUS_COLORS,
+  PAYMENT_STATUS_COLORS,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  OrderStatus,
+  PaymentStatus,
+} from "@/lib/constants";
 
-const ORDER_STATUSES = ["PENDING", "PAID", "PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
-const PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REFUNDED"] as const;
+const ORDER_STATUSES = [
+  "PENDING",
+  "PAID",
+  "PROCESSING",
+  "PACKED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+] as const;
+
+const PAYMENT_STATUSES = [
+  "PENDING",
+  "PAID",
+  "FAILED",
+  "REFUNDED",
+] as const;
+
 const PAYMENT_METHODS = ["ONLINE", "COD"] as const;
 
 interface OrderItem {
@@ -25,6 +48,7 @@ interface Order {
   deliveryMethod: string;
   orderStatus: string;
   paymentStatus: string;
+  paymentMethod: string;
   razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
   createdAt: string;
@@ -40,8 +64,7 @@ interface OrdersResponse {
   totalPages: number;
 }
 
-function formatINR(paise: number): string {
-  const rupees = paise / 100;
+function formatINR(rupees: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -49,34 +72,26 @@ function formatINR(paise: number): string {
   }).format(rupees);
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  PAID: "bg-green-50 text-green-700 border-green-200",
-  PROCESSING: "bg-blue-50 text-blue-700 border-blue-200",
-  PACKED: "bg-purple-50 text-purple-700 border-purple-200",
-  SHIPPED: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
-};
-
-const PAYMENT_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  PAID: "bg-green-50 text-green-700 border-green-200",
-  FAILED: "bg-red-50 text-red-700 border-red-200",
-  REFUNDED: "bg-gray-50 text-gray-600 border-gray-200",
-};
-
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
-  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
   const [methodFilter, setMethodFilter] = useState("");
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    orderId: string;
+    field: "orderStatus" | "paymentStatus";
+    value: string;
+    title: string;
+    description: string;
+  } | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -117,8 +132,13 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const updateOrderStatus = async (orderId: string, field: string, value: string) => {
+  const executeStatusUpdate = async (
+    orderId: string,
+    field: "orderStatus" | "paymentStatus",
+    value: string
+  ) => {
     setUpdatingOrder(orderId);
+    setActionNotice(null);
     try {
       const body: Record<string, string> = { id: orderId };
       body[field] = value;
@@ -129,28 +149,101 @@ export default function AdminOrdersPage() {
         body: JSON.stringify(body),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Failed to update");
+        setActionNotice({
+          type: "error",
+          text: data.error || `Failed to update ${field}`,
+        });
         return;
       }
 
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, [field]: value } : o))
       );
+
+      setActionNotice({
+        type: "success",
+        text: `Order #${orderId.slice(0, 8)} ${field === "orderStatus" ? "order" : "payment"} status updated to ${value}.`,
+      });
     } catch {
-      alert("Network error");
+      setActionNotice({
+        type: "error",
+        text: "Network error while updating status.",
+      });
     } finally {
       setUpdatingOrder(null);
     }
+  };
+
+  const requestStatusUpdate = (
+    orderId: string,
+    field: "orderStatus" | "paymentStatus",
+    value: string
+  ) => {
+    const current = orders.find((o) => o.id === orderId);
+    if (!current || current[field] === value) return;
+
+    if (value === "CANCELLED") {
+      setConfirmModal({
+        orderId,
+        field,
+        value,
+        title: "Confirm Order Cancellation",
+        description:
+          "Are you sure you want to mark this order as CANCELLED? This action updates the record to Cancelled.",
+      });
+      return;
+    }
+
+    if (value === "DELIVERED") {
+      setConfirmModal({
+        orderId,
+        field,
+        value,
+        title: "Confirm Order Delivery",
+        description:
+          "Are you sure you want to mark this order as DELIVERED? Note: Payment status is independent and will not be changed automatically.",
+      });
+      return;
+    }
+
+    if (value === "REFUNDED") {
+      setConfirmModal({
+        orderId,
+        field,
+        value,
+        title: "Confirm Payment Refund Status",
+        description:
+          "Are you sure you want to mark payment status as REFUNDED? Note: This updates the database record only. Gateway refunds must be issued separately via your Razorpay Dashboard.",
+      });
+      return;
+    }
+
+    executeStatusUpdate(orderId, field, value);
   };
 
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="font-serif text-3xl">Orders</h1>
-        <p className="text-brand-gray-500 font-mono text-sm mt-1">Manage customer orders</p>
+        <p className="text-brand-gray-500 font-mono text-sm mt-1">
+          Manage customer orders and payment statuses
+        </p>
       </div>
+
+      {/* Action Notice */}
+      {actionNotice && (
+        <div
+          className={`px-6 py-4 text-sm font-mono mb-6 border ${
+            actionNotice.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+              : "bg-red-50 text-red-800 border-red-200"
+          }`}
+        >
+          {actionNotice.text}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white border border-brand-gray-200 p-4 mb-6">
@@ -171,7 +264,9 @@ export default function AdminOrdersPage() {
           >
             <option value="">All Statuses</option>
             {ORDER_STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {ORDER_STATUS_LABELS[s] || s}
+              </option>
             ))}
           </select>
           <select
@@ -181,7 +276,9 @@ export default function AdminOrdersPage() {
           >
             <option value="">All Payments</option>
             {PAYMENT_STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {PAYMENT_STATUS_LABELS[s] || s}
+              </option>
             ))}
           </select>
           <select
@@ -191,7 +288,9 @@ export default function AdminOrdersPage() {
           >
             <option value="">All Payment Methods</option>
             {PAYMENT_METHODS.map((m) => (
-              <option key={m} value={m}>{m === "COD" ? "Cash on Delivery" : "Online"}</option>
+              <option key={m} value={m}>
+                {m === "COD" ? "Cash on Delivery (COD)" : "Online"}
+              </option>
             ))}
           </select>
         </div>
@@ -211,7 +310,7 @@ export default function AdminOrdersPage() {
         ) : orders.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-brand-gray-400 font-mono text-sm">
-              {searchQuery || statusFilter || paymentFilter
+              {searchQuery || statusFilter || paymentFilter || methodFilter
                 ? "No orders match your filters"
                 : "No orders yet"}
             </p>
@@ -221,21 +320,44 @@ export default function AdminOrdersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-brand-gray-100 text-left">
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Order ID</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Customer</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Items</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">Total</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Order Status</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Method</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Payment</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">Date</th>
-                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">Actions</th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Order ID
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Customer
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Items
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">
+                    Total
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Order Status
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Method
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Payment Status
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 font-mono text-xs uppercase text-brand-gray-500 text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order.id} className="border-b border-brand-gray-50 hover:bg-brand-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{order.id.slice(0, 8)}...</td>
+                  <tr
+                    key={order.id}
+                    className="border-b border-brand-gray-50 hover:bg-brand-gray-50"
+                  >
+                    <td className="px-4 py-3 font-mono text-xs">
+                      #{order.id.slice(0, 8)}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {order.user.image && (
@@ -247,43 +369,66 @@ export default function AdminOrdersPage() {
                         )}
                         <div>
                           <p className="text-sm">{order.user.name || "—"}</p>
-                          <p className="text-xs text-brand-gray-400 font-mono">{order.user.email}</p>
+                          <p className="text-xs text-brand-gray-400 font-mono">
+                            {order.user.email}
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-center">
                       {order.items.reduce((sum, item) => sum + item.quantity, 0)}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-right">{formatINR(order.total)}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-right font-medium">
+                      {formatINR(order.total)}
+                    </td>
                     <td className="px-4 py-3">
                       <select
                         value={order.orderStatus}
                         onChange={(e) =>
-                          updateOrderStatus(order.id, "orderStatus", e.target.value)
+                          requestStatusUpdate(order.id, "orderStatus", e.target.value)
                         }
                         disabled={updatingOrder === order.id}
-                        className={`text-xs px-2 py-1 border focus:outline-none disabled:opacity-50 ${STATUS_COLORS[order.orderStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}
+                        className={`text-xs px-2.5 py-1 border font-mono focus:outline-none disabled:opacity-50 ${
+                          ORDER_STATUS_COLORS[order.orderStatus as OrderStatus] ||
+                          "bg-gray-50 text-gray-600 border-gray-200"
+                        }`}
                       >
                         {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
+                          <option key={s} value={s}>
+                            {ORDER_STATUS_LABELS[s] || s}
+                          </option>
                         ))}
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${
-                        (order as any).paymentMethod === "COD"
-                          ? "bg-orange-50 text-orange-700 border-orange-200"
-                          : "bg-gray-50 text-gray-700 border-gray-200"
-                      }`}>
-                        {(order as any).paymentMethod === "COD" ? "COD" : "Online"}
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-mono font-medium border ${
+                          order.paymentMethod === "COD"
+                            ? "bg-orange-50 text-orange-700 border-orange-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200"
+                        }`}
+                      >
+                        {order.paymentMethod === "COD" ? "COD" : "Online"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${PAYMENT_COLORS[order.paymentStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
-                        {(order as any).paymentMethod === "COD" && order.paymentStatus === "PENDING"
-                          ? "COD — Pending"
-                          : order.paymentStatus}
-                      </span>
+                      <select
+                        value={order.paymentStatus}
+                        onChange={(e) =>
+                          requestStatusUpdate(order.id, "paymentStatus", e.target.value)
+                        }
+                        disabled={updatingOrder === order.id}
+                        className={`text-xs px-2.5 py-1 border font-mono focus:outline-none disabled:opacity-50 ${
+                          PAYMENT_STATUS_COLORS[order.paymentStatus as PaymentStatus] ||
+                          "bg-gray-50 text-gray-600 border-gray-200"
+                        }`}
+                      >
+                        {PAYMENT_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {PAYMENT_STATUS_LABELS[s] || s}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-brand-gray-400">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -331,6 +476,38 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white max-w-md w-full p-6 border border-brand-gray-200 shadow-xl space-y-4">
+            <h3 className="font-serif text-xl">{confirmModal.title}</h3>
+            <p className="text-sm font-mono text-brand-gray-600 leading-relaxed">
+              {confirmModal.description}
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-brand-gray-100">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 border border-brand-gray-200 text-xs font-mono uppercase tracking-wide hover:border-brand-black transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const { orderId, field, value } = confirmModal;
+                  setConfirmModal(null);
+                  executeStatusUpdate(orderId, field, value);
+                }}
+                className="px-4 py-2 bg-brand-black text-white text-xs font-mono uppercase tracking-wide hover:bg-neutral-800 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

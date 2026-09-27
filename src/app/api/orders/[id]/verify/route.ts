@@ -40,8 +40,8 @@ export async function POST(
     return NextResponse.json({ error: "This order does not use online payment." }, { status: 400 });
   }
 
-  // Already marked as PAID via webhook or previous call
-  if (order.paymentStatus === "PAID") {
+  // Already finalized via webhook or previous verify call
+  if (order.razorpayPaymentId) {
     if (order.checkoutMode === "CART") {
       await prisma.cart.deleteMany({ where: { userId: session.user.id } });
     }

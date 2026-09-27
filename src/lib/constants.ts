@@ -65,6 +65,26 @@ export const OrderStatus = {
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
+export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  PAID: "bg-green-50 text-green-700 border-green-200",
+  PROCESSING: "bg-blue-50 text-blue-700 border-blue-200",
+  PACKED: "bg-purple-50 text-purple-700 border-purple-200",
+  SHIPPED: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  DELIVERED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+};
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING: "Pending",
+  PAID: "Paid",
+  PROCESSING: "Processing",
+  PACKED: "Packed",
+  SHIPPED: "Shipped",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
 /**
  * Payment statuses.
  */
@@ -76,6 +96,20 @@ export const PaymentStatus = {
 } as const;
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
+  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  PAID: "bg-green-50 text-green-700 border-green-200",
+  FAILED: "bg-red-50 text-red-700 border-red-200",
+  REFUNDED: "bg-gray-50 text-gray-600 border-gray-200",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: "Pending",
+  PAID: "Paid",
+  FAILED: "Failed",
+  REFUNDED: "Refunded",
+};
 
 /**
  * Delivery methods.

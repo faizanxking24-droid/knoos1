@@ -1,10 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import {
+  ORDER_STATUS_COLORS,
+  PAYMENT_STATUS_COLORS,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  OrderStatus,
+  PaymentStatus,
+} from "@/lib/constants";
 
-const ORDER_STATUSES = ["PENDING", "PAID", "PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
-const PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REFUNDED"] as const;
+const ORDER_STATUSES = [
+  "PENDING",
+  "PAID",
+  "PROCESSING",
+  "PACKED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+] as const;
+
+const PAYMENT_STATUSES = [
+  "PENDING",
+  "PAID",
+  "FAILED",
+  "REFUNDED",
+] as const;
 
 interface OrderItem {
   id: string;
@@ -54,57 +76,114 @@ function formatINR(rupees: number): string {
   }).format(rupees);
 }
 
-const ORDER_STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  PAID: "bg-green-50 text-green-700 border-green-200",
-  PROCESSING: "bg-blue-50 text-blue-700 border-blue-200",
-  PACKED: "bg-purple-50 text-purple-700 border-purple-200",
-  SHIPPED: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
-};
-
-const PAYMENT_STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  PAID: "bg-green-50 text-green-700 border-green-200",
-  FAILED: "bg-red-50 text-red-700 border-red-200",
-  REFUNDED: "bg-gray-50 text-gray-600 border-gray-200",
-};
-
-export default function AdminOrderDetail({ order }: OrderDetailProps) {
+export default function AdminOrderDetail({ order: initialOrder }: OrderDetailProps) {
+  const [currentOrder, setCurrentOrder] = useState<Order>(initialOrder);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    field: "orderStatus" | "paymentStatus";
+    value: string;
+    title: string;
+    description: string;
+  } | null>(null);
 
-  const updateStatus = async (field: "orderStatus" | "paymentStatus", value: string) => {
+  const executeStatusUpdate = async (
+    field: "orderStatus" | "paymentStatus",
+    value: string
+  ) => {
     setUpdating(field);
+    setMessage(null);
 
     try {
-      const res = await fetch(`/api/admin/orders/${order.id}`, {
+      const res = await fetch(`/api/admin/orders/${currentOrder.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: order.id, [field]: value }),
+        body: JSON.stringify({ id: currentOrder.id, [field]: value }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Failed to update status");
+        setMessage({
+          type: "error",
+          text: data.error || `Failed to update ${field}`,
+        });
+        return;
       }
+
+      // Update local state immediately with returned order
+      setCurrentOrder((prev) => ({
+        ...prev,
+        ...data,
+      }));
+
+      setMessage({
+        type: "success",
+        text: `${field === "orderStatus" ? "Order" : "Payment"} status successfully updated to ${value}.`,
+      });
     } catch {
-      alert("Network error");
+      setMessage({ type: "error", text: "Network error while updating status." });
     } finally {
       setUpdating(null);
     }
   };
 
+  const handleStatusChange = (
+    field: "orderStatus" | "paymentStatus",
+    value: string
+  ) => {
+    if (value === currentOrder[field]) return;
+
+    // High-impact confirmation dialogs for terminal or financial operations
+    if (value === "CANCELLED") {
+      setConfirmModal({
+        field,
+        value,
+        title: "Confirm Order Cancellation",
+        description:
+          "Are you sure you want to mark this order as CANCELLED? This updates the record to Cancelled. Manual status updates do not trigger automated refunds or inventory alterations.",
+      });
+      return;
+    }
+
+    if (value === "DELIVERED") {
+      setConfirmModal({
+        field,
+        value,
+        title: "Confirm Order Delivery",
+        description:
+          "Are you sure you want to mark this order as DELIVERED? Note: Order status and Payment status are independent. Payment status will NOT be changed automatically.",
+      });
+      return;
+    }
+
+    if (value === "REFUNDED") {
+      setConfirmModal({
+        field,
+        value,
+        title: "Confirm Payment Refund Status",
+        description:
+          "Are you sure you want to mark payment status as REFUNDED? Note: This updates the database record only. Actual gateway refunds must be issued separately via your Razorpay Dashboard.",
+      });
+      return;
+    }
+
+    // Direct transition for non-critical statuses
+    executeStatusUpdate(field, value);
+  };
+
   return (
     <div className="p-8">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="font-serif text-3xl">Order</h1>
-            <span className="font-mono text-xs text-brand-gray-400">#{order.id.slice(0, 12)}</span>
+            <span className="font-mono text-xs text-brand-gray-400">
+              #{currentOrder.id.slice(0, 12)}
+            </span>
           </div>
           <p className="text-brand-gray-500 font-mono text-sm">
-            {new Date(order.createdAt).toLocaleDateString("en-IN", {
+            {new Date(currentOrder.createdAt).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "long",
               year: "numeric",
@@ -121,17 +200,32 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
         </Link>
       </div>
 
+      {/* Status feedback message */}
+      {message && (
+        <div
+          className={`px-6 py-4 text-sm font-mono mb-6 border ${
+            message.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+              : "bg-red-50 text-red-800 border-red-200"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Order items */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Items */}
           <div className="bg-white border border-brand-gray-200">
             <div className="border-b border-brand-gray-200 px-6 py-4">
               <h2 className="font-serif text-lg">Order Items</h2>
             </div>
             <div className="divide-y divide-brand-gray-50">
-              {order.items.map((item) => (
-                <div key={item.id} className="px-6 py-4 flex items-center justify-between">
+              {currentOrder.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="px-6 py-4 flex items-center justify-between"
+                >
                   <div>
                     <p className="font-medium">{item.productName}</p>
                     <p className="text-xs text-brand-gray-400 font-mono mt-0.5">
@@ -139,8 +233,12 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-sm">{formatINR(item.price)} each</p>
-                    <p className="font-mono text-sm font-medium">{formatINR(item.total)}</p>
+                    <p className="font-mono text-sm">
+                      {formatINR(item.price)} each
+                    </p>
+                    <p className="font-mono text-sm font-medium">
+                      {formatINR(item.total)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -148,27 +246,35 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
             <div className="border-t border-brand-gray-200 px-6 py-4">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-brand-gray-500 font-mono">Subtotal</span>
-                <span className="font-mono">{formatINR(order.subtotal)}</span>
+                <span className="font-mono">{formatINR(currentOrder.subtotal)}</span>
               </div>
-              {order.discountAmount > 0 && (
+              {currentOrder.discountAmount > 0 && (
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-brand-gray-500 font-mono">Coupon ({order.couponCode})</span>
-                  <span className="font-mono">-{formatINR(order.discountAmount)}</span>
+                  <span className="text-brand-gray-500 font-mono">
+                    Coupon ({currentOrder.couponCode})
+                  </span>
+                  <span className="font-mono">
+                    -{formatINR(currentOrder.discountAmount)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-brand-gray-500 font-mono">Delivery ({order.deliveryMethod})</span>
-                <span className="font-mono">{formatINR(order.deliveryCharge)}</span>
+                <span className="text-brand-gray-500 font-mono">
+                  Delivery ({currentOrder.deliveryMethod})
+                </span>
+                <span className="font-mono">
+                  {formatINR(currentOrder.deliveryCharge)}
+                </span>
               </div>
               <div className="flex justify-between font-medium pt-3 border-t border-brand-gray-100">
                 <span className="font-mono uppercase text-sm">Total</span>
-                <span className="font-mono">{formatINR(order.total)}</span>
+                <span className="font-mono">{formatINR(currentOrder.total)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Status + Customer + Razorpay */}
+        {/* Right: Status + Customer + Shipping + Payment */}
         <div className="space-y-6">
           {/* Customer */}
           <div className="bg-white border border-brand-gray-200">
@@ -177,37 +283,96 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
             </div>
             <div className="px-6 py-4">
               <div className="flex items-center gap-3">
-                {order.user.image && (
+                {currentOrder.user.image && (
                   <img
-                    src={order.user.image}
+                    src={currentOrder.user.image}
                     alt=""
                     className="w-10 h-10 rounded-full object-cover border border-brand-gray-100"
                   />
                 )}
                 <div>
-                  <p className="font-medium">{order.user.name || "—"}</p>
-                  <p className="text-xs text-brand-gray-400 font-mono">{order.user.email}</p>
+                  <p className="font-medium">{currentOrder.user.name || "—"}</p>
+                  <p className="text-xs text-brand-gray-400 font-mono">
+                    {currentOrder.user.email}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Order Status */}
+          {/* Order Status Control */}
           <div className="bg-white border border-brand-gray-200">
-            <div className="border-b border-brand-gray-200 px-6 py-4">
+            <div className="border-b border-brand-gray-200 px-6 py-4 flex items-center justify-between">
               <h2 className="font-serif text-lg">Order Status</h2>
+              <span
+                className={`text-xs font-mono uppercase px-2 py-0.5 border ${
+                  ORDER_STATUS_COLORS[currentOrder.orderStatus as OrderStatus] ||
+                  "bg-gray-50 text-gray-700 border-gray-200"
+                }`}
+              >
+                {currentOrder.orderStatus}
+              </span>
             </div>
-            <div className="px-6 py-4">
+            <div className="px-6 py-4 space-y-2">
+              <label className="text-xs font-mono text-brand-gray-500 uppercase block">
+                Change Status
+              </label>
               <select
-                value={order.orderStatus}
-                onChange={(e) => updateStatus("orderStatus", e.target.value)}
-                disabled={updating === "orderStatus" || order.orderStatus === "DELIVERED" || order.orderStatus === "CANCELLED"}
-                className={`w-full border px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors disabled:opacity-50 ${ORDER_STATUS_COLORS[order.orderStatus] || "bg-white border-brand-gray-200"}`}
+                value={currentOrder.orderStatus}
+                onChange={(e) => handleStatusChange("orderStatus", e.target.value)}
+                disabled={updating === "orderStatus"}
+                className={`w-full border px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors disabled:opacity-50 ${
+                  ORDER_STATUS_COLORS[currentOrder.orderStatus as OrderStatus] ||
+                  "bg-white border-brand-gray-200"
+                }`}
               >
                 {ORDER_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {ORDER_STATUS_LABELS[s] || s}
+                  </option>
                 ))}
               </select>
+              <p className="text-xs text-brand-gray-400 font-mono">
+                Admins may transition between any order statuses.
+              </p>
+            </div>
+          </div>
+
+          {/* Payment Status Control */}
+          <div className="bg-white border border-brand-gray-200">
+            <div className="border-b border-brand-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="font-serif text-lg">Payment Status</h2>
+              <span
+                className={`text-xs font-mono uppercase px-2 py-0.5 border ${
+                  PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
+                  "bg-gray-50 text-gray-700 border-gray-200"
+                }`}
+              >
+                {currentOrder.paymentStatus}
+              </span>
+            </div>
+            <div className="px-6 py-4 space-y-2">
+              <label className="text-xs font-mono text-brand-gray-500 uppercase block">
+                Change Status
+              </label>
+              <select
+                value={currentOrder.paymentStatus}
+                onChange={(e) => handleStatusChange("paymentStatus", e.target.value)}
+                disabled={updating === "paymentStatus"}
+                className={`w-full border px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-brand-black transition-colors disabled:opacity-50 ${
+                  PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
+                  "bg-white border-brand-gray-200"
+                }`}
+              >
+                {PAYMENT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {PAYMENT_STATUS_LABELS[s] || s}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-brand-gray-400 font-mono">
+                Manual status changes do not initiate payment capture or refunds.
+              </p>
             </div>
           </div>
 
@@ -217,12 +382,17 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
               <h2 className="font-serif text-lg">Shipping Address</h2>
             </div>
             <div className="px-6 py-4 text-sm font-mono text-brand-gray-600">
-              {order.address ? (
+              {currentOrder.address ? (
                 <>
-                  <p className="font-medium text-black mb-1">{order.address.name}</p>
-                  <p>{order.address.address}</p>
-                  <p>{order.address.city}, {order.address.state} {order.address.pincode}</p>
-                  <p className="mt-2">Phone: {order.address.phone}</p>
+                  <p className="font-medium text-black mb-1">
+                    {currentOrder.address.name}
+                  </p>
+                  <p>{currentOrder.address.address}</p>
+                  <p>
+                    {currentOrder.address.city}, {currentOrder.address.state}{" "}
+                    {currentOrder.address.pincode}
+                  </p>
+                  <p className="mt-2">Phone: {currentOrder.address.phone}</p>
                 </>
               ) : (
                 <p className="text-brand-gray-400">Address snapshot unavailable.</p>
@@ -230,31 +400,46 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
             </div>
           </div>
 
-          {/* Payment Method */}
+          {/* Payment Method Details */}
           <div className="bg-white border border-brand-gray-200">
             <div className="border-b border-brand-gray-200 px-6 py-4">
-              <h2 className="font-serif text-lg">Payment</h2>
+              <h2 className="font-serif text-lg">Payment Details</h2>
             </div>
             <div className="px-6 py-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-brand-gray-500 font-mono">Method</span>
-                <span className="font-medium">{order.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-gray-500 font-mono">Status</span>
-                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${PAYMENT_STATUS_COLORS[order.paymentStatus] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
-                  {order.paymentMethod === "COD" && order.paymentStatus === "PENDING"
-                    ? "COD — Pending Collection"
-                    : order.paymentStatus}
+                <span className="font-medium font-mono">
+                  {currentOrder.paymentMethod === "COD"
+                    ? "Cash on Delivery (COD)"
+                    : "Online Payment"}
                 </span>
               </div>
-              {order.paymentMethod === "COD" && (
-                <p className="text-xs text-brand-gray-500">
-                  {order.paymentStatus === "PAID"
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-gray-500 font-mono">Collection State</span>
+                <span
+                  className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${
+                    PAYMENT_STATUS_COLORS[currentOrder.paymentStatus as PaymentStatus] ||
+                    "bg-gray-50 text-gray-600 border-gray-200"
+                  }`}
+                >
+                  {currentOrder.paymentMethod === "COD" &&
+                  currentOrder.paymentStatus === "PENDING"
+                    ? "COD — Pending Collection"
+                    : currentOrder.paymentStatus}
+                </span>
+              </div>
+              {currentOrder.paymentMethod === "COD" && (
+                <p className="text-xs text-brand-gray-500 font-mono">
+                  {currentOrder.paymentStatus === "PAID"
                     ? "Cash collected on delivery."
                     : "Payment will be collected on delivery."}
                 </p>
               )}
+              <div className="border-t border-brand-gray-100 pt-3">
+                <p className="text-xs text-brand-gray-400 font-mono">
+                  Note: Manual status changes do not initiate payment capture or refunds.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -266,30 +451,40 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
             <div className="px-6 py-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-brand-gray-500 font-mono">Method</span>
-                <span className="font-mono">{order.deliveryMethod}</span>
+                <span className="font-mono">{currentOrder.deliveryMethod}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-gray-500 font-mono">Charge</span>
-                <span className="font-mono">{formatINR(order.deliveryCharge)}</span>
+                <span className="font-mono">
+                  {formatINR(currentOrder.deliveryCharge)}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Razorpay info */}
-          {order.razorpayOrderId && (
+          {currentOrder.razorpayOrderId && (
             <div className="bg-white border border-brand-gray-200">
               <div className="border-b border-brand-gray-200 px-6 py-4">
-                <h2 className="font-serif text-lg">Payment</h2>
+                <h2 className="font-serif text-lg">Gateway Reference</h2>
               </div>
               <div className="px-6 py-4 space-y-3">
                 <div>
-                  <span className="text-xs text-brand-gray-400 font-mono block">Razorpay Order ID</span>
-                  <p className="font-mono text-xs break-all">{order.razorpayOrderId}</p>
+                  <span className="text-xs text-brand-gray-400 font-mono block">
+                    Razorpay Order ID
+                  </span>
+                  <p className="font-mono text-xs break-all">
+                    {currentOrder.razorpayOrderId}
+                  </p>
                 </div>
-                {order.razorpayPaymentId && (
+                {currentOrder.razorpayPaymentId && (
                   <div>
-                    <span className="text-xs text-brand-gray-400 font-mono block">Razorpay Payment ID</span>
-                    <p className="font-mono text-xs break-all">{order.razorpayPaymentId}</p>
+                    <span className="text-xs text-brand-gray-400 font-mono block">
+                      Razorpay Payment ID
+                    </span>
+                    <p className="font-mono text-xs break-all">
+                      {currentOrder.razorpayPaymentId}
+                    </p>
                   </div>
                 )}
               </div>
@@ -297,6 +492,38 @@ export default function AdminOrderDetail({ order }: OrderDetailProps) {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white max-w-md w-full p-6 border border-brand-gray-200 shadow-xl space-y-4">
+            <h3 className="font-serif text-xl">{confirmModal.title}</h3>
+            <p className="text-sm font-mono text-brand-gray-600 leading-relaxed">
+              {confirmModal.description}
+            </p>
+            <div className="flex justify-end gap-3 pt-4 border-t border-brand-gray-100">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 border border-brand-gray-200 text-xs font-mono uppercase tracking-wide hover:border-brand-black transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const { field, value } = confirmModal;
+                  setConfirmModal(null);
+                  executeStatusUpdate(field, value);
+                }}
+                className="px-4 py-2 bg-brand-black text-white text-xs font-mono uppercase tracking-wide hover:bg-neutral-800 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

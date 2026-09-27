@@ -127,23 +127,29 @@ describe("COD Payment Method (Item A–P)", () => {
     assert(cancelSource.includes("updateMany"), "Must use updateMany, not update");
   });
 
-  // M. COD delivery auto-marks payment PAID
-  it("M. Admin PATCH sets paymentStatus PAID when COD order is DELIVERED", async () => {
+  // M. Admin order update decouples orderStatus and paymentStatus
+  it("M. Admin PATCH uses updateOrderAsAdmin with decoupled orderStatus and paymentStatus", async () => {
     const adminRoute = await import("fs").then(fs =>
       fs.readFileSync("src/app/api/admin/orders/[id]/route.ts", "utf-8")
     );
-    assert(adminRoute.includes('orderStatus === "DELIVERED"'), "Must check DELIVERED");
-    assert(adminRoute.includes('PaymentMethod.COD'), "Must check COD");
-    assert(adminRoute.includes('"PAID"'), "Must set PAID");
+    assert(adminRoute.includes("updateOrderAsAdmin"), "Must delegate to authoritative updateOrderAsAdmin helper");
+
+    const helperSource = await import("fs").then(fs =>
+      fs.readFileSync("src/lib/admin-order-update.ts", "utf-8")
+    );
+    // Verified that orderStatus and paymentStatus are independent and DELIVERED does not force PAID
+    assert(!helperSource.includes('isCodDelivered'), "Must NOT auto-couple COD DELIVERED to PAID");
+    assert(helperSource.includes("data.orderStatus = parsed.data.orderStatus"), "Must set orderStatus independently");
+    assert(helperSource.includes("data.paymentStatus = parsed.data.paymentStatus"), "Must set paymentStatus independently");
   });
 
-  // N. ONLINE delivery does not change payment behavior
-  it("N. ONLINE orders not affected by COD delivery logic", async () => {
-    const adminRoute = await import("fs").then(fs =>
-      fs.readFileSync("src/app/api/admin/orders/[id]/route.ts", "utf-8")
+  // N. Admin update supports both orderStatus and paymentStatus independently
+  it("N. Admin order update supports updating paymentStatus independently for all orders", async () => {
+    const helperSource = await import("fs").then(fs =>
+      fs.readFileSync("src/lib/admin-order-update.ts", "utf-8")
     );
-    // The COD auto-PAID is gated on paymentMethod === COD
-    assert(adminRoute.includes('currentOrder.paymentMethod === PaymentMethod.COD'), "Must gate on COD");
+    assert(helperSource.includes("orderStatusUpdateSchema"), "Must validate with orderStatusUpdateSchema");
+    assert(helperSource.includes("[ADMIN_ORDER_OVERRIDE]"), "Must log audit trail for admin overrides");
   });
 
   // O. Razorpay verify rejects COD orders

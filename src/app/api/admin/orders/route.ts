@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OrderStatus, PaymentStatus, PaymentMethod } from "@/lib/constants";
-import { orderStatusUpdateSchema, mapZodErrors } from "@/lib/validation/admin";
+import { updateOrderAsAdmin } from "@/lib/admin-order-update";
 
 export async function GET(request: Request) {
   const adminResult = await requireAdmin();
@@ -63,30 +63,30 @@ export async function PATCH(request: Request) {
   const adminResult = await requireAdmin();
   if (adminResult instanceof Response) return adminResult;
 
-  const body = await request.json();
-  const { id } = body;
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
+  const { id } = body || {};
   if (!id) {
     return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
   }
 
-  const parsed = orderStatusUpdateSchema.safeParse(body);
-  if (!parsed.success) {
+  const result = await updateOrderAsAdmin({
+    orderId: id,
+    orderStatus: body.orderStatus,
+    paymentStatus: body.paymentStatus,
+  });
+
+  if (!result.success) {
     return NextResponse.json(
-      { error: "Validation failed", fieldErrors: mapZodErrors(parsed.error) },
-      { status: 400 }
+      { error: result.error, fieldErrors: result.fieldErrors },
+      { status: result.status }
     );
   }
 
-  const data: Record<string, string> = {};
-  if (parsed.data.orderStatus) data.orderStatus = parsed.data.orderStatus;
-  if (parsed.data.paymentStatus) data.paymentStatus = parsed.data.paymentStatus;
-
-  const updated = await prisma.order.update({
-    where: { id },
-    data,
-    include: { items: true, user: { select: { name: true, email: true } } },
-  });
-
-  return Response.json(updated);
+  return NextResponse.json(result.order);
 }

@@ -27,11 +27,16 @@ export async function finalizePaidOrder({
       throw new Error("Order not found");
     }
 
+    // Use razorpayPaymentId: null as the atomic claim condition.
+    // This ensures real gateway capture / verification executes side-effects exactly once,
+    // even if an admin previously adjusted paymentStatus or orderStatus.
+    const nextOrderStatus = order.orderStatus === "PENDING" ? "PROCESSING" : order.orderStatus;
+
     const claimed = await tx.order.updateMany({
-      where: { id: orderId, paymentStatus: { not: "PAID" } },
+      where: { id: orderId, razorpayPaymentId: null },
       data: {
         paymentStatus: "PAID",
-        orderStatus: "PROCESSING",
+        orderStatus: nextOrderStatus,
         couponReservationActive: false,
         razorpayPaymentId,
         ...(razorpaySignature ? { razorpaySignature } : {}),
