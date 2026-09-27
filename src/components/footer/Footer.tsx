@@ -4,6 +4,8 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Mail, Phone, MessageCircle, Home, User, Users, Info, HelpCircle, Shield, FileText, ShoppingBag } from "lucide-react";
 
 export function Footer() {
+  const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim();
+
   return (
     <footer className="border-t border-brand-navy-dark bg-brand-navy text-white">
       <Reveal className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-16" yOffset={20} duration={0.6}>
@@ -29,7 +31,7 @@ export function Footer() {
               <span className="font-mono text-xs uppercase tracking-widest text-brand-gold block mb-2">
                 Social
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2.5">
                 <a
                   href="https://www.instagram.com/knoosshoes"
                   target="_blank"
@@ -56,12 +58,56 @@ export function Footer() {
                   <span className="font-mono font-medium text-white group-hover:text-brand-gold group-hover:underline">@KNOOSSHOES</span>
                 </a>
 
-                {/* 
-                  Facebook link: Currently omitted per project requirement:
-                  "DO NOT invent one. DO NOT link to facebook.com generically. DO NOT use '#'. Report: FACEBOOK PROFILE URL REQUIRED"
-                  When official profile is provided by client, enable here:
-                  <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="KNOOS Facebook" className="...">...</a>
-                */}
+                {facebookUrl ? (
+                  <a
+                    href={facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook @KNOOSSHOES"
+                    className="group inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-brand-blue group-hover:scale-110 group-hover:text-brand-gold transition-transform"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                    <span className="font-mono font-medium text-white group-hover:text-brand-gold group-hover:underline">
+                      @KNOOSSHOES
+                    </span>
+                  </a>
+                ) : (
+                  <div
+                    className="inline-flex items-center gap-2 text-sm text-slate-300"
+                    title="@KNOOSSHOES on Facebook"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-brand-blue"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                    <span className="font-mono font-medium text-white">
+                      @KNOOSSHOES
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
