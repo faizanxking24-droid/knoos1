@@ -29,7 +29,10 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     db: {
       url: process.env.DATABASE_URL
     }
-  }
+  },
+  log: process.env.NODE_ENV === "development"
+    ? [{ level: "query", emit: "event" }, { level: "error", emit: "event" }]
+    : [{ level: "error", emit: "event" }],
 });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;
