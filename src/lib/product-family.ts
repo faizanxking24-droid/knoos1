@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { ProductFamilyInput } from "@/lib/validation/product-family";
+import { visibleFamilyWhere } from "@/lib/product-deletion";
 
 export const familyInclude = {
   images: { orderBy: { sortOrder: "asc" as const } },
@@ -10,8 +11,10 @@ export const familyInclude = {
 export async function findFamilyByProductId(productId: string) {
   const source = await prisma.product.findUnique({ where: { id: productId } });
   if (!source) return null;
+  const where = visibleFamilyWhere(source);
+  if (!where) return null;
   const products = await prisma.product.findMany({
-    where: source.colorGroupKey ? { colorGroupKey: source.colorGroupKey } : { id: source.id },
+    where,
     include: familyInclude,
     orderBy: { createdAt: "asc" },
   });

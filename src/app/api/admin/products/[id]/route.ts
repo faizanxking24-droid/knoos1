@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { updateProductSchema, mapZodErrors } from "@/lib/validation/admin";
+import { softDeleteProducts, visibleProductWhere } from "@/lib/product-deletion";
 
 // @ts-ignore - Next.js 16 type compatibility
 export async function GET(
@@ -15,8 +16,8 @@ export async function GET(
 
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id },
+  const product = await prisma.product.findFirst({
+    where: visibleProductWhere(id),
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { size: "asc" } },
@@ -40,6 +41,14 @@ export async function PATCH(
   if (adminResult instanceof Response) return adminResult;
 
   const { id } = await params;
+  const existing = await prisma.product.findFirst({
+    where: visibleProductWhere(id),
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
   const body = await request.json();
   const parsed = updateProductSchema.safeParse({ ...body, id });
 
@@ -121,10 +130,10 @@ export async function DELETE(
 
   const { id } = await params;
 
-  await prisma.product.update({
-    where: { id },
-    data: { status: "INACTIVE" },
-  });
+  const result = await softDeleteProducts(prisma, [id]);
+  if (result.count === 0) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
 
-  return Response.json({ success: true });
+  return Response.json({ success: true, deleted: result.count });
 }

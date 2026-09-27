@@ -10,6 +10,7 @@ import {
   mapZodErrors,
 } from "@/lib/validation/admin";
 import { Gender, ProductStatus } from "@/lib/constants";
+import { buildAdminProductWhere, softDeleteProducts } from "@/lib/product-deletion";
 
 // ─── GET: List products ──────────────────────────────────────────────────────
 
@@ -25,27 +26,14 @@ export async function GET(request: Request) {
   const q = searchParams.get("q");
   const categoryId = searchParams.get("categoryId");
 
-  const where: Record<string, unknown> = {};
-
-  if (gender && Object.values(Gender).includes(gender as Gender)) {
-    where.gender = gender;
-  }
-
-  if (status && Object.values(ProductStatus).includes(status as ProductStatus)) {
-    where.status = status;
-  }
-
-  if (categoryId) {
-    where.categoryId = categoryId;
-  }
-
-  if (q) {
-    where.OR = [
-      { name: { contains: q } },
-      { sku: { contains: q } },
-      { slug: { contains: q } },
-    ];
-  }
+  const where = buildAdminProductWhere({
+    gender,
+    status,
+    categoryId,
+    q,
+    validGenders: Object.values(Gender),
+    validStatuses: Object.values(ProductStatus),
+  });
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({
@@ -179,11 +167,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "ids array is required" }, { status: 400 });
   }
 
-  // Deactivate — never hard-delete to preserve historical order data
-  const result = await prisma.product.updateMany({
-    where: { id: { in: ids } },
-    data: { status: "INACTIVE" },
-  });
+  // Keep the row and its relations for historical orders and other business data.
+  const result = await softDeleteProducts(prisma, ids);
 
-  return Response.json({ success: true, deactivated: result.count });
+  return Response.json({ success: true, deleted: result.count });
 }

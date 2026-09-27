@@ -139,7 +139,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Deactivate "${name}"?\n\nThis will hide the product from the storefront. Historical order data will be preserved.`)) return;
+    if (!confirm(`Delete "${name}"?\n\nThis will remove the product from your catalog. Historical order data will be preserved.`)) return;
     setDeleting(id);
     try {
       const res = await fetch("/api/admin/products", {
@@ -147,10 +147,10 @@ export default function AdminProductsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
       });
-      if (!res.ok) throw new Error("Failed to deactivate");
+      if (!res.ok) throw new Error("Failed to delete");
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch {
-      alert("Failed to deactivate product");
+      alert("Failed to delete product");
     } finally {
       setDeleting(null);
     }
@@ -369,7 +369,7 @@ export default function AdminProductsPage() {
                           <button
                             onClick={() => handleDelete(product.id, product.name)}
                             disabled={deleting === product.id}
-                            title="Deactivate"
+                            title="Delete"
                             className="p-1.5 text-brand-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
