@@ -103,7 +103,7 @@ export default async function CartPage() {
           initialSubtotal={subtotal} 
           recommendationsSlot={
             <ProductRecommendations 
-              title="COMPLETE YOUR LOOK" 
+              title="RECOMMENDED FOR YOU" 
               products={recommendedProducts} 
               mode="cart" 
             />
