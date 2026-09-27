@@ -5,8 +5,9 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductWithImages } from "@/lib/products";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { StoreContainer } from "@/components/store/StoreContainer";
+import { easings, durations } from "@/components/motion/constants";
 
 interface FeaturedCarouselProps {
   products: ProductWithImages[];
@@ -74,17 +75,37 @@ export function FeaturedCarousel({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4">
           <div className="max-w-2xl">
             {eyebrow && (
-              <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5">
+              <motion.p
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, ease: easings.premium }}
+                className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5"
+              >
                 {eyebrow}
-              </p>
+              </motion.p>
             )}
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15]">
-              {title}
-            </h2>
+            <div className="overflow-hidden py-0.5">
+              <motion.h2
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : "100%" }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: durations.reveal, delay: 0.05, ease: easings.premium }}
+                className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15]"
+              >
+                {title}
+              </motion.h2>
+            </div>
             {subtitle && (
-              <p className="mt-3 text-brand-gray-600 text-sm sm:text-base font-normal leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: 0.12, ease: easings.premium }}
+                className="mt-3 text-brand-gray-600 text-sm sm:text-base font-normal leading-relaxed"
+              >
                 {subtitle}
-              </p>
+              </motion.p>
             )}
           </div>
 
@@ -109,9 +130,9 @@ export function FeaturedCarousel({
                 onClick={() => handleScroll("left")}
                 disabled={!canScrollPrev}
                 aria-label="Previous products"
-                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
                   canScrollPrev
-                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 active:scale-95"
+                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 hover:scale-105 active:scale-95"
                     : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
@@ -122,9 +143,9 @@ export function FeaturedCarousel({
                 onClick={() => handleScroll("right")}
                 disabled={!canScrollNext}
                 aria-label="Next products"
-                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
                   canScrollNext
-                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 active:scale-95"
+                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 hover:scale-105 active:scale-95"
                     : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
@@ -135,7 +156,11 @@ export function FeaturedCarousel({
         </div>
 
         {/* Carousel Tracks */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: durations.reveal, delay: 0.15, ease: easings.premium }}
           ref={scrollRef}
           tabIndex={0}
           role="region"
@@ -151,7 +176,7 @@ export function FeaturedCarousel({
               <ProductCard product={product} />
             </div>
           ))}
-        </div>
+        </motion.div>
       </StoreContainer>
     </section>
   );

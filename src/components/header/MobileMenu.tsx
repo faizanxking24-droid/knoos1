@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { X, ChevronDown, User, ShoppingBag, ArrowRight, Phone, MessageCircle, Shield } from "lucide-react";
+import { easings } from "@/components/motion/constants";
 
 interface Category {
   id: string;
@@ -54,6 +55,29 @@ export function MobileMenu({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
+  const navContainerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.08,
+      },
+    },
+  };
+
+  const navItemVariants: Variants = {
+    hidden: { opacity: 0, x: -14 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.32,
+        ease: easings.premium,
+      },
+    },
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -63,7 +87,7 @@ export function MobileMenu({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
             className="absolute inset-0 bg-brand-navy/60 backdrop-blur-sm"
           />
@@ -73,7 +97,7 @@ export function MobileMenu({
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             className="absolute top-0 bottom-0 left-0 w-[88vw] max-w-sm bg-white shadow-2xl flex flex-col justify-between overflow-y-auto"
           >
             {/* Top Bar */}
@@ -100,12 +124,13 @@ export function MobileMenu({
               </div>
 
               {/* Main Editorial Nav */}
-              <div className="px-6 py-6 space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
+              <motion.div
+                variants={navContainerVariants}
+                initial="hidden"
+                animate="visible"
+                className="px-6 py-6 space-y-4"
+              >
+                <motion.div variants={navItemVariants}>
                   <Link
                     href="/men"
                     onClick={onClose}
@@ -116,11 +141,7 @@ export function MobileMenu({
                   </Link>
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.15 }}
-                >
+                <motion.div variants={navItemVariants}>
                   <Link
                     href="/women"
                     onClick={onClose}
@@ -131,11 +152,7 @@ export function MobileMenu({
                   </Link>
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
+                <motion.div variants={navItemVariants}>
                   <Link
                     href="/search?sort=Newest"
                     onClick={onClose}
@@ -147,12 +164,7 @@ export function MobileMenu({
                 </motion.div>
 
                 {/* Shop By Accordion */}
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.25 }}
-                  className="pt-2"
-                >
+                <motion.div variants={navItemVariants} className="pt-2">
                   <button
                     type="button"
                     onClick={() => setIsShopByOpen(!isShopByOpen)}
@@ -209,7 +221,7 @@ export function MobileMenu({
                     )}
                   </AnimatePresence>
                 </motion.div>
-              </div>
+              </motion.div>
 
               {/* Secondary Navigation Section */}
               <div className="px-6 py-4 border-t border-brand-gray-100 space-y-3 font-mono text-xs uppercase tracking-widest text-brand-gray-600">

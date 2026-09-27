@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { StoreContainer } from "@/components/store/StoreContainer";
+import { Reveal } from "@/components/motion";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | KNOOS",
@@ -11,7 +12,8 @@ export default function TermsPage() {
   return (
     <main className="bg-brand-surface min-h-screen py-12 sm:py-20 text-brand-dark">
       <StoreContainer>
-        <div className="max-w-4xl mx-auto bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-14 lg:p-16 shadow-xs">
+        <Reveal>
+          <div className="max-w-4xl mx-auto bg-white border border-brand-sky-border/60 rounded-3xl p-8 sm:p-14 lg:p-16 shadow-xs">
       {/* Header */}
       <div className="border-b border-brand-sky-border/80 pb-10 mb-12">
         <span className="font-mono text-xs uppercase tracking-widest text-brand-blue font-medium block mb-3">
@@ -187,6 +189,7 @@ export default function TermsPage() {
         </section>
       </div>
       </div>
+        </Reveal>
       </StoreContainer>
     </main>
   );

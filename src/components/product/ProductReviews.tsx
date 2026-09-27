@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { easings } from "@/components/motion/constants";
 import { useAuth } from "@/hooks/use-auth";
 import { loginWithGoogle } from "@/lib/auth-actions";
 import { ReviewCarousel } from "@/components/review/ReviewCarousel";
@@ -17,6 +19,7 @@ interface ProductReviewsProps {
 }
 
 export function ProductReviews({ productId, reviews: initialReviews }: ProductReviewsProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { user, isLoading: authLoading } = useAuth();
   const [reviews] = useState<PublicReview[]>(initialReviews || []);
   const [rating, setRating] = useState(5);
@@ -88,7 +91,13 @@ export function ProductReviews({ productId, reviews: initialReviews }: ProductRe
   return (
     <section className="mt-24 pt-16 border-t border-brand-gray-100 max-w-6xl mx-auto px-4 sm:px-6">
       {/* Header and Aggregate Rating Summary */}
-      <div className="text-center max-w-2xl mx-auto mb-16">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: prefersReducedMotion ? 0.01 : 0.5, ease: easings.premium }}
+        className="text-center max-w-2xl mx-auto mb-16"
+      >
         <span className="font-mono text-xs uppercase tracking-widest text-brand-gray-400 block mb-2">
           Verified Feedback
         </span>
@@ -118,9 +127,12 @@ export function ProductReviews({ productId, reviews: initialReviews }: ProductRe
                 <div key={star} className="flex items-center gap-2 text-xs font-mono text-brand-gray-500">
                   <span className="w-7 text-right">{star} ★</span>
                   <div className="flex-1 h-2 bg-brand-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-400 rounded-full transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${percentage}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: prefersReducedMotion ? 0.01 : 0.65, ease: easings.premium }}
+                      className="h-full bg-amber-400 rounded-full"
                     />
                   </div>
                   <span className="w-6 text-brand-gray-400">{count}</span>
@@ -133,20 +145,32 @@ export function ProductReviews({ productId, reviews: initialReviews }: ProductRe
             Be the first verified customer to share feedback on this shoe.
           </p>
         )}
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Review Showcase: Polished Carousel with Mobile Swipe */}
-        <div className="lg:col-span-7">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: prefersReducedMotion ? 0.01 : 0.55, ease: easings.premium }}
+          className="lg:col-span-7"
+        >
           <ReviewCarousel
             reviews={reviews}
             title={reviews.length > 0 ? "What Customers Are Saying" : undefined}
             subtitle={reviews.length > 0 ? "Swipe or use navigation arrows to browse reviews" : undefined}
           />
-        </div>
+        </motion.div>
 
         {/* Review Submission Form (Normal customer text & star review) */}
-        <div className="lg:col-span-5">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: prefersReducedMotion ? 0.01 : 0.55, delay: prefersReducedMotion ? 0 : 0.1, ease: easings.premium }}
+          className="lg:col-span-5"
+        >
           <div className="bg-brand-sky/20 border border-brand-sky-border/40 p-6 sm:p-8 rounded-2xl shadow-xs">
             <h3 className="font-serif text-2xl mb-2 text-brand-dark">Write a Review</h3>
             <p className="text-xs text-brand-gray-500 mb-6 font-mono leading-relaxed">
@@ -244,7 +268,7 @@ export function ProductReviews({ productId, reviews: initialReviews }: ProductRe
                 <button
                   type="submit"
                   disabled={isSubmitting || authLoading}
-                  className="w-full bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest py-3.5 px-4 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="w-full bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest py-3.5 px-4 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.985] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:active:scale-100 font-medium"
                 >
                   {authLoading
                     ? "Authenticating..."
@@ -257,7 +281,7 @@ export function ProductReviews({ productId, reviews: initialReviews }: ProductRe
               </form>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

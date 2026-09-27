@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MessageCircle, Info, Shield, FileText, ArrowUpRight } from "lucide-react";
 import { StoreContainer } from "@/components/store/StoreContainer";
+import { Reveal, StaggerContainer, StaggerItem } from "@/components/motion";
 
 export function Footer() {
   const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL?.trim();
@@ -17,10 +18,10 @@ export function Footer() {
       </div>
 
       <StoreContainer className="pt-16 pb-12 sm:pt-20 sm:pb-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           
           {/* Brand Column (Col 1-4) */}
-          <div className="lg:col-span-4 space-y-5">
+          <StaggerItem className="lg:col-span-4 space-y-5">
             <Link href="/" className="inline-block transition-opacity hover:opacity-90">
               <Image
                 src="/knoos-logo.png"
@@ -98,86 +99,86 @@ export function Footer() {
                 )}
               </div>
             </div>
-          </div>
+          </StaggerItem>
 
           {/* Shop Column (Col 5-7) */}
-          <div className="lg:col-span-3 space-y-4">
+          <StaggerItem className="lg:col-span-3 space-y-4">
             <h4 className="font-mono text-xs uppercase tracking-[0.2em] text-brand-gold font-medium">
               Shop Collections
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <Link href="/men" className="hover:text-white transition-colors inline-flex items-center gap-1.5 group">
+                <Link href="/men" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Men&apos;s Footwear</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/women" className="hover:text-white transition-colors inline-flex items-center gap-1.5 group">
+                <Link href="/women" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Women&apos;s Footwear</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/search?sort=Newest" className="hover:text-white transition-colors inline-flex items-center gap-1.5 group">
+                <Link href="/search?sort=Newest" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>New Arrivals</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/search" className="hover:text-white transition-colors inline-flex items-center gap-1.5 group">
+                <Link href="/search" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Complete Catalog</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
             </ul>
-          </div>
+          </StaggerItem>
 
           {/* Information Column (Col 8-9) */}
-          <div className="lg:col-span-2 space-y-4">
+          <StaggerItem className="lg:col-span-2 space-y-4">
             <h4 className="font-mono text-xs uppercase tracking-[0.2em] text-brand-gold font-medium">
               Information
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <Link href="/about" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/about" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <Info size={13} className="text-brand-blue" />
                   <span>About Us</span>
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/contact" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <Phone size={13} className="text-brand-blue" />
                   <span>Contact Support</span>
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/faq" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <span>FAQ</span>
                 </Link>
               </li>
               <li>
-                <Link href="/returns-refunds" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/returns-refunds" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <FileText size={13} className="text-brand-blue" />
                   <span>Returns Policy</span>
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/privacy" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <Shield size={13} className="text-brand-blue" />
                   <span>Privacy Policy</span>
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors inline-flex items-center gap-2">
+                <Link href="/terms" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
                   <span>Terms of Service</span>
                 </Link>
               </li>
             </ul>
-          </div>
+          </StaggerItem>
 
           {/* Contact Column (Col 10-12) */}
-          <div className="lg:col-span-3 space-y-4">
+          <StaggerItem className="lg:col-span-3 space-y-4">
             <h4 className="font-mono text-xs uppercase tracking-[0.2em] text-brand-gold font-medium">
               Get in Touch
             </h4>
@@ -219,20 +220,22 @@ export function Footer() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
+          </StaggerItem>
+        </StaggerContainer>
 
         {/* Bottom Copyright and Legal Bar */}
-        <div className="border-t border-white/10 mt-12 sm:mt-16 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-mono text-xs text-slate-400 text-center sm:text-left">
-            &copy; {new Date().getFullYear()} KNOOS. Handcrafted Footwear. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6 text-xs text-slate-400 font-mono">
-            <Link href="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
-            <Link href="/returns-refunds" className="hover:text-slate-200 transition-colors">Returns</Link>
+        <Reveal>
+          <div className="border-t border-white/10 mt-12 sm:mt-16 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="font-mono text-xs text-slate-400 text-center sm:text-left">
+              &copy; {new Date().getFullYear()} KNOOS. Handcrafted Footwear. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6 text-xs text-slate-400 font-mono">
+              <Link href="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
+              <Link href="/returns-refunds" className="hover:text-slate-200 transition-colors">Returns</Link>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </StoreContainer>
     </footer>
   );

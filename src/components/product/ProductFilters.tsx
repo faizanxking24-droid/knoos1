@@ -177,7 +177,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
                 key={sort.value}
                 type="button"
                 onClick={() => handleFilterChange("sort", sort.value)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all text-left ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all duration-200 active:scale-[0.98] text-left ${
                   isSelected
                     ? "bg-brand-sky/40 text-brand-navy font-semibold border border-brand-sky-border/70"
                     : "text-brand-gray-600 hover:bg-neutral-50 hover:text-brand-dark"
@@ -205,7 +205,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
                   key={cat.id}
                   type="button"
                   onClick={() => handleFilterChange("category", isSelected ? "" : cat.slug)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all duration-200 active:scale-[0.98] text-left ${
                     isSelected
                       ? "bg-brand-sky/40 text-brand-navy font-semibold border border-brand-sky-border/70"
                       : "text-brand-gray-600 hover:bg-neutral-50 hover:text-brand-dark"
@@ -233,7 +233,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
                 key={size}
                 type="button"
                 onClick={() => handleFilterChange("size", isActive ? "" : size)}
-                className={`py-2 text-xs font-mono font-medium rounded-lg border transition-all text-center ${
+                className={`py-2 text-xs font-mono font-medium rounded-lg border transition-all duration-150 active:scale-[0.96] text-center ${
                   isActive
                     ? "bg-brand-navy text-white border-brand-navy shadow-xs font-semibold"
                     : "bg-white text-neutral-800 border-neutral-300 hover:border-neutral-900 hover:bg-neutral-50 shadow-2xs"
@@ -281,7 +281,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-brand-navy hover:bg-brand-blue text-white text-xs font-mono uppercase tracking-widest rounded-lg transition-colors font-medium"
+            className="w-full py-2 bg-brand-navy hover:bg-brand-blue text-white text-xs font-mono uppercase tracking-widest rounded-lg transition-all active:scale-[0.98] font-medium"
           >
             Apply Range
           </button>

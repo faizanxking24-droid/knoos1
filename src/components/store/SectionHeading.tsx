@@ -1,6 +1,10 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { easings, durations } from "@/components/motion/constants";
 
 interface SectionHeadingProps {
   eyebrow?: string;
@@ -21,6 +25,8 @@ export function SectionHeading({
   centered = false,
   className = "",
 }: SectionHeadingProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <div
       className={`flex flex-col ${
@@ -29,22 +35,50 @@ export function SectionHeading({
     >
       <div className={centered ? "max-w-2xl mx-auto" : "max-w-2xl"}>
         {eyebrow && (
-          <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5">
+          <motion.p
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, ease: easings.premium }}
+            className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5"
+          >
             {eyebrow}
-          </p>
+          </motion.p>
         )}
-        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15]">
-          {title}
-        </h2>
+
+        <div className="overflow-hidden py-0.5">
+          <motion.h2
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : "100%" }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: durations.reveal, delay: 0.05, ease: easings.premium }}
+            className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15]"
+          >
+            {title}
+          </motion.h2>
+        </div>
+
         {description && (
-          <p className="mt-3 text-brand-gray-600 text-sm sm:text-base font-normal leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, delay: 0.12, ease: easings.premium }}
+            className="mt-3 text-brand-gray-600 text-sm sm:text-base font-normal leading-relaxed"
+          >
             {description}
-          </p>
+          </motion.p>
         )}
       </div>
 
       {viewAllHref && !centered && (
-        <div className="pt-2 md:pt-0 self-start md:self-end shrink-0">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="pt-2 md:pt-0 self-start md:self-end shrink-0"
+        >
           <Link
             href={viewAllHref}
             className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue pb-1 border-b border-brand-dark/20 hover:border-brand-blue transition-all duration-300"
@@ -55,7 +89,7 @@ export function SectionHeading({
               className="transition-transform duration-300 group-hover:translate-x-1"
             />
           </Link>
-        </div>
+        </motion.div>
       )}
     </div>
   );

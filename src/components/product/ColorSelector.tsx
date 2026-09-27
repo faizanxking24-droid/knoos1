@@ -112,7 +112,7 @@ export function ColorSelector({
               aria-label={`${option.label}${option.isSelected ? " (Selected)" : ""}`}
               disabled={!option.slug}
               className={`
-                snap-start flex-shrink-0 group relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-200
+                snap-start flex-shrink-0 group relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-200 hover:scale-[1.03] active:scale-95
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2
                 ${
                   option.isSelected
@@ -138,7 +138,7 @@ export function ColorSelector({
 
               {/* Color swatch dot */}
               <span
-                className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${
+                className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                   optionSwatch.isLight ? "border border-black/20" : ""
                 }`}
                 style={{ backgroundColor: optionSwatch.hex }}

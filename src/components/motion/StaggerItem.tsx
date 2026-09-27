@@ -1,15 +1,17 @@
 "use client";
 
 import { motion, useReducedMotion, HTMLMotionProps } from "framer-motion";
-import { easings } from "./constants";
+import { easings, durations } from "./constants";
 
 interface StaggerItemProps extends HTMLMotionProps<"div"> {
   yOffset?: number;
+  duration?: number;
 }
 
 export function StaggerItem({
   children,
-  yOffset = 30,
+  yOffset = 25,
+  duration = durations.normal,
   ...props
 }: StaggerItemProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -23,7 +25,7 @@ export function StaggerItem({
       opacity: 1, 
       y: 0,
       transition: {
-        duration: shouldReduceMotion ? 0.1 : 0.8,
+        duration: shouldReduceMotion ? 0.05 : duration,
         ease: easings.premium,
       }
     },

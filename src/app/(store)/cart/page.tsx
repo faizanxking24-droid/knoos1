@@ -8,6 +8,7 @@ import { CartClient } from "./CartClient";
 import { getRecommendations } from "@/lib/recommendations";
 import { ProductRecommendations } from "@/components/product/ProductRecommendations";
 import { StoreContainer } from "@/components/store/StoreContainer";
+import { Reveal } from "@/components/motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -117,12 +118,14 @@ export default async function CartPage() {
     <main className="bg-brand-surface min-h-[75vh] py-10 sm:py-16">
       <StoreContainer>
         <div className="mb-10">
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-semibold block mb-2">
-            ORDER SUMMARY
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight">
-            Your Shopping Bag
-          </h1>
+          <Reveal>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-semibold block mb-2">
+              ORDER SUMMARY
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight">
+              Your Shopping Bag
+            </h1>
+          </Reveal>
         </div>
 
         <CartClient

@@ -1,5 +1,8 @@
+"use client";
+
 import { Product, ProductImage } from "@prisma/client";
 import { ProductCard } from "./ProductCard";
+import { StaggerContainer, StaggerItem } from "@/components/motion";
 
 type ProductWithImages = Product & {
   images: ProductImage[];
@@ -38,10 +41,22 @@ export function ProductGrid({
       : "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8";
 
   return (
-    <div className={colClasses}>
-      {products.map((product, idx) => (
-        <ProductCard key={product.id} product={product} priority={idx < 4} />
-      ))}
-    </div>
+    <StaggerContainer staggerDelay={0.06} className={colClasses}>
+      {products.map((product, idx) => {
+        // Cap stagger items to first 12 cards for peak scrolling performance on large catalogs
+        if (idx < 12) {
+          return (
+            <StaggerItem key={product.id} yOffset={25} duration={0.6}>
+              <ProductCard product={product} priority={idx < 4} />
+            </StaggerItem>
+          );
+        }
+        return (
+          <div key={product.id}>
+            <ProductCard product={product} priority={false} />
+          </div>
+        );
+      })}
+    </StaggerContainer>
   );
 }

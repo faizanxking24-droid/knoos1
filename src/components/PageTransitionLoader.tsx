@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 function LoaderContent() {
   const pathname = usePathname();
@@ -12,7 +13,6 @@ function LoaderContent() {
 
   useEffect(() => {
     // When the route or search params change, navigation has finished rendering.
-    // Next.js App Router updates pathname and searchParams AFTER the new route renders.
     setIsLoading(false);
   }, [pathname, searchParams]);
 
@@ -94,53 +94,62 @@ function LoaderContent() {
     };
   }, []);
 
+  // Debounce display: only show loader if navigation genuinely takes > 180ms
   useEffect(() => {
+    let delayTimer: NodeJS.Timeout;
     if (isLoading) {
-      setVisible(true);
+      delayTimer = setTimeout(() => {
+        setVisible(true);
+      }, 180);
     } else {
-      const t = setTimeout(() => setVisible(false), 400); // Wait for fade out
-      return () => clearTimeout(t);
+      setVisible(false);
     }
+    return () => {
+      clearTimeout(delayTimer);
+    };
   }, [isLoading]);
 
-  if (!visible && !isLoading) return null;
-
   return (
-    <div
-      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-white/70 dark:bg-black/70 backdrop-blur-md transition-opacity duration-400 ease-in-out ${
-        isLoading ? "opacity-100" : "opacity-0"
-      } motion-reduce:transition-opacity`}
-      style={{ pointerEvents: isLoading ? "auto" : "none" }}
-    >
-      <div className="relative flex items-center justify-center">
-        {/* Animated outer ring */}
-        <div 
-          className="absolute w-32 h-32 rounded-full border border-brand-sky-border/40 border-t-brand-blue animate-spin motion-reduce:hidden" 
-          style={{ animationDuration: '1s' }} 
-        />
-        
-        {/* Soft pulsing glow */}
-        <div 
-          className="absolute w-24 h-24 rounded-full bg-brand-blue/10 animate-pulse motion-reduce:hidden blur-2xl" 
-          style={{ animationDuration: '2s' }} 
-        />
-        
-        {/* Logo container */}
-        <div 
-          className="relative w-20 h-20 flex items-center justify-center animate-pulse motion-reduce:animate-none" 
-          style={{ animationDuration: '2s' }}
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/75 backdrop-blur-md"
         >
-          <Image
-            src="/knoos-logo-sm.webp"
-            alt="Loading..."
-            fill
-            sizes="80px"
-            className="object-contain p-2"
-            priority
-          />
-        </div>
-      </div>
-    </div>
+          <div className="relative flex items-center justify-center">
+            {/* Animated outer ring */}
+            <div 
+              className="absolute w-32 h-32 rounded-full border border-brand-sky-border/40 border-t-brand-blue animate-spin motion-reduce:hidden" 
+              style={{ animationDuration: '1s' }} 
+            />
+            
+            {/* Soft pulsing glow */}
+            <div 
+              className="absolute w-24 h-24 rounded-full bg-brand-blue/10 animate-pulse motion-reduce:hidden blur-2xl" 
+              style={{ animationDuration: '2s' }} 
+            />
+            
+            {/* Logo container */}
+            <div 
+              className="relative w-20 h-20 flex items-center justify-center animate-pulse motion-reduce:animate-none" 
+              style={{ animationDuration: '2s' }}
+            >
+              <Image
+                src="/knoos-logo-sm.webp"
+                alt="Loading..."
+                fill
+                sizes="80px"
+                className="object-contain p-2"
+                priority
+              />
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

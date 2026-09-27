@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { easings } from "@/components/motion/constants";
 import { CouponEntry } from "@/components/cart/CouponEntry";
 import { APPLIED_COUPON_STORAGE_KEY, type CouponApplication } from "@/lib/coupon";
 import { FallbackImage } from "@/components/ui/FallbackImage";
@@ -31,6 +32,7 @@ interface CartClientProps {
 }
 
 export function CartClient({ initialItems, initialSubtotal, recommendationsSlot }: CartClientProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [items, setItems] = useState(initialItems);
   const [subtotal, setSubtotal] = useState(initialSubtotal);
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
@@ -167,7 +169,12 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
 
   if (items.length === 0) {
     return (
-      <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-10 sm:p-16 text-center max-w-2xl mx-auto shadow-xs">
+      <motion.div
+        initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: prefersReducedMotion ? 0.01 : 0.4, ease: easings.premium }}
+        className="bg-white border border-brand-sky-border/60 rounded-3xl p-10 sm:p-16 text-center max-w-2xl mx-auto shadow-xs"
+      >
         <div className="w-16 h-16 rounded-2xl bg-brand-sky/40 border border-brand-sky-border flex items-center justify-center text-brand-blue mx-auto mb-6 shadow-2xs">
           <ShoppingBag size={28} />
         </div>
@@ -178,18 +185,18 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/men"
-            className="w-full sm:w-auto px-8 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium shadow-sm"
+            className="w-full sm:w-auto px-8 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 font-medium shadow-sm"
           >
             Explore Men
           </Link>
           <Link
             href="/women"
-            className="w-full sm:w-auto px-8 py-3.5 border border-neutral-300 hover:border-neutral-900 bg-neutral-50 hover:bg-white text-neutral-800 font-mono text-xs uppercase tracking-widest rounded-xl transition-colors font-medium"
+            className="w-full sm:w-auto px-8 py-3.5 border border-neutral-300 hover:border-neutral-900 bg-neutral-50 hover:bg-white text-neutral-800 font-mono text-xs uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 font-medium"
           >
             Explore Women
           </Link>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -210,9 +217,19 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
               return (
                 <motion.div
                   layout
-                  initial={false}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{
+                    opacity: 0,
+                    scale: prefersReducedMotion ? 1 : 0.96,
+                    height: 0,
+                    overflow: "hidden",
+                    marginBottom: 0,
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    transition: { duration: prefersReducedMotion ? 0.01 : 0.28, ease: easings.premium },
+                  }}
+                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.35, ease: easings.premium }}
                   key={item.id}
                   className={`bg-white border border-brand-sky-border/60 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row gap-5 ${
                     isLoading ? "opacity-50" : ""
@@ -274,7 +291,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
                         <button
                           onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1 || isLoading}
-                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-xs font-mono"
+                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 disabled:opacity-30 transition-all text-xs font-mono"
                           aria-label="Decrease quantity"
                         >
                           -
@@ -285,7 +302,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
                         <button
                           onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
                           disabled={item.quantity >= item.stock || isLoading}
-                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-xs font-mono"
+                          className="px-3 py-1 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 disabled:opacity-30 transition-all text-xs font-mono"
                           aria-label="Increase quantity"
                         >
                           +
@@ -296,7 +313,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
                       <button
                         onClick={() => handleRemove(item.id)}
                         disabled={isLoading}
-                        className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-400 hover:text-red-600 transition-colors py-1 px-2 rounded-md hover:bg-red-50"
+                        className="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-400 hover:text-red-600 active:scale-95 transition-all py-1 px-2 rounded-md hover:bg-red-50"
                         aria-label={`Remove ${item.productName} from bag`}
                       >
                         <Trash2 size={13} />
@@ -311,7 +328,12 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
         </div>
 
         {/* Order Summary Card (Cols 8-12) */}
-        <div className="lg:col-span-5 sticky top-28">
+        <motion.div
+          initial={{ opacity: 0, x: prefersReducedMotion ? 0 : 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0.01 : 0.45, ease: easings.premium }}
+          className="lg:col-span-5 sticky top-28"
+        >
           <div className="bg-white border border-brand-sky-border/60 rounded-3xl p-6 sm:p-8 shadow-xs">
             <h2 className="font-serif text-2xl text-brand-dark mb-6 font-medium">Summary</h2>
 
@@ -361,7 +383,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
             {/* Primary Checkout CTA */}
             <Link
               href="/checkout"
-              className="w-full flex items-center justify-center gap-3 py-4 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-xl transition-all shadow-md active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-xl transition-all shadow-md hover:-translate-y-0.5 active:scale-[0.985]"
             >
               <span>Proceed to Checkout</span>
               <ArrowRight size={14} />
@@ -383,7 +405,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {recommendationsSlot}

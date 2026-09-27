@@ -122,7 +122,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>Men</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-blue transition-all duration-300 group-hover:w-full" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
 
             <Link
@@ -130,7 +130,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>Women</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-blue transition-all duration-300 group-hover:w-full" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
 
             {/* Shop By Dropdown */}
@@ -153,10 +153,10 @@ export function HeaderClient({
               <AnimatePresence>
                 {isShopByOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-white/95 backdrop-blur-md border border-brand-sky-border/60 shadow-xl rounded-xl py-2 z-50 overflow-hidden"
                   >
                     <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-brand-gray-400 border-b border-brand-gray-100 mb-1">
@@ -228,7 +228,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>About</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-blue transition-all duration-300 group-hover:w-full" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
           </nav>
 
@@ -250,15 +250,21 @@ export function HeaderClient({
             {/* Cart Button */}
             <Link
               href="/cart"
-              className="p-1.5 text-brand-dark hover:text-brand-blue transition-colors flex items-center gap-1.5 relative"
+              className="p-1.5 text-brand-dark hover:text-brand-blue transition-colors flex items-center gap-1.5 relative group"
               aria-label={`Shopping cart with ${cartCount} items`}
             >
               <div className="relative">
-                <ShoppingBag size={18} strokeWidth={1.75} />
+                <ShoppingBag size={18} strokeWidth={1.75} className="group-hover:scale-105 transition-transform duration-200" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[17px] h-[17px] px-1 bg-brand-blue text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm">
+                  <motion.span
+                    key={cartCount}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute -top-1.5 -right-2 min-w-[17px] h-[17px] px-1 bg-brand-blue text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm"
+                  >
                     {cartCount}
-                  </span>
+                  </motion.span>
                 )}
               </div>
               <span className="hidden lg:inline font-mono text-[11px] uppercase tracking-widest text-brand-dark font-medium">

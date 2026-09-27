@@ -21,9 +21,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const discount = calculateDiscount(mrp, selling);
 
   return (
-    <Link href={`/product/${product.slug}`} className="group block select-none">
+    <Link 
+      href={`/product/${product.slug}`} 
+      className="group block select-none hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+    >
       {/* Product Image Stage */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F6F7F9] rounded-lg transition-all duration-500 group-hover:shadow-md">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F6F7F9] rounded-lg transition-all duration-400 group-hover:shadow-md">
         {/* Primary Image */}
         <FallbackImage
           src={mainImage}
@@ -31,20 +34,20 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           fill
           priority={priority}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className={`object-cover object-center transition-all duration-700 ease-out group-hover:scale-[1.03] ${
-            hoverImage ? "group-hover:opacity-0" : ""
+          className={`object-cover object-center transition-all duration-450 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035] ${
+            hoverImage ? "group-hover:opacity-0 duration-350" : ""
           }`}
         />
 
-        {/* Alternate Image on Hover */}
+        {/* Alternate Image on Hover (Crossfade ~350ms) */}
         {hoverImage && (
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-350 ease-out">
             <FallbackImage
               src={hoverImage}
               alt={`${product.name} alternate view`}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+              className="object-cover object-center transition-transform duration-450 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035]"
             />
           </div>
         )}
@@ -61,7 +64,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {/* Hover View Action Pill */}
         <div className="absolute bottom-3 right-3 z-10 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-md rounded-full shadow-md text-brand-dark">
           <span className="font-mono text-[11px] uppercase tracking-wider font-medium">View</span>
-          <ArrowUpRight size={12} className="text-brand-blue" />
+          <ArrowUpRight size={12} className="text-brand-blue group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
         </div>
       </div>
 
@@ -73,7 +76,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         </p>
 
         {/* Product Title */}
-        <h3 className="font-sans font-medium text-sm sm:text-base text-brand-dark group-hover:text-brand-blue transition-colors duration-200 line-clamp-1">
+        <h3 className="font-sans font-medium text-sm sm:text-base text-brand-dark group-hover:text-brand-blue transition-colors duration-300 line-clamp-1">
           {product.name}
         </h3>
 

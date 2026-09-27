@@ -220,7 +220,7 @@ export default function AccountOverviewClient() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-blue/40 transition-colors">
+    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-blue/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
       <p className="font-serif text-2xl sm:text-3xl lg:text-4xl text-brand-navy font-normal">
         {value}
       </p>
@@ -233,7 +233,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function RecentOrderCard({ order }: { order: RecentOrder }) {
   return (
-    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs">
+    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-200">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Metadata columns */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 flex-1">
@@ -313,7 +313,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex items-center justify-between min-h-[72px] sm:min-h-[76px] px-5 py-4 bg-white border border-brand-sky-border/60 rounded-xl hover:border-brand-blue/50 hover:bg-brand-sky/20 transition-all group shadow-xs"
+      className="flex items-center justify-between min-h-[72px] sm:min-h-[76px] px-5 py-4 bg-white border border-brand-sky-border/60 rounded-xl hover:border-brand-blue/50 hover:bg-brand-sky/20 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 group shadow-xs"
     >
       <div className="flex items-center gap-3.5">
         <div className="w-10 h-10 rounded-xl bg-brand-sky/50 text-brand-navy flex items-center justify-center shrink-0 group-hover:bg-brand-navy group-hover:text-white transition-colors">

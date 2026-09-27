@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import { easings } from "@/components/motion/constants";
 import type { PublicReview } from "@/lib/reviews";
 
 interface ReviewCarouselProps {
@@ -101,7 +103,7 @@ export function ReviewCarousel({ reviews, title, subtitle }: ReviewCarouselProps
                 onClick={() => handleScroll("left")}
                 disabled={!canScrollLeft}
                 aria-label="Previous reviews"
-                className="w-10 h-10 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy hover:text-brand-navy transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-xs"
+                className="w-10 h-10 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy hover:text-brand-navy hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-xs"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -110,7 +112,7 @@ export function ReviewCarousel({ reviews, title, subtitle }: ReviewCarouselProps
                 onClick={() => handleScroll("right")}
                 disabled={!canScrollRight}
                 aria-label="Next reviews"
-                className="w-10 h-10 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy hover:text-brand-navy transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-xs"
+                className="w-10 h-10 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy hover:text-brand-navy hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-xs"
               >
                 <ChevronRight size={18} />
               </button>
@@ -133,7 +135,7 @@ export function ReviewCarousel({ reviews, title, subtitle }: ReviewCarouselProps
           return (
             <div
               key={review.id || idx}
-              className="w-[85vw] sm:w-[350px] md:w-[380px] shrink-0 snap-start bg-white border border-brand-gray-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow duration-300"
+              className="w-[85vw] sm:w-[350px] md:w-[380px] shrink-0 snap-start bg-white border border-brand-gray-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300"
             >
               <div>
                 {/* Header: Customer Info & Rating */}
@@ -245,7 +247,7 @@ export function ReviewCarousel({ reviews, title, subtitle }: ReviewCarouselProps
               onClick={() => handleScroll("right")}
               disabled={!canScrollRight}
               aria-label="Next"
-              className="w-8 h-8 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-8 h-8 rounded-full border border-brand-gray-200 bg-white flex items-center justify-center text-brand-dark hover:border-brand-navy active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight size={16} />
             </button>
@@ -275,38 +277,48 @@ export function ReviewCarousel({ reviews, title, subtitle }: ReviewCarouselProps
       )}
 
       {/* Lightbox Modal for Photo Inspection */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full max-h-[85vh] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {lightboxImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setLightboxImage(null)}
           >
-            <div className="w-full flex justify-between items-center text-white mb-3 px-2">
-              <span className="font-mono text-xs uppercase tracking-wider">{lightboxImage.title}</span>
-              <button
-                type="button"
-                onClick={() => setLightboxImage(null)}
-                className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
-                aria-label="Close photo preview"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="relative w-full h-[65vh] rounded-xl overflow-hidden bg-black/50">
-              <Image
-                src={lightboxImage.url}
-                alt={lightboxImage.title}
-                fill
-                sizes="(max-width: 1024px) 100vw, 800px"
-                className="object-contain"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.24, ease: easings.premium }}
+              className="relative max-w-3xl w-full max-h-[85vh] flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-full flex justify-between items-center text-white mb-3 px-2">
+                <span className="font-mono text-xs uppercase tracking-wider">{lightboxImage.title}</span>
+                <button
+                  type="button"
+                  onClick={() => setLightboxImage(null)}
+                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-all active:scale-95"
+                  aria-label="Close photo preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="relative w-full h-[65vh] rounded-xl overflow-hidden bg-black/50">
+                <Image
+                  src={lightboxImage.url}
+                  alt={lightboxImage.title}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 800px"
+                  className="object-contain"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

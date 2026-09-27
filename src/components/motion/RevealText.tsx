@@ -1,17 +1,28 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { easings } from "./constants";
+import { easings, durations, staggers } from "./constants";
 import React from "react";
 
 interface RevealTextProps {
   text: string;
   className?: string;
+  lineClassName?: string;
   delay?: number;
+  staggerDelay?: number;
+  duration?: number;
   as?: React.ElementType;
 }
 
-export function RevealText({ text, className = "", delay = 0, as = "span" }: RevealTextProps) {
+export function RevealText({ 
+  text, 
+  className = "", 
+  lineClassName = "",
+  delay = 0, 
+  staggerDelay = staggers.normal,
+  duration = durations.reveal,
+  as = "span" 
+}: RevealTextProps) {
   const shouldReduceMotion = useReducedMotion();
   const Component = as as any;
   
@@ -31,27 +42,23 @@ export function RevealText({ text, className = "", delay = 0, as = "span" }: Rev
     );
   }
 
-  // The outer component uses the 'as' tag (e.g., h2, p).
-  // The inner animated component MUST be a span to ensure valid HTML nesting.
-  const MotionComponent = motion.span;
-
   return (
     <Component className={`${className} flex flex-col`}>
       {lines.map((line: string, i: number) => (
-        <span key={i} className="overflow-hidden inline-block align-bottom">
-          <MotionComponent
-            className="inline-block whitespace-pre-wrap"
-            initial={{ y: "100%", opacity: 0 }}
+        <span key={i} className="overflow-hidden inline-block align-bottom py-0.5">
+          <motion.span
+            className={`inline-block whitespace-pre-wrap ${lineClassName}`}
+            initial={{ y: "105%", opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: true, margin: "-60px" }}
             transition={{
-              duration: 0.8,
-              delay: delay + i * 0.08,
+              duration,
+              delay: delay + i * staggerDelay,
               ease: easings.premium,
             }}
           >
             {line}
-          </MotionComponent>
+          </motion.span>
         </span>
       ))}
     </Component>

@@ -7,10 +7,11 @@ import { Product, ProductVariant } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { loginWithGoogle } from "@/lib/auth-actions";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import { getVariantPrices, calculateDiscount } from "@/lib/pricing";
 import { ColorSelector, ColorSibling } from "./ColorSelector";
 import { Truck, RotateCcw, ShieldCheck, ArrowRight, X } from "lucide-react";
+import { easings } from "@/components/motion/constants";
 
 type ProductWithCategory = Product & {
   categoryRel?: { id: string; name: string; slug: string } | null;
@@ -45,6 +46,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
 
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
 
   const selectedVariant = variants.find((v) => v.id === selectedVariantId);
   const stockAvailable = selectedVariant ? selectedVariant.stock : 0;
@@ -165,10 +167,38 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
     setSuccess(false);
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: prefersReducedMotion ? 0 : 0.05,
+        delayChildren: prefersReducedMotion ? 0 : 0.08,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: prefersReducedMotion ? 0.01 : 0.42,
+        ease: easings.premium,
+      },
+    },
+  };
+
   return (
-    <div className="flex flex-col">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col"
+    >
       {/* Category Eyebrow & Title */}
-      <div className="mb-6">
+      <motion.div variants={itemVariants} className="mb-6">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5">
           {product.categoryRel?.name
             ? `${product.categoryRel.name} • SIGNATURE SERIES`
@@ -216,24 +246,29 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             </span>
           </p>
         )}
-      </div>
+      </motion.div>
 
       {/* Description */}
-      <div className="mb-8 text-neutral-600 leading-relaxed max-w-prose text-sm sm:text-base font-light">
+      <motion.div
+        variants={itemVariants}
+        className="mb-8 text-neutral-600 leading-relaxed max-w-prose text-sm sm:text-base font-light"
+      >
         {product.description ||
           "Engineered for fluid everyday movement with multi-density cushioning and handcrafted premium leathers."}
-      </div>
+      </motion.div>
 
       {/* Color Selector */}
-      <ColorSelector
-        currentProductId={product.id}
-        currentColor={product.color}
-        siblings={colorSiblings}
-        currentHasStock={variants.some((variant) => variant.stock > 0)}
-      />
+      <motion.div variants={itemVariants}>
+        <ColorSelector
+          currentProductId={product.id}
+          currentColor={product.color}
+          siblings={colorSiblings}
+          currentHasStock={variants.some((variant) => variant.stock > 0)}
+        />
+      </motion.div>
 
       {/* Size Selector */}
-      <div className="mb-8">
+      <motion.div variants={itemVariants} className="mb-8">
         <div className="flex items-center justify-between mb-3.5">
           <span className="font-mono text-xs uppercase tracking-[0.18em] text-neutral-900 font-semibold">
             Select UK Size
@@ -269,7 +304,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
                       ${
                         isOutOfStock
                           ? "opacity-35 cursor-not-allowed bg-neutral-100 border-neutral-200 line-through text-neutral-400"
-                          : ""
+                          : "hover:-translate-y-0.5 active:scale-95"
                       }
                       ${
                         isSelected && !isOutOfStock
@@ -291,11 +326,11 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             <p className="col-span-full text-xs font-mono text-neutral-400">Standard fit</p>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Quantity Selector */}
       {selectedVariantId && stockAvailable > 0 && (
-        <div className="mb-8 flex items-center gap-4">
+        <motion.div variants={itemVariants} className="mb-8 flex items-center gap-4">
           <span className="font-mono text-xs uppercase tracking-[0.18em] text-neutral-900 font-semibold">
             Quantity
           </span>
@@ -303,7 +338,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             <button
               onClick={() => handleQuantityChange(-1)}
               disabled={quantity <= 1}
-              className="px-3.5 py-2 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-sm font-mono"
+              className="px-3.5 py-2 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 disabled:opacity-30 transition-all text-sm font-mono"
             >
               -
             </button>
@@ -313,28 +348,36 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             <button
               onClick={() => handleQuantityChange(1)}
               disabled={quantity >= stockAvailable}
-              className="px-3.5 py-2 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 disabled:opacity-30 transition-colors text-sm font-mono"
+              className="px-3.5 py-2 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 disabled:opacity-30 transition-all text-sm font-mono"
             >
               +
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Error & Success Feedback */}
       {error && (
-        <p className="mb-4 text-xs font-mono text-red-600 bg-red-50 border border-red-200 p-3.5 rounded-xl">
+        <motion.p
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 text-xs font-mono text-red-600 bg-red-50 border border-red-200 p-3.5 rounded-xl"
+        >
           {error}
-        </p>
+        </motion.p>
       )}
       {success && (
-        <p className="mb-4 text-xs font-mono text-emerald-800 bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl font-medium">
+        <motion.p
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 text-xs font-mono text-emerald-800 bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl font-medium"
+        >
           Added to your shopping bag!
-        </p>
+        </motion.p>
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
           onClick={handleAddToCart}
           disabled={
@@ -396,10 +439,13 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             ? "Sign In to Buy"
             : "Buy Now"}
         </button>
-      </div>
+      </motion.div>
 
       {/* Trust Micro-bar */}
-      <div className="mt-8 pt-6 border-t border-neutral-200/70 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono text-neutral-600">
+      <motion.div
+        variants={itemVariants}
+        className="mt-8 pt-6 border-t border-neutral-200/70 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono text-neutral-600"
+      >
         <div className="flex items-center gap-2">
           <Truck size={16} className="text-brand-blue shrink-0" />
           <span>Free Express Delivery</span>
@@ -412,10 +458,13 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
           <ShieldCheck size={16} className="text-brand-blue shrink-0" />
           <span>Artisanal Quality</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Specifications Card */}
-      <div className="mt-10 p-6 sm:p-7 rounded-2xl bg-white border border-brand-sky-border/60 shadow-xs">
+      <motion.div
+        variants={itemVariants}
+        className="mt-10 p-6 sm:p-7 rounded-2xl bg-white border border-brand-sky-border/60 shadow-xs"
+      >
         <h3 className="font-serif text-lg text-brand-dark mb-5 font-medium">Specifications</h3>
         <ul className="space-y-3.5 font-mono text-xs text-neutral-500 uppercase tracking-wider">
           {(product as any).categoryRel?.name && (
@@ -481,12 +530,16 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             </Link>
           </li>
         </ul>
-      </div>
+      </motion.div>
 
       {/* Size Guide Modal */}
       <AnimatePresence>
         {isSizeGuideOpen && (
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs"
             onClick={() => setIsSizeGuideOpen(false)}
             role="dialog"
@@ -497,7 +550,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.24, ease: easings.premium }}
               className="relative w-full max-w-xl max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-neutral-200 overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
@@ -534,9 +587,9 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
                 </div>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

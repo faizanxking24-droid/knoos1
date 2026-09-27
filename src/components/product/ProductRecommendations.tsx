@@ -3,6 +3,7 @@ import type { Product, ProductImage } from "@prisma/client";
 import { getProductPrices } from "@/lib/pricing";
 import { ProductCard } from "./ProductCard";
 import { FallbackImage } from "@/components/ui/FallbackImage";
+import { Reveal, StaggerContainer, StaggerItem } from "@/components/motion";
 
 type ProductWithImages = Product & { images: ProductImage[] };
 
@@ -60,32 +61,36 @@ export function ProductRecommendations({
   if (mode === "cart") {
     return (
       <section className="mt-10 w-full">
-        <h2 className="mb-6 text-center font-serif text-2xl text-brand-navy uppercase tracking-widest">{title}</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5">
+        <Reveal>
+          <h2 className="mb-6 text-center font-serif text-2xl text-brand-navy uppercase tracking-widest">{title}</h2>
+        </Reveal>
+        <StaggerContainer className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5">
           {products.slice(0, 4).map((product) => (
-            <div key={product.id} className="min-w-0 max-w-[280px]">
+            <StaggerItem key={product.id} className="min-w-0 max-w-[280px]">
               <ProductCard product={product} />
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </section>
     );
   }
 
   return (
     <section className="w-full border-t border-brand-sky-border/60 py-16 md:py-24">
-      <h2 className="font-serif text-2xl md:text-3xl mb-8 md:mb-12 text-center text-brand-navy uppercase tracking-widest">{title}</h2>
+      <Reveal>
+        <h2 className="font-serif text-2xl md:text-3xl mb-8 md:mb-12 text-center text-brand-navy uppercase tracking-widest">{title}</h2>
+      </Reveal>
       
       {/* Mobile scrollable row, Desktop grid */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory md:grid hide-scrollbar pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
+      <StaggerContainer className="flex overflow-x-auto snap-x snap-mandatory md:grid hide-scrollbar pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
         <div className="flex w-max gap-4 md:contents md:w-auto">
           {products.map((product) => (
-            <div key={product.id} className="snap-start w-[60vw] md:w-auto flex-shrink-0">
+            <StaggerItem key={product.id} className="snap-start w-[60vw] md:w-auto flex-shrink-0">
               <ProductCard product={product} />
-            </div>
+            </StaggerItem>
           ))}
         </div>
-      </div>
+      </StaggerContainer>
     </section>
   );
 }

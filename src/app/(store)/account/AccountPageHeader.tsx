@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { easings } from "@/components/motion/constants";
 
 interface AccountPageHeaderProps {
   title: string;
@@ -16,8 +18,15 @@ export function AccountPageHeader({
   backHref,
   className = "",
 }: AccountPageHeaderProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div className={`mb-8 sm:mb-10 max-w-[900px] ${className}`}>
+    <motion.div
+      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: prefersReducedMotion ? 0.01 : 0.4, ease: easings.premium }}
+      className={`mb-8 sm:mb-10 max-w-[900px] ${className}`}
+    >
       {backHref && (
         <Link
           href={backHref}
@@ -25,7 +34,7 @@ export function AccountPageHeader({
         >
           <ChevronLeft
             size={14}
-            className="group-hover:-translate-x-0.5 transition-transform"
+            className="group-hover:-translate-x-1 transition-transform duration-200"
           />
           <span>Back</span>
         </Link>
@@ -38,6 +47,6 @@ export function AccountPageHeader({
           {subtitle}
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }

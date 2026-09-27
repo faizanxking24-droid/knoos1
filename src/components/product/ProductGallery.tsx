@@ -92,9 +92,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         className="flex flex-col-reverse md:flex-row gap-6 md:gap-8"
       >
         {/* Thumbnails */}
@@ -104,9 +104,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               <button
                 key={image.id}
                 onClick={() => scrollToSlide(index)}
-                className={`relative aspect-[4/5] w-20 md:w-full flex-shrink-0 border transition-all duration-300 rounded-lg overflow-hidden bg-brand-sky/20 ${
+                className={`relative aspect-[4/5] w-20 md:w-full flex-shrink-0 border transition-all duration-300 rounded-lg overflow-hidden bg-brand-sky/20 hover:scale-[1.03] ${
                   activeIndex === index
-                    ? "border-brand-navy ring-2 ring-brand-blue/30 opacity-100"
+                    ? "border-brand-navy ring-2 ring-brand-navy/30 opacity-100 shadow-xs"
                     : "border-brand-sky-border/40 opacity-60 hover:opacity-100 hover:border-brand-blue/50"
                 }`}
               >
@@ -188,10 +188,10 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
-              initial={false}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
+              initial={{ opacity: 0, scale: 1.015 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="absolute inset-0 p-4 md:p-8"
             >
               <FallbackImage
