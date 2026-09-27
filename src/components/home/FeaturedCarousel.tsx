@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductWithImages } from "@/lib/products";
 import { useReducedMotion } from "framer-motion";
-import { RevealText } from "@/components/motion/RevealText";
-import { Reveal } from "@/components/motion/Reveal";
+import { StoreContainer } from "@/components/store/StoreContainer";
 
 interface FeaturedCarouselProps {
   products: ProductWithImages[];
@@ -20,8 +20,8 @@ interface FeaturedCarouselProps {
 export function FeaturedCarousel({
   products,
   title = "New Arrivals",
-  eyebrow = "JUST IN",
-  subtitle = "Our latest arrivals, engineered with comfort-first principles and premium finishes.",
+  eyebrow = "SEASONAL DROP",
+  subtitle = "Our latest arrivals, engineered with anatomical comfort and premium finishes.",
   viewAllHref = "/search?sort=Newest",
   viewAllText = "View All",
 }: FeaturedCarouselProps) {
@@ -43,8 +43,6 @@ export function FeaturedCarousel({
     if (!el) return;
 
     updateScrollButtons();
-
-    // Listen to scroll events to update arrow active/disabled states
     el.addEventListener("scroll", updateScrollButtons, { passive: true });
     window.addEventListener("resize", updateScrollButtons);
 
@@ -58,7 +56,6 @@ export function FeaturedCarousel({
     const el = scrollRef.current;
     if (!el) return;
 
-    // Scroll by roughly 1 page or 2 items
     const scrollAmount = el.clientWidth * 0.75;
     el.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
@@ -71,48 +68,42 @@ export function FeaturedCarousel({
   }
 
   return (
-    <section className="py-16 md:py-20 lg:py-24 px-6 md:px-12 lg:px-24 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-6">
-          <div>
-            <Reveal>
-              <p className="font-mono text-xs md:text-sm uppercase tracking-widest text-brand-blue font-semibold mb-3">
+    <section className="py-16 sm:py-20 lg:py-24 bg-white border-b border-brand-sky-border/30 overflow-hidden">
+      <StoreContainer>
+        {/* Header row with Title, Eyebrow & Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4">
+          <div className="max-w-2xl">
+            {eyebrow && (
+              <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5">
                 {eyebrow}
               </p>
-            </Reveal>
-            <RevealText
-              as="h2"
-              text={title}
-              className="font-serif text-3xl md:text-4xl text-brand-dark"
-            />
+            )}
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15]">
+              {title}
+            </h2>
             {subtitle && (
-              <Reveal delay={0.15}>
-                <p className="text-brand-gray-500 text-sm md:text-base mt-2 max-w-xl">
-                  {subtitle}
-                </p>
-              </Reveal>
+              <p className="mt-3 text-brand-gray-600 text-sm sm:text-base font-normal leading-relaxed">
+                {subtitle}
+              </p>
             )}
           </div>
 
-          <div className="flex items-center gap-4 self-end md:self-auto">
+          <div className="flex items-center gap-4 self-start sm:self-end pt-2 sm:pt-0">
             {viewAllHref && (
               <Link
                 href={viewAllHref}
-                className="group font-mono text-xs uppercase tracking-widest text-brand-navy hover:text-brand-blue transition-colors flex items-center gap-2 pb-1 border-b border-transparent hover:border-brand-blue mr-2"
+                className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue pb-1 border-b border-brand-dark/20 hover:border-brand-blue transition-all duration-300 mr-2"
               >
                 <span>{viewAllText}</span>
-                <span
+                <ArrowRight
+                  size={13}
                   className="transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden="true"
-                >
-                  &rarr;
-                </span>
+                />
               </Link>
             )}
 
-            {/* Desktop Navigation Arrows */}
-            <div className="hidden sm:flex items-center gap-2" role="group" aria-label="Carousel navigation">
+            {/* Navigation Arrows */}
+            <div className="flex items-center gap-2" role="group" aria-label="Carousel navigation">
               <button
                 type="button"
                 onClick={() => handleScroll("left")}
@@ -120,23 +111,11 @@ export function FeaturedCarousel({
                 aria-label="Previous products"
                 className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
                   canScrollPrev
-                    ? "border-brand-dark/20 text-brand-dark hover:border-brand-blue hover:text-brand-blue hover:bg-brand-sky/20 active:scale-95"
-                    : "border-brand-gray-200 text-brand-gray-300 cursor-not-allowed opacity-40"
+                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 active:scale-95"
+                    : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
+                <ArrowLeft size={16} />
               </button>
               <button
                 type="button"
@@ -145,47 +124,35 @@ export function FeaturedCarousel({
                 aria-label="Next products"
                 className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
                   canScrollNext
-                    ? "border-brand-dark/20 text-brand-dark hover:border-brand-blue hover:text-brand-blue hover:bg-brand-sky/20 active:scale-95"
-                    : "border-brand-gray-200 text-brand-gray-300 cursor-not-allowed opacity-40"
+                    ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 active:scale-95"
+                    : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Carousel Container */}
+        {/* Carousel Tracks */}
         <div
           ref={scrollRef}
           tabIndex={0}
           role="region"
           aria-label={`${title} carousel`}
-          className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-6 pt-2 -mx-6 px-6 md:-mx-12 md:px-12 lg:mx-0 lg:px-0 focus:outline-none focus:ring-1 focus:ring-brand-blue/30 rounded-lg touch-pan-x"
+          className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-6 pt-2 -mx-5 px-5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10 focus:outline-none touch-pan-x"
         >
           {products.map((product) => (
             <div
               key={product.id}
               data-carousel-item
-              className="flex-none w-[76vw] sm:w-[45vw] md:w-[32vw] lg:w-[calc(25%-1.5rem)] snap-start"
+              className="flex-none w-[70vw] sm:w-[42vw] md:w-[32vw] lg:w-[calc(25%-1.5rem)] snap-start"
             >
               <ProductCard product={product} />
             </div>
           ))}
         </div>
-      </div>
+      </StoreContainer>
     </section>
   );
 }

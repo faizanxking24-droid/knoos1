@@ -1,10 +1,5 @@
 import { prisma } from "@/lib/db";
 import { Hero } from "@/components/hero/Hero";
-import { Reveal } from "@/components/motion/Reveal";
-import { RevealText } from "@/components/motion/RevealText";
-import { RevealImage } from "@/components/motion/RevealImage";
-import { StaggerContainer } from "@/components/motion/StaggerContainer";
-import { StaggerItem } from "@/components/motion/StaggerItem";
 import Image from "next/image";
 import Link from "next/link";
 import { ProductWithImages } from "@/lib/products";
@@ -12,6 +7,9 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { CategoryShowcase } from "@/components/home/CategoryShowcase";
 import { PromoBanners } from "@/components/home/PromoBanners";
 import { FeaturedCarousel } from "@/components/home/FeaturedCarousel";
+import { StoreContainer } from "@/components/store/StoreContainer";
+import { SectionHeading } from "@/components/store/SectionHeading";
+import { Sparkles, ShieldCheck, Feather, Compass, ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "KNOOS - Premium Footwear",
@@ -89,13 +87,13 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-x-hidden">
-      {/* 1. HERO (Phase 1 Owned Component) */}
+      {/* 1. HERO */}
       <Hero />
 
       {/* 2. SHOP BY CATEGORY (MEN | WOMEN) */}
       <CategoryShowcase />
 
-      {/* 3. PROMOTIONAL BANNERS */}
+      {/* 3. PROMOTIONAL BANNERS / EDITORIAL SPOTLIGHT */}
       <PromoBanners featuredProduct={promoProduct} />
 
       {/* 4. HOMEPAGE CAROUSEL (NEW ARRIVALS) */}
@@ -103,144 +101,109 @@ export default async function HomePage() {
         <FeaturedCarousel
           products={newArrivals}
           title="New Arrivals"
-          eyebrow="JUST IN"
+          eyebrow="SEASONAL DROP"
           subtitle="Our latest footwear arrivals, engineered for everyday movement and refined comfort."
           viewAllHref="/search?sort=Newest"
-          viewAllText="View All"
+          viewAllText="View All New"
         />
       )}
 
       {/* 5. BEST SELLERS */}
       {bestSellers.length > 0 && (
-        <section className="py-16 md:py-20 lg:py-24 px-6 md:px-12 lg:px-24 bg-brand-sky/40 border-y border-brand-sky-border/40">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-6">
-              <div>
-                <RevealText
-                  as="h2"
-                  text="BEST SELLERS"
-                  className="font-serif text-3xl md:text-4xl uppercase mb-3 text-brand-dark"
-                />
-                <Reveal delay={0.15}>
-                  <p className="text-brand-gray-600 text-sm md:text-base">
-                    Our most-loved pairs, chosen for everyday comfort and style.
-                  </p>
-                </Reveal>
-              </div>
-              <Reveal delay={0.25}>
-                <Link
-                  href="/search"
-                  className="font-mono text-xs uppercase tracking-widest text-brand-navy hover:text-brand-blue transition-colors group flex items-center gap-2 pb-1 border-b border-transparent hover:border-brand-blue"
-                >
-                  <span>View All</span>
-                  <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
-                    &rarr;
-                  </span>
-                </Link>
-              </Reveal>
-            </div>
-            <StaggerContainer
-              staggerDelay={0.1}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8"
-            >
+        <section className="py-16 sm:py-20 lg:py-24 bg-brand-surface border-b border-brand-sky-border/40">
+          <StoreContainer>
+            <SectionHeading
+              eyebrow="HIGH-DEMAND SILHOUETTES"
+              title="Best Sellers"
+              description="Our most celebrated styles, selected for enduring durability and quiet confidence."
+              viewAllHref="/search"
+              viewAllText="View All Best Sellers"
+            />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               {bestSellers.map((product) => (
-                <StaggerItem key={product.id} yOffset={30}>
-                  <ProductCard product={product} />
-                </StaggerItem>
+                <ProductCard key={product.id} product={product} />
               ))}
-            </StaggerContainer>
-          </div>
+            </div>
+          </StoreContainer>
         </section>
       )}
 
-      {/* 6. MADE WITH INTENT */}
-      <section className="py-16 md:py-20 lg:py-24 px-6 md:px-12 lg:px-24 bg-brand-cream/80 border-y border-brand-cream-border/60">
-        <div className="max-w-7xl mx-auto">
-          <Reveal>
-            <p className="font-mono text-xs md:text-sm uppercase tracking-widest text-brand-gold font-semibold mb-3">
-              WHY KNOOS
-            </p>
-          </Reveal>
-          <RevealText
-            as="h2"
-            text="MADE WITH INTENT"
-            delay={0.1}
-            className="font-serif text-3xl md:text-4xl mb-12 md:mb-16 uppercase text-brand-dark"
+      {/* 6. MADE WITH INTENT / BRAND PILLARS */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-white border-b border-brand-sky-border/40">
+        <StoreContainer>
+          <SectionHeading
+            eyebrow="THE KNOOS STANDARD"
+            title="Made with Intent"
+            description="Every pair is engineered around human anatomy, premium natural materials, and architectural balance."
+            centered
           />
 
-          <StaggerContainer
-            staggerDelay={0.08}
-            delayChildren={0.2}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8"
-          >
-            <StaggerItem yOffset={25} className="flex flex-col items-start group">
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl border border-brand-cream-border/70 mb-6 bg-white text-brand-navy shadow-sm group-hover:scale-105 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v4l3 3" />
-                </svg>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mt-12">
+            <div className="p-8 rounded-2xl bg-brand-surface border border-brand-sky-border/60 flex flex-col items-start hover:border-brand-blue/40 transition-colors duration-300">
+              <div className="w-12 h-12 rounded-xl bg-white border border-brand-sky-border flex items-center justify-center text-brand-blue shadow-xs mb-6">
+                <Feather size={22} />
               </div>
-              <h3 className="font-serif text-xl mb-3 text-brand-dark">Comfort</h3>
-              <p className="text-brand-gray-600 text-sm leading-relaxed">
-                Cushioned footbeds and considered fit for long days on your feet.
+              <h3 className="font-serif text-xl text-brand-dark mb-2 font-medium">Anatomical Fit</h3>
+              <p className="text-brand-gray-600 text-sm leading-relaxed font-light">
+                Multi-density cushioned footbeds and ergonomic arches engineered for effortless 14-hour days on your feet.
               </p>
-            </StaggerItem>
+            </div>
 
-            <StaggerItem yOffset={25} className="flex flex-col items-start group">
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl border border-brand-cream-border/70 mb-6 bg-white text-brand-navy shadow-sm group-hover:scale-105 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l-7-7m7 7a3 3 0 100-6 3 3 0 000 6z" />
-                </svg>
+            <div className="p-8 rounded-2xl bg-brand-surface border border-brand-sky-border/60 flex flex-col items-start hover:border-brand-blue/40 transition-colors duration-300">
+              <div className="w-12 h-12 rounded-xl bg-white border border-brand-sky-border flex items-center justify-center text-brand-blue shadow-xs mb-6">
+                <Sparkles size={22} />
               </div>
-              <h3 className="font-serif text-xl mb-3 text-brand-dark">Craftsmanship</h3>
-              <p className="text-brand-gray-600 text-sm leading-relaxed">
-                Clean lines, careful stitching and a finish you can feel.
+              <h3 className="font-serif text-xl text-brand-dark mb-2 font-medium">Artisanal Leathers</h3>
+              <p className="text-brand-gray-600 text-sm leading-relaxed font-light">
+                Full-grain and burnished hides that soften with time and develop a deep, personalized patina unique to your journey.
               </p>
-            </StaggerItem>
+            </div>
 
-            <StaggerItem yOffset={25} className="flex flex-col items-start group">
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl border border-brand-cream-border/70 mb-6 bg-white text-brand-navy shadow-sm group-hover:scale-105 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z" />
-                </svg>
+            <div className="p-8 rounded-2xl bg-brand-surface border border-brand-sky-border/60 flex flex-col items-start hover:border-brand-blue/40 transition-colors duration-300">
+              <div className="w-12 h-12 rounded-xl bg-white border border-brand-sky-border flex items-center justify-center text-brand-blue shadow-xs mb-6">
+                <Compass size={22} />
               </div>
-              <h3 className="font-serif text-xl mb-3 text-brand-dark">Everyday Style</h3>
-              <p className="text-brand-gray-600 text-sm leading-relaxed">
-                Silhouettes that move easily from work to weekend.
+              <h3 className="font-serif text-xl text-brand-dark mb-2 font-medium">Versatile Modernism</h3>
+              <p className="text-brand-gray-600 text-sm leading-relaxed font-light">
+                Understated silhouettes with pure lines that transition fluidly from client meetings to weekend travel.
               </p>
-            </StaggerItem>
+            </div>
 
-            <StaggerItem yOffset={25} className="flex flex-col items-start group">
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl border border-brand-cream-border/70 mb-6 bg-white text-brand-navy shadow-sm group-hover:scale-105 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 10a.5.5 0 01.5-.5h5a.5.5 0 01.5.5v4a.5.5 0 01-.5.5h-5a.5.5 0 01-.5-.5v-4z" />
-                </svg>
+            <div className="p-8 rounded-2xl bg-brand-surface border border-brand-sky-border/60 flex flex-col items-start hover:border-brand-blue/40 transition-colors duration-300">
+              <div className="w-12 h-12 rounded-xl bg-white border border-brand-sky-border flex items-center justify-center text-brand-blue shadow-xs mb-6">
+                <ShieldCheck size={22} />
               </div>
-              <h3 className="font-serif text-xl mb-3 text-brand-dark">Quality Materials</h3>
-              <p className="text-brand-gray-600 text-sm leading-relaxed">
-                Selected leathers, knits and durable rubber outsoles.
+              <h3 className="font-serif text-xl text-brand-dark mb-2 font-medium">Built to Endure</h3>
+              <p className="text-brand-gray-600 text-sm leading-relaxed font-light">
+                Reinforced stitching, vulcanized bonding, and durable anti-slip outsoles engineered for longevity.
               </p>
-            </StaggerItem>
-
-            <StaggerItem yOffset={25} className="flex flex-col items-start group">
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl border border-brand-cream-border/70 mb-6 bg-white text-brand-navy shadow-sm group-hover:scale-105 transition-transform">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="font-serif text-xl mb-3 text-brand-dark">Built To Move</h3>
-              <p className="text-brand-gray-600 text-sm leading-relaxed">
-                Flexible construction designed around natural movement.
-              </p>
-            </StaggerItem>
-          </StaggerContainer>
-        </div>
+            </div>
+          </div>
+        </StoreContainer>
       </section>
 
-      {/* 7. VIDEO */}
-      <section className="relative bg-brand-navy py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-          <div className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-2xl border border-white/10">
+      {/* 7. VIDEO SHOWCASE */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-neutral-950 text-white overflow-hidden">
+        <StoreContainer>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-4">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-brand-gold font-medium mb-2.5">
+                MOTION &amp; PRECISION
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-[1.15]">
+                Behind the Silhouette
+              </h2>
+            </div>
+            <Link
+              href="/about"
+              className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-white/80 hover:text-white pb-1 border-b border-white/20 hover:border-white transition-all duration-300"
+            >
+              <span>Our Philosophy</span>
+              <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-2xl border border-white/10 bg-neutral-900">
             <video
               className="absolute inset-0 h-full w-full object-cover"
               controls
@@ -255,55 +218,80 @@ export default async function HomePage() {
               Your browser does not support the video tag.
             </video>
           </div>
-        </div>
+        </StoreContainer>
       </section>
 
-      {/* 8. OUR QUALITY PROCESS */}
-      <section className="py-16 md:py-20 lg:py-24 px-6 md:px-12 lg:px-24 bg-gradient-to-b from-brand-sky/30 to-white">
-        <div className="max-w-7xl mx-auto">
+      {/* 8. QUALITY PROCESS */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-brand-surface">
+        <StoreContainer>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <RevealImage
-              scaleFrom={1.05}
-              className="relative aspect-square md:aspect-[4/3] lg:aspect-square bg-white border border-brand-sky-border/40 shadow-lg rounded-3xl overflow-hidden"
-            >
+            <div className="relative aspect-[4/3] lg:aspect-square bg-neutral-100 rounded-3xl overflow-hidden shadow-lg border border-brand-sky-border/40">
               <Image
                 src="/images/process-footwear.jpg"
-                alt="Craftsmanship Process"
+                alt="KNOOS Footwear Workshop"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
+                className="object-cover transition-transform duration-700 hover:scale-105"
               />
-            </RevealImage>
+              <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-white/90 backdrop-blur-md border border-white/40 shadow-sm pointer-events-none">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-brand-blue font-semibold block">
+                  Studio Archive
+                </span>
+                <p className="font-serif text-sm sm:text-base text-brand-dark mt-0.5">
+                  Hand-burnishing each toe box before final inspection.
+                </p>
+              </div>
+            </div>
+
             <div>
-              <RevealText
-                as="p"
-                text="PROCESS"
-                className="font-mono text-xs md:text-sm uppercase tracking-widest text-brand-blue font-semibold mb-4"
-              />
-              <RevealText
-                as="h2"
-                text="Finished with care."
-                delay={0.1}
-                className="font-serif text-3xl md:text-4xl mb-8 md:mb-12 text-brand-dark"
-              />
-              <StaggerContainer delayChildren={0.2} staggerDelay={0.1} className="space-y-6 md:space-y-8">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-3">
+                THE PROCESS
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-dark tracking-tight leading-[1.15] mb-8">
+                Finished with Devotion
+              </h2>
+
+              <div className="space-y-6 sm:space-y-8">
                 {[
-                  "Material selection and inspection",
-                  "Cutting and stitched construction",
-                  "Comfort-focused footbed assembly",
-                  "Finishing, cleaning and quality control",
-                ].map((step, idx) => (
-                  <StaggerItem key={idx} yOffset={20} className="flex items-start gap-4">
-                    <div className="w-7 h-7 rounded-full bg-brand-blue flex-shrink-0 flex items-center justify-center mt-1 shadow-sm">
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                  {
+                    step: "01",
+                    title: "Raw Material Selection",
+                    desc: "Hand-inspecting hides for tensile strength, grain consistency, and natural surface character.",
+                  },
+                  {
+                    step: "02",
+                    title: "Architectural Pattern Cutting",
+                    desc: "Precision knife-cutting every vamp, quarter, and counter to ensure zero stretch distortion.",
+                  },
+                  {
+                    step: "03",
+                    title: "Dual-Density Bed Assembly",
+                    desc: "Laminating memory foam cushioning over shock-absorbing cork midsoles for lasting bounce.",
+                  },
+                  {
+                    step: "04",
+                    title: "Artisanal Edge Finishing",
+                    desc: "Wax-polishing edges and burnishing leather surfaces by hand prior to boxed delivery.",
+                  },
+                ].map((item) => (
+                  <div key={item.step} className="flex items-start gap-5">
+                    <span className="font-mono text-sm sm:text-base font-semibold text-brand-blue bg-brand-sky/40 border border-brand-sky-border w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                      {item.step}
+                    </span>
+                    <div>
+                      <h4 className="font-serif text-lg sm:text-xl text-brand-dark mb-1 font-medium">
+                        {item.title}
+                      </h4>
+                      <p className="text-brand-gray-600 text-sm sm:text-base leading-relaxed font-light">
+                        {item.desc}
+                      </p>
                     </div>
-                    <p className="text-base md:text-lg text-brand-dark font-light">{step}</p>
-                  </StaggerItem>
+                  </div>
                 ))}
-              </StaggerContainer>
+              </div>
             </div>
           </div>
-        </div>
+        </StoreContainer>
       </section>
     </main>
   );

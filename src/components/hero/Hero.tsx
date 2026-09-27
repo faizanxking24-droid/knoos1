@@ -1,336 +1,148 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useScroll, useSpring, useMotionValueEvent, useReducedMotion, useTransform } from "framer-motion";
-import { useRef, useEffect, useState, useCallback } from "react";
-
-function isVideoValid(video: HTMLVideoElement | null): video is HTMLVideoElement {
-  return (
-    video !== null &&
-    video.readyState >= 1 &&
-    Number.isFinite(video.duration) &&
-    video.duration > 0
-  );
-}
-
-function calculateClampedTarget(video: HTMLVideoElement, progress: number): number {
-  const duration = video.duration;
-  if (!Number.isFinite(duration) || duration <= 0) return 0;
-
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  const maxSeek = Math.max(0, duration - 0.05);
-  return Math.min(Math.max(clampedProgress * duration, 0), maxSeek);
-}
+import Link from "next/link";
+import { ArrowRight, ArrowDown } from "lucide-react";
+import { StoreContainer } from "@/components/store/StoreContainer";
 
 export function Hero() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const shouldReduceMotion = useReducedMotion();
-  const latestTargetRef = useRef<number>(0);
-  const dispatchedTargetRef = useRef<number>(-1);
-  const rafIdRef = useRef<number | null>(null);
-
-  // Video visibility state: only true once a real decoded frame is confirmed ready
-  const [videoReady, setVideoReady] = useState(false);
-
-  // Track the scroll progress of the entire 400vh section
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
-
-  // Smooth the scroll progress for a cinematic scrubbing feel.
-  const smoothProgress = useSpring(scrollYProgress, { 
-    stiffness: 100, 
-    damping: 30, 
-    restDelta: 0.001 
-  });
-
-  const applyVideoSeek = useCallback(() => {
-    const video = videoRef.current;
-    if (!isVideoValid(video)) return;
-
-    // Ensure video is paused at all times; timeline authority is scroll position
-    if (!video.paused) {
-      video.pause();
-    }
-
-    // If browser is actively decoding/seeking previous frame, defer to 'seeked' event
-    if (video.seeking) return;
-
-    const target = latestTargetRef.current;
-    const maxSeek = Math.max(0, video.duration - 0.05);
-    const clampedTarget = Math.min(Math.max(target, 0), maxSeek);
-
-    // Only seek if change is significant (> 0.015s)
-    if (Math.abs(video.currentTime - clampedTarget) > 0.015) {
-      try {
-        video.currentTime = clampedTarget;
-        dispatchedTargetRef.current = clampedTarget;
-      } catch {
-        // Ignore seek abort / DOM exceptions during cleanup or fast scrubbing
-      }
-    }
-  }, []);
-
-  // Coalesce video seeking via requestAnimationFrame to avoid decoder thrashing
-  useMotionValueEvent(smoothProgress, "change", (latest) => {
-    if (shouldReduceMotion) return; // Respect prefers-reduced-motion
-
-    const video = videoRef.current;
-    if (video && Number.isFinite(video.duration) && video.duration > 0) {
-      latestTargetRef.current = calculateClampedTarget(video, latest);
-      if (rafIdRef.current === null) {
-        rafIdRef.current = requestAnimationFrame(() => {
-          rafIdRef.current = null;
-          applyVideoSeek();
-        });
-      }
-    }
-  });
-
-  // Lifecycle listeners for video decoding readiness, seeking, pause enforcement, and error fallback
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    // Guarantee the video is immediately paused
-    if (!video.paused) {
-      video.pause();
-    }
-
-    const enforcePause = () => {
-      if (!video.paused) {
-        video.pause();
-      }
-    };
-
-    const handleMetadata = () => {
-      enforcePause();
-      if (isVideoValid(video)) {
-        const target = calculateClampedTarget(video, smoothProgress.get());
-        latestTargetRef.current = target;
-        applyVideoSeek();
-      }
-    };
-
-    const handleReady = () => {
-      enforcePause();
-      setVideoReady(true);
-    };
-
-    const handleSeeked = () => {
-      enforcePause();
-      setVideoReady(true);
-      if (!isVideoValid(video)) return;
-
-      const target = latestTargetRef.current;
-      const maxSeek = Math.max(0, video.duration - 0.05);
-      const clampedTarget = Math.min(Math.max(target, 0), maxSeek);
-
-      // Re-apply latest scroll target if meaningfully different from dispatched or currentTime
-      if (
-        Math.abs(latestTargetRef.current - dispatchedTargetRef.current) > 0.015 ||
-        Math.abs(video.currentTime - clampedTarget) > 0.015
-      ) {
-        try {
-          video.currentTime = clampedTarget;
-          dispatchedTargetRef.current = clampedTarget;
-        } catch {
-          // Ignore seek abort / DOM exceptions
-        }
-      }
-    };
-
-    const handleError = () => {
-      // In case of playback or decode failure, gracefully hide video to reveal persistent poster
-      setVideoReady(false);
-    };
-
-    const handleStalled = () => {
-      // If stalled before initial frame is decoded, keep video hidden
-      if (video.readyState < 2) {
-        setVideoReady(false);
-      }
-    };
-
-    // Immediate sync for already cached / ready media
-    if (isVideoValid(video)) {
-      handleMetadata();
-    }
-    if (video.readyState >= 2) {
-      handleReady();
-    }
-
-    video.addEventListener("loadedmetadata", handleMetadata);
-    video.addEventListener("loadeddata", handleReady);
-    video.addEventListener("canplay", handleReady);
-    video.addEventListener("play", enforcePause);
-    video.addEventListener("playing", enforcePause);
-    video.addEventListener("seeked", handleSeeked);
-    video.addEventListener("error", handleError);
-    video.addEventListener("stalled", handleStalled);
-    video.addEventListener("abort", handleError);
-
-    return () => {
-      video.removeEventListener("loadedmetadata", handleMetadata);
-      video.removeEventListener("loadeddata", handleReady);
-      video.removeEventListener("canplay", handleReady);
-      video.removeEventListener("play", enforcePause);
-      video.removeEventListener("playing", enforcePause);
-      video.removeEventListener("seeked", handleSeeked);
-      video.removeEventListener("error", handleError);
-      video.removeEventListener("stalled", handleStalled);
-      video.removeEventListener("abort", handleError);
-
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-    };
-  }, [applyVideoSeek, smoothProgress]);
-
-  // Message 1: 0% to 25%
-  const opacity1 = useTransform(smoothProgress, [0, 0.05, 0.2, 0.25], [1, 1, 1, 0]);
-  const y1 = useTransform(smoothProgress, [0, 0.2, 0.25], [0, 0, -30]);
-
-  // Message 2: 25% to 50%
-  const opacity2 = useTransform(smoothProgress, [0.2, 0.25, 0.45, 0.5], [0, 1, 1, 0]);
-  const y2 = useTransform(smoothProgress, [0.2, 0.25, 0.45, 0.5], [30, 0, 0, -30]);
-
-  // Message 3: 50% to 75%
-  const opacity3 = useTransform(smoothProgress, [0.45, 0.5, 0.7, 0.75], [0, 1, 1, 0]);
-  const y3 = useTransform(smoothProgress, [0.45, 0.5, 0.7, 0.75], [30, 0, 0, -30]);
-
-  // Message 4: 75% to 100%
-  const opacity4 = useTransform(smoothProgress, [0.7, 0.75, 1, 1], [0, 1, 1, 1]);
-  const y4 = useTransform(smoothProgress, [0.7, 0.75, 1, 1], [30, 0, 0, 0]);
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative h-[400vh] bg-brand-black"
-    >
-      {/* Sticky Container keeps the hero visual pinned while the user scrolls through the 400vh section */}
-      <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex flex-col justify-center">
-        {/* Persistent poster background layer: permanently mounted behind video at z-0 */}
-        <Image
-          src="/images/hero-scroll-poster.webp"
-          alt="KNOOS Hero Background"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover pointer-events-none z-0"
-        />
+    <section className="relative min-h-[600px] lg:min-h-[740px] flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#FCFDFE] via-[#F4F8FB] to-[#EDF4F9]">
+      {/* Subtle atmospheric ambient glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-brand-sky-light/80 rounded-full blur-[120px] pointer-events-none"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-20 -left-20 w-[450px] h-[450px] bg-brand-sky/20 rounded-full blur-[100px] pointer-events-none"
+      />
 
-        {/* Video Background: mounted at z-[1], only visible when decoded frame is ready */}
-        <video
-          ref={videoRef}
-          className={`absolute inset-0 h-full w-full object-cover z-[1] transition-opacity duration-500 ease-out ${
-            videoReady ? "opacity-100" : "opacity-0"
-          }`}
-          muted
-          playsInline
-          preload="auto"
-          poster="/images/hero-scroll-poster.webp"
-        >
-          <source src="/videos/hero-scroll.mp4" type="video/mp4" />
-        </video>
+      {/* Background Subtle Watermark Wordmark */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
+      >
+        <span className="font-serif font-black text-[22vw] text-brand-sky-border/25 leading-none tracking-tighter uppercase">
+          KNOOS
+        </span>
+      </div>
 
-        {/* Subtle Overlay for text readability & atmospheric soft-sky/navy tone */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/60 via-brand-navy/20 to-transparent pointer-events-none z-[2]" />
-        
-        {/* Secondary atmospheric gradient for gentle bottom vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none z-[2]" />
-
-        {/* Content Layers */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-24 h-full pointer-events-none flex items-center">
+      <StoreContainer className="relative z-10 w-full py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          {/* Message 1 */}
-          <motion.div style={{ opacity: opacity1, y: y1 }} className="absolute max-w-xl pointer-events-auto">
-            <p className="font-mono text-xs md:text-sm uppercase tracking-[0.3em] text-brand-sky/90 mb-4 drop-shadow-md">
-              KNOOS Original
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              Redefining <br/>
-              everyday wear.
-            </h1>
-            <p className="text-white/90 mb-12 max-w-md text-sm md:text-base leading-relaxed drop-shadow-md font-medium">
-              We started with a simple idea: comfort should not compromise style. Welcome to the new standard.
-            </p>
-          </motion.div>
-
-          {/* Message 2 */}
-          <motion.div style={{ opacity: opacity2, y: y2 }} className="absolute max-w-xl pointer-events-auto">
-            <p className="font-mono text-xs md:text-sm uppercase tracking-[0.3em] text-brand-sky/90 mb-4 drop-shadow-md">
-              Craftsmanship
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              Materials <br/>
-              that matter.
-            </h1>
-            <p className="text-white/90 mb-12 max-w-md text-sm md:text-base leading-relaxed drop-shadow-md font-medium">
-              Sourced globally, assembled with precision. Our premium leather and responsive soles work together seamlessly.
-            </p>
-          </motion.div>
-
-          {/* Message 3 */}
-          <motion.div style={{ opacity: opacity3, y: y3 }} className="absolute max-w-xl pointer-events-auto">
-            <p className="font-mono text-xs md:text-sm uppercase tracking-[0.3em] text-brand-sky/90 mb-4 drop-shadow-md">
-              Movement
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              Engineered <br/>
-              for motion.
-            </h1>
-            <p className="text-white/90 mb-12 max-w-md text-sm md:text-base leading-relaxed drop-shadow-md font-medium">
-              Whether commuting through the city or standing all day, experience dynamic support that adapts to you.
-            </p>
-          </motion.div>
-
-          {/* Message 4 & CTA */}
-          <motion.div style={{ opacity: opacity4, y: y4 }} className="absolute max-w-xl pointer-events-auto">
-            <p className="font-mono text-xs md:text-sm uppercase tracking-[0.3em] text-brand-sky/90 mb-4 drop-shadow-md">
-              Collection
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight drop-shadow-lg">
-              Find your <br/>
-              perfect fit.
-            </h1>
-            <p className="text-white/90 mb-10 max-w-md text-sm md:text-base leading-relaxed drop-shadow-md font-medium">
-              Explore the latest arrivals. Comfort and elegance, now available for men and women.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <a
-                href="/men"
-                className="inline-block bg-brand-navy border border-brand-blue/50 px-8 py-3.5 font-mono text-xs uppercase tracking-widest text-white hover:bg-brand-blue shadow-lg hover:shadow-brand-blue/20 transition-all duration-300 rounded-sm"
-              >
-                Shop Men
-              </a>
-              <a
-                href="/women"
-                className="inline-block border border-white/60 bg-white/10 backdrop-blur-md px-8 py-3.5 font-mono text-xs uppercase tracking-widest text-white hover:bg-white hover:text-brand-navy transition-all duration-300 rounded-sm"
-              >
-                Shop Women
-              </a>
+          {/* Left Column: Brand Story & CTAs (Cols 1-7) */}
+          <div className="lg:col-span-7 flex flex-col items-start text-left z-20">
+            {/* Eyebrow badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-sky-border/60 shadow-xs mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
+              <span className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-brand-dark font-medium">
+                Modern Footwear &bull; Edition 2026
+              </span>
             </div>
-          </motion.div>
-          
+
+            {/* Editorial Headline */}
+            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.25rem] xl:text-[6rem] text-brand-dark leading-[1.02] tracking-tight mb-6">
+              Comfort in <br />
+              <span className="italic font-light text-brand-navy">every step.</span>
+            </h1>
+
+            {/* Supporting Copy */}
+            <p className="text-brand-gray-600 text-base sm:text-lg max-w-lg font-light leading-relaxed mb-8 sm:mb-10">
+              Architectural silhouettes, hand-burnished leathers, and engineered cushioning built for effortless everyday movement.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5 w-full sm:w-auto">
+              <Link
+                href="/men"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-navy text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-md hover:bg-brand-blue hover:shadow-lg transition-all duration-300 active:scale-[0.98]"
+              >
+                <span>Shop Men</span>
+                <ArrowRight
+                  size={14}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+
+              <Link
+                href="/women"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/90 backdrop-blur-sm border border-brand-navy/30 text-brand-dark font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-xs hover:border-brand-navy hover:bg-white transition-all duration-300 active:scale-[0.98]"
+              >
+                <span>Shop Women</span>
+                <ArrowRight
+                  size={14}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+            </div>
+
+            {/* Brand Reassurance Micro-bar */}
+            <div className="mt-10 sm:mt-12 pt-6 border-t border-brand-sky-border/50 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-mono text-brand-gray-500">
+              <span className="flex items-center gap-1.5">
+                <span className="text-brand-blue">&bull;</span> Free Domestic Delivery
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-brand-blue">&bull;</span> Hand-Finished Leathers
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-brand-blue">&bull;</span> 3-Day Easy Return Window
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: Hero Campaign Product Visual (Cols 8-12) */}
+          <div className="lg:col-span-5 relative mt-6 lg:mt-0 flex items-center justify-center">
+            <div className="relative w-full max-w-lg lg:max-w-none aspect-square sm:aspect-[4/5] lg:aspect-[4/5]">
+              {/* Product Card Stage */}
+              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/60 bg-gradient-to-b from-white/90 to-brand-sky/20">
+                <Image
+                  src="/images/hero-scroll-poster.webp"
+                  alt="KNOOS Signature Footwear"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="object-cover object-center transition-transform duration-1000 ease-out hover:scale-105"
+                />
+                
+                {/* Subtle soft gradient overlay at bottom of photo */}
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/60 via-transparent to-transparent pointer-events-none" />
+
+                {/* Floating Campaign Badge */}
+                <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-white pointer-events-none">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-brand-sky/90 block">
+                      Signature Series
+                    </span>
+                    <span className="font-serif text-lg sm:text-xl font-medium tracking-wide">
+                      Chelsea Noir
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs uppercase tracking-wider px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
+                    Handmade
+                  </span>
+                </div>
+              </div>
+
+              {/* Floating Architectural Badge */}
+              <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 bg-white/95 backdrop-blur-md border border-brand-sky-border/70 rounded-xl px-4 py-3 shadow-xl hidden sm:block">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-brand-blue font-semibold block">
+                  Ergonomic Insole
+                </span>
+                <span className="font-serif text-sm font-semibold text-brand-dark block mt-0.5">
+                  Natural Stride Support
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          className="absolute bottom-8 left-6 md:left-12 lg:left-24 pointer-events-none z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-white/50" style={{ writingMode: 'vertical-rl' }}>Scroll</span>
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/50 to-transparent" />
-          </div>
-        </motion.div>
-      </div>
+        {/* Scroll hint indicator */}
+        <div className="hidden lg:flex items-center justify-center gap-2 mt-8 text-brand-gray-400 font-mono text-[11px] uppercase tracking-widest">
+          <span>Scroll to explore</span>
+          <ArrowDown size={12} className="animate-bounce" />
+        </div>
+      </StoreContainer>
     </section>
   );
 }
