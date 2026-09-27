@@ -18,7 +18,7 @@ function calculateClampedTarget(video: HTMLVideoElement, progress: number): numb
   if (!Number.isFinite(duration) || duration <= 0) return 0;
 
   const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  const maxSeek = duration > 0.1 ? duration - 0.05 : 0;
+  const maxSeek = Math.max(0, duration - 0.05);
   return Math.min(Math.max(clampedProgress * duration, 0), maxSeek);
 }
 
@@ -50,15 +50,20 @@ export function Hero() {
     const video = videoRef.current;
     if (!isVideoValid(video)) return;
 
+    // Ensure video is paused at all times; timeline authority is scroll position
+    if (!video.paused) {
+      video.pause();
+    }
+
     // If browser is actively decoding/seeking previous frame, defer to 'seeked' event
     if (video.seeking) return;
 
     const target = latestTargetRef.current;
-    const maxSeek = video.duration > 0.1 ? video.duration - 0.05 : 0;
+    const maxSeek = Math.max(0, video.duration - 0.05);
     const clampedTarget = Math.min(Math.max(target, 0), maxSeek);
 
-    // Only seek if change is significant (> 1 frame at 24fps ≈ 0.04s)
-    if (Math.abs(video.currentTime - clampedTarget) > 0.03) {
+    // Only seek if change is significant (> 0.015s)
+    if (Math.abs(video.currentTime - clampedTarget) > 0.015) {
       try {
         video.currentTime = clampedTarget;
         dispatchedTargetRef.current = clampedTarget;
@@ -84,12 +89,24 @@ export function Hero() {
     }
   });
 
-  // Lifecycle listeners for video decoding readiness, seeking, and error fallback
+  // Lifecycle listeners for video decoding readiness, seeking, pause enforcement, and error fallback
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    // Guarantee the video is immediately paused
+    if (!video.paused) {
+      video.pause();
+    }
+
+    const enforcePause = () => {
+      if (!video.paused) {
+        video.pause();
+      }
+    };
+
     const handleMetadata = () => {
+      enforcePause();
       if (isVideoValid(video)) {
         const target = calculateClampedTarget(video, smoothProgress.get());
         latestTargetRef.current = target;
@@ -98,21 +115,23 @@ export function Hero() {
     };
 
     const handleReady = () => {
+      enforcePause();
       setVideoReady(true);
     };
 
     const handleSeeked = () => {
+      enforcePause();
       setVideoReady(true);
       if (!isVideoValid(video)) return;
 
       const target = latestTargetRef.current;
-      const maxSeek = video.duration > 0.1 ? video.duration - 0.05 : 0;
+      const maxSeek = Math.max(0, video.duration - 0.05);
       const clampedTarget = Math.min(Math.max(target, 0), maxSeek);
 
-      // Re-apply latest scroll target if meaningfully different from dispatched
+      // Re-apply latest scroll target if meaningfully different from dispatched or currentTime
       if (
-        Math.abs(latestTargetRef.current - dispatchedTargetRef.current) > 0.03 &&
-        Math.abs(video.currentTime - clampedTarget) > 0.03
+        Math.abs(latestTargetRef.current - dispatchedTargetRef.current) > 0.015 ||
+        Math.abs(video.currentTime - clampedTarget) > 0.015
       ) {
         try {
           video.currentTime = clampedTarget;
@@ -146,7 +165,8 @@ export function Hero() {
     video.addEventListener("loadedmetadata", handleMetadata);
     video.addEventListener("loadeddata", handleReady);
     video.addEventListener("canplay", handleReady);
-    video.addEventListener("playing", handleReady);
+    video.addEventListener("play", enforcePause);
+    video.addEventListener("playing", enforcePause);
     video.addEventListener("seeked", handleSeeked);
     video.addEventListener("error", handleError);
     video.addEventListener("stalled", handleStalled);
@@ -156,7 +176,8 @@ export function Hero() {
       video.removeEventListener("loadedmetadata", handleMetadata);
       video.removeEventListener("loadeddata", handleReady);
       video.removeEventListener("canplay", handleReady);
-      video.removeEventListener("playing", handleReady);
+      video.removeEventListener("play", enforcePause);
+      video.removeEventListener("playing", enforcePause);
       video.removeEventListener("seeked", handleSeeked);
       video.removeEventListener("error", handleError);
       video.removeEventListener("stalled", handleStalled);
@@ -194,7 +215,7 @@ export function Hero() {
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex flex-col justify-center">
         {/* Persistent poster background layer: permanently mounted behind video at z-0 */}
         <Image
-          src="/images/hero-poster.webp"
+          src="/images/hero-scroll-poster.webp"
           alt="KNOOS Hero Background"
           fill
           priority
@@ -211,10 +232,9 @@ export function Hero() {
           muted
           playsInline
           preload="auto"
-          poster="/images/hero-poster.webp"
+          poster="/images/hero-scroll-poster.webp"
         >
-          <source src="/videos/video-optimized.mp4" type="video/mp4" />
-          <source src="/videos/video.mp4" type="video/mp4" />
+          <source src="/videos/hero-scroll.mp4" type="video/mp4" />
         </video>
 
         {/* Subtle Overlay for text readability & atmospheric soft-sky/navy tone */}
