@@ -19,7 +19,20 @@ export async function GET() {
 
   const orders = await prisma.order.findMany({
     where: { userId: session.user.id },
-    include: { items: true },
+    include: {
+      items: {
+        select: {
+          id: true,
+          orderId: true,
+          productId: true,
+          productName: true,
+          size: true,
+          quantity: true,
+          price: true,
+          total: true,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -80,6 +93,7 @@ export async function POST(request: Request) {
     quantity: number;
     price: number;
     total: number;
+    unitCostPaise: number | null;
   }> = [];
   let inventoryToCommit: Array<{ variantId: string; quantity: number }> = [];
 
@@ -128,6 +142,8 @@ export async function POST(request: Request) {
 
     const unitPrice = getEffectiveSellingPrice(product, variant);
     subtotal = unitPrice * qty;
+    const unitCostPaise =
+      product.costPrice != null ? Math.round(product.costPrice * 100) : null;
 
     itemsToCreate = [
       {
@@ -137,6 +153,7 @@ export async function POST(request: Request) {
         quantity: qty,
         price: unitPrice,
         total: subtotal,
+        unitCostPaise,
       },
     ];
 
@@ -177,6 +194,10 @@ export async function POST(request: Request) {
 
     itemsToCreate = cart.items.map((item) => {
       const price = getEffectiveSellingPrice(item.product, item.variant);
+      const unitCostPaise =
+        item.product.costPrice != null
+          ? Math.round(item.product.costPrice * 100)
+          : null;
       return {
         productId: item.productId,
         productName: item.product.name,
@@ -184,6 +205,7 @@ export async function POST(request: Request) {
         quantity: item.quantity,
         price,
         total: price * item.quantity,
+        unitCostPaise,
       };
     });
 

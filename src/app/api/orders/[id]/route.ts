@@ -16,7 +16,21 @@ export async function GET(
 
   const order = await prisma.order.findFirst({
     where: { id: id, userId: session.user.id },
-    include: { items: true, address: true },
+    include: {
+      items: {
+        select: {
+          id: true,
+          orderId: true,
+          productId: true,
+          productName: true,
+          size: true,
+          quantity: true,
+          price: true,
+          total: true,
+        },
+      },
+      address: true,
+    },
   });
 
   if (!order) {

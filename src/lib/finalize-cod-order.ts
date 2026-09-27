@@ -25,6 +25,7 @@ interface CodOrderInput {
     quantity: number;
     price: number;
     total: number;
+    unitCostPaise?: number | null;
   }>;
   inventoryToCommit: Array<{ variantId: string; quantity: number }>;
 }

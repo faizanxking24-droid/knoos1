@@ -1,11 +1,6 @@
 import { Metadata } from "next";
-import {
-  getDashboardStats,
-  getRecentOrders,
-  getTopSellingProducts,
-  getSalesTrend,
-  type DateRange,
-} from "@/lib/dashboard";
+import { getCompleteDashboardData, getRecentOrdersList } from "@/lib/analytics/dashboard";
+import type { DateRange } from "@/lib/analytics/date-range";
 import { AdminDashboardClient } from "./DashboardClient";
 
 type SearchParams = { range?: string; from?: string; to?: string };
@@ -21,23 +16,18 @@ export default async function AdminDashboardPage({
 }) {
   const params = searchParams ? await searchParams : {};
   const range: DateRange = (params.range as DateRange) || "30days";
-  const dateFrom = params.from ? new Date(params.from) : undefined;
-  const dateTo = params.to ? new Date(params.to) : undefined;
+  const dateFrom = params.from;
+  const dateTo = params.to;
 
-  const [stats, recentOrders, topProducts, salesTrend] = await Promise.all([
-    getDashboardStats({ range, dateFrom, dateTo }),
-    getRecentOrders(10),
-    getTopSellingProducts({ range, dateFrom, dateTo }, 10),
-    getSalesTrend({ range, dateFrom, dateTo }, 14),
+  const [dashboardData, recentOrders] = await Promise.all([
+    getCompleteDashboardData({ range, dateFrom, dateTo }),
+    getRecentOrdersList(10),
   ]);
 
   return (
     <AdminDashboardClient
-      range={range}
-      stats={stats}
+      data={dashboardData}
       recentOrders={recentOrders}
-      topProducts={topProducts}
-      salesTrend={salesTrend}
     />
   );
 }
