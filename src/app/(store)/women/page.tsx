@@ -32,6 +32,7 @@ export default async function WomenPage({ searchParams }: WomenPageProps) {
     <CollectionLayout 
       title="Women's Collection" 
       count={products.length}
+      description="Sculpted flats, effortless slip-ons, mules, and elevated low-profile silhouettes crafted for enduring distinction."
       sizes={WOMEN_SIZES}
     >
       <ProductGrid 

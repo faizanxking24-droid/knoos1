@@ -32,6 +32,7 @@ export default async function MenPage({ searchParams }: MenPageProps) {
     <CollectionLayout 
       title="Men's Collection" 
       count={products.length}
+      description="Architectural silhouettes, hand-burnished leathers, and engineered cushioning built for effortless everyday movement."
       sizes={MEN_SIZES}
     >
       <ProductGrid 

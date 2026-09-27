@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SEARCH_SIZES } from "@/lib/constants";
+import { X, Check } from "lucide-react";
 
 interface CategoryOption {
   id: string;
@@ -12,7 +13,7 @@ interface CategoryOption {
 
 const SORTS = [
   { value: "Featured", label: "Featured" },
-  { value: "Newest", label: "Newest" },
+  { value: "Newest", label: "Newest Arrivals" },
   { value: "price-low", label: "Price: Low to High" },
   { value: "price-high", label: "Price: High to Low" },
 ];
@@ -31,7 +32,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/categories")
-      .then((res) => res.ok ? res.json() : null)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled) {
           setCategories(data?.categories ?? []);
@@ -41,7 +42,9 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
       .catch(() => {
         if (!cancelled) setCategoriesLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Helper to create a new query string
@@ -63,7 +66,6 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
   };
 
   const clearAll = () => {
-    // Keep 'q' if we are on search page, but maybe let's just clear filters.
     const q = searchParams.get("q");
     if (q) {
       router.push(`?q=${encodeURIComponent(q)}`, { scroll: false });
@@ -77,7 +79,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
 
   const handlePriceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
     if (minPrice) params.set("min", minPrice);
     else params.delete("min");
 
@@ -92,34 +94,55 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
   const activeSort = searchParams.get("sort") || "Featured";
 
   const hasFilters =
-    activeCategory || activeSize || searchParams.get("min") || searchParams.get("max") || searchParams.get("sort");
+    Boolean(activeCategory) ||
+    Boolean(activeSize) ||
+    Boolean(searchParams.get("min")) ||
+    Boolean(searchParams.get("max")) ||
+    (Boolean(searchParams.get("sort")) && searchParams.get("sort") !== "Featured");
 
   return (
-    <div className="hidden lg:block w-64 flex-shrink-0 space-y-10 pr-8">
-      {/* Active Filters */}
+    <aside className="w-full bg-white/90 backdrop-blur-md border border-brand-sky-border/60 rounded-2xl p-6 sm:p-7 shadow-xs space-y-8">
+      {/* Active Filters Header */}
       {hasFilters && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-serif text-lg text-brand-dark">Filters</h3>
-            <button onClick={clearAll} className="text-xs font-mono uppercase tracking-widest text-brand-navy hover:text-brand-blue transition-colors">
-              Clear All
+        <div className="pb-6 border-b border-neutral-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-brand-dark font-semibold">
+              Active Filters
+            </h3>
+            <button
+              onClick={clearAll}
+              className="text-[11px] font-mono uppercase tracking-wider text-brand-blue hover:text-brand-navy transition-colors underline-offset-2 hover:underline"
+            >
+              Reset
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {activeCategory && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-sky text-brand-navy border border-brand-sky-border text-xs uppercase font-mono rounded-full font-medium shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-surface text-brand-dark border border-brand-sky-border text-xs font-mono rounded-full">
                 {categories.find((c) => c.slug === activeCategory)?.name ?? activeCategory}
-                <button onClick={() => handleFilterChange("category", "")} className="hover:text-red-500 font-bold ml-1">&times;</button>
+                <button
+                  onClick={() => handleFilterChange("category", "")}
+                  className="hover:text-red-500 transition-colors"
+                  aria-label="Remove category filter"
+                >
+                  <X size={12} />
+                </button>
               </span>
             )}
             {activeSize && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-sky text-brand-navy border border-brand-sky-border text-xs uppercase font-mono rounded-full font-medium shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-surface text-brand-dark border border-brand-sky-border text-xs font-mono rounded-full">
                 Size {activeSize}
-                <button onClick={() => handleFilterChange("size", "")} className="hover:text-red-500 font-bold ml-1">&times;</button>
+                <button
+                  onClick={() => handleFilterChange("size", "")}
+                  className="hover:text-red-500 transition-colors"
+                  aria-label="Remove size filter"
+                >
+                  <X size={12} />
+                </button>
               </span>
             )}
             {(searchParams.get("min") || searchParams.get("max")) && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-sky text-brand-navy border border-brand-sky-border text-xs uppercase font-mono rounded-full font-medium shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-surface text-brand-dark border border-brand-sky-border text-xs font-mono rounded-full">
                 ₹{searchParams.get("min") || "0"} - ₹{searchParams.get("max") || "Any"}
                 <button
                   onClick={() => {
@@ -130,9 +153,10 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
                     params.delete("max");
                     router.push(`?${params.toString()}`, { scroll: false });
                   }}
-                  className="hover:text-red-500 font-bold ml-1"
+                  className="hover:text-red-500 transition-colors"
+                  aria-label="Remove price filter"
                 >
-                  &times;
+                  <X size={12} />
                 </button>
               </span>
             )}
@@ -140,66 +164,79 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
         </div>
       )}
 
-      {/* Sort */}
+      {/* Sort Section */}
       <div>
-        <h3 className="font-serif text-lg mb-4 text-brand-dark">Sort By</h3>
-        <div className="space-y-2">
-          {SORTS.map((sort) => (
-            <label key={sort.value} className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="radio"
-                name="sort"
-                value={sort.value}
-                checked={activeSort === sort.value}
-                onChange={() => handleFilterChange("sort", sort.value)}
-                className="w-4 h-4 accent-brand-blue border-brand-gray-200"
-              />
-              <span className="text-sm font-mono text-brand-gray-600 group-hover:text-brand-blue transition-colors">
-                {sort.label}
-              </span>
-            </label>
-          ))}
+        <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-brand-gray-500 font-semibold mb-3.5">
+          Sort By
+        </h3>
+        <div className="space-y-1.5">
+          {SORTS.map((sort) => {
+            const isSelected = activeSort === sort.value;
+            return (
+              <button
+                key={sort.value}
+                type="button"
+                onClick={() => handleFilterChange("sort", sort.value)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all text-left ${
+                  isSelected
+                    ? "bg-brand-sky/40 text-brand-navy font-semibold border border-brand-sky-border/70"
+                    : "text-brand-gray-600 hover:bg-neutral-50 hover:text-brand-dark"
+                }`}
+              >
+                <span>{sort.label}</span>
+                {isSelected && <Check size={14} className="text-brand-blue" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Category */}
-      <div>
-        <h3 className="font-serif text-lg mb-4 text-brand-dark">Category</h3>
-        {categoriesLoading ? (
-          <p className="text-sm text-brand-gray-400 font-mono">Loading...</p>
-        ) : categories.length === 0 ? (
-          <p className="text-sm text-brand-gray-400 font-mono">No categories available</p>
-        ) : (
-          <div className="space-y-2">
-            {categories.map((cat) => (
-              <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="category"
-                  value={cat.slug}
-                  checked={activeCategory === cat.slug}
-                  onChange={() => handleFilterChange("category", cat.slug)}
-                  className="w-4 h-4 accent-brand-blue border-brand-gray-200"
-                />
-                <span className="text-sm font-mono text-brand-gray-600 group-hover:text-brand-blue transition-colors">{cat.name}</span>
-              </label>
-            ))}
+      {/* Categories Section */}
+      {categories.length > 0 && (
+        <div className="pt-2 border-t border-neutral-100">
+          <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-brand-gray-500 font-semibold mb-3.5 pt-4">
+            Category
+          </h3>
+          <div className="space-y-1.5">
+            {categories.map((cat) => {
+              const isSelected = activeCategory === cat.slug;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleFilterChange("category", isSelected ? "" : cat.slug)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono transition-all text-left ${
+                    isSelected
+                      ? "bg-brand-sky/40 text-brand-navy font-semibold border border-brand-sky-border/70"
+                      : "text-brand-gray-600 hover:bg-neutral-50 hover:text-brand-dark"
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  {isSelected && <Check size={14} className="text-brand-blue" />}
+                </button>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Size */}
-      <div>
-        <h3 className="font-serif text-lg mb-4 text-brand-dark">Size</h3>
+      {/* Size Filter */}
+      <div className="pt-2 border-t border-neutral-100">
+        <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-brand-gray-500 font-semibold mb-3.5 pt-4">
+          UK Size
+        </h3>
         <div className="grid grid-cols-4 gap-2">
           {sizes.map((size) => {
             const isActive = activeSize === size;
             return (
               <button
                 key={size}
+                type="button"
                 onClick={() => handleFilterChange("size", isActive ? "" : size)}
-                className={`py-2 text-sm font-mono transition-all rounded-md border ${
-                  isActive ? "bg-brand-navy text-white border-brand-navy shadow-sm ring-1 ring-brand-blue/30" : "bg-white text-brand-dark border-brand-gray-200 hover:border-brand-blue hover:text-brand-blue hover:bg-brand-sky/20"
+                className={`py-2 text-xs font-mono font-medium rounded-lg border transition-all text-center ${
+                  isActive
+                    ? "bg-brand-navy text-white border-brand-navy shadow-xs font-semibold"
+                    : "bg-white text-neutral-800 border-neutral-300 hover:border-neutral-900 hover:bg-neutral-50 shadow-2xs"
                 }`}
               >
                 {size}
@@ -209,33 +246,47 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
         </div>
       </div>
 
-      {/* Price */}
-      <div>
-        <h3 className="font-serif text-lg mb-4 text-brand-dark">Price</h3>
-        <form onSubmit={handlePriceSubmit} className="flex items-center gap-2">
-          <input
-            type="number"
-            placeholder="Min"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="w-full px-3 py-2 text-sm font-mono border border-brand-gray-200 rounded-md focus:outline-none focus:border-brand-blue transition-colors"
-          />
-          <span className="text-brand-gray-400">-</span>
-          <input
-            type="number"
-            placeholder="Max"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="w-full px-3 py-2 text-sm font-mono border border-brand-gray-200 rounded-md focus:outline-none focus:border-brand-blue transition-colors"
-          />
-          <button type="submit" className="px-4 py-2 bg-brand-navy text-white text-sm font-mono rounded-md hover:bg-brand-blue transition-colors shadow-sm">
-            Go
+      {/* Price Range Filter */}
+      <div className="pt-2 border-t border-neutral-100">
+        <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-brand-gray-500 font-semibold mb-3.5 pt-4">
+          Price Range
+        </h3>
+        <form onSubmit={handlePriceSubmit} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-brand-gray-400">
+                ₹
+              </span>
+              <input
+                type="number"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full pl-6 pr-2 py-2 text-xs font-mono border border-neutral-200 rounded-lg focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+              />
+            </div>
+            <span className="text-brand-gray-400 text-xs font-mono">-</span>
+            <div className="relative flex-1">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-brand-gray-400">
+                ₹
+              </span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full pl-6 pr-2 py-2 text-xs font-mono border border-neutral-200 rounded-lg focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 bg-brand-navy hover:bg-brand-blue text-white text-xs font-mono uppercase tracking-widest rounded-lg transition-colors font-medium"
+          >
+            Apply Range
           </button>
         </form>
       </div>
-
-      {/* Stock */}
-      {/* Stock filter removed — inventory validation still enforced server-side */}
-    </div>
+    </aside>
   );
 }
