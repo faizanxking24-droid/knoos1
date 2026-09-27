@@ -119,7 +119,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: result.id, quantity: result.quantity, success: true });
   } catch (err: any) {
-    console.error("[CART][POST] Unexpected error:", err);
+    // Structured diagnostic: capture exact failure without secrets
+    console.error("[CART][POST] Unexpected error:", JSON.stringify({
+      name: err?.name ?? "Unknown",
+      code: err?.code ?? null,
+      meta: err?.meta ?? null,
+      message: err?.message?.slice(0, 500) ?? "",
+      clientVersion: err?.clientVersion ?? null,
+      stack: err?.stack?.split("\n").slice(0, 5).join("\n") ?? null,
+    }));
 
     if (err?.code === "PRODUCT_UNAVAILABLE") {
       return NextResponse.json({ error: "Product is not available" }, { status: 400 });
