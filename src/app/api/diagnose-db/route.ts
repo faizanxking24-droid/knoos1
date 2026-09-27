@@ -8,6 +8,10 @@ const execAsync = promisify(exec);
 
 export const dynamic = 'force-dynamic';
 
+function replacer(key: string, value: any) {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
+
 export async function GET(request: Request) {
   try {
     const adminCheck = await requireAdmin();
@@ -56,13 +60,17 @@ export async function GET(request: Request) {
       WHERE u2.id IS NULL
     `;
 
-    return NextResponse.json({
+    const rawData = {
       migrateStatus,
       migrationHistory,
       showCreateTable: showCreateTable[0],
       fkInfo,
-      total_orphans: Number(orphanCarts[0].total_orphans),
-      google_mappable_orphans: Number(googleMappable[0].google_mappable_orphans)
+      total_orphans: orphanCarts[0]?.total_orphans,
+      google_mappable_orphans: googleMappable[0]?.google_mappable_orphans
+    };
+
+    return new Response(JSON.stringify(rawData, replacer), {
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
