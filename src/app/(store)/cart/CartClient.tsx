@@ -349,12 +349,12 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
             <div className="mb-6">
               <CouponEntry
                 code={couponCode}
-                setCode={setCouponCode}
+                onCodeChange={setCouponCode}
                 onApply={applyCoupon}
                 onRemove={removeCoupon}
-                appliedCoupon={coupon}
+                application={coupon}
                 error={couponError}
-                loading={applyingCoupon}
+                applying={applyingCoupon}
               />
             </div>
 
