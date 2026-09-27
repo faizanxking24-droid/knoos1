@@ -17,7 +17,7 @@ export default function HelpPage() {
           <div className="p-6 sm:p-8">
             <h2 className="font-serif text-xl text-brand-navy mb-2">Need help with your order?</h2>
             <p className="text-sm text-brand-gray-500 mb-8 leading-relaxed">
-              Our team is available from 10 AM to 7 PM. Reach out to us via WhatsApp or email and we'll get back to you as soon as possible.
+              Our team is available from 10 AM to 7 PM. Reach out to us via WhatsApp or email and we&apos;ll get back to you as soon as possible.
             </p>
 
             <div className="space-y-4">
