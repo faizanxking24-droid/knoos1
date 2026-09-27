@@ -13,18 +13,21 @@ export interface ColorSibling {
   price?: number;
   salePrice?: number | null;
   images?: { id: string; imageUrl: string }[];
+  variants?: { stock: number }[];
 }
 
 interface ColorSelectorProps {
   currentProductId: string;
   currentColor: string | null;
   siblings?: ColorSibling[];
+  currentHasStock?: boolean;
 }
 
 export function ColorSelector({
   currentProductId,
   currentColor,
   siblings = [],
+  currentHasStock = false,
 }: ColorSelectorProps) {
   const router = useRouter();
   const swatch = getColorSwatch(currentColor);
@@ -38,6 +41,7 @@ export function ColorSelector({
     label: string;
     isSelected: boolean;
     firstImage?: { id: string; imageUrl: string };
+    soldOut: boolean;
   }> = [];
 
   if (siblings.length > 0) {
@@ -48,6 +52,7 @@ export function ColorSelector({
         label: getColorSwatch(sibling.color).label,
         isSelected: sibling.id === currentProductId,
         firstImage: sibling.images?.[0],
+        soldOut: !(sibling.variants ?? []).some((variant) => variant.stock > 0),
       });
     }
   } else if (currentColor) {
@@ -57,6 +62,7 @@ export function ColorSelector({
       slug: "",
       label: swatch.label,
       isSelected: true,
+      soldOut: !currentHasStock,
     });
   } else {
     return null;
@@ -114,6 +120,7 @@ export function ColorSelector({
                     : "border-brand-gray-200 bg-white hover:border-brand-navy/50 hover:bg-brand-sky/10 cursor-pointer"
                 }
                 ${!option.slug ? "opacity-75 cursor-default" : ""}
+                ${option.soldOut ? "opacity-60" : ""}
               `}
             >
               {/* Optional tiny product thumbnail */}
@@ -150,6 +157,8 @@ export function ColorSelector({
               </span>
 
               {option.isSelected && <span className="sr-only">(Selected)</span>}
+              {option.isSelected && <span aria-hidden="true" className="font-bold">✓</span>}
+              {option.soldOut && <span className="font-mono text-[9px] uppercase text-red-700">Out of stock</span>}
             </button>
           );
         })}

@@ -49,6 +49,12 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
   const stockAvailable = selectedVariant ? selectedVariant.stock : 0;
 
   useEffect(() => {
+    setSelectedVariantId(null);
+    setQuantity(1);
+    setError(null);
+  }, [product.id]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isSizeGuideOpen) {
         setIsSizeGuideOpen(false);
@@ -196,6 +202,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             </>
           )}
         </div>
+        {selectedVariant && <p className={`mt-3 font-mono text-xs uppercase ${selectedVariant.stock <= 2 ? "text-amber-700" : "text-green-700"}`}>{selectedVariant.stock === 0 ? "Out of stock" : selectedVariant.stock <= 2 ? `Only ${selectedVariant.stock} left` : "In stock"}</p>}
       </motion.div>
 
       <motion.div variants={itemVariants} className="mb-8 text-brand-gray-600 leading-relaxed max-w-prose text-[15px]">
@@ -208,6 +215,7 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
           currentProductId={product.id}
           currentColor={product.color}
           siblings={colorSiblings}
+          currentHasStock={variants.some((variant) => variant.stock > 0)}
         />
       </motion.div>
 
