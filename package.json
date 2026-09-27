@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
-    "build": "prisma generate && npx prisma migrate deploy && next build --webpack",
-    "start": "prisma migrate deploy && next start",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
