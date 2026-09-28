@@ -21,6 +21,7 @@ interface CategoryCardProps {
   badge?: string;
   className?: string;
   delay?: number;
+  imageClassName?: string;
 }
 
 function CategoryCard({
@@ -35,6 +36,7 @@ function CategoryCard({
   badge,
   className = "",
   delay = 0,
+  imageClassName = "object-center",
 }: CategoryCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -42,13 +44,13 @@ function CategoryCard({
     <motion.div
       initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
+      viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: durations.reveal, delay, ease: easings.premium }}
-      className="h-full"
+      className="h-full min-w-0 w-full"
     >
       <Link
         href={href}
-        className={`group relative block h-full overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 shadow-md hover:shadow-2xl transition-all duration-700 focus:outline-none focus:ring-2 focus:ring-brand-blue ${className}`}
+        className={`group relative flex flex-col justify-between h-full min-w-0 w-full overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-900 border border-neutral-800 shadow-md hover:shadow-2xl transition-all duration-700 focus:outline-none focus:ring-2 focus:ring-brand-blue ${className}`}
       >
         {/* Background Image with subtle zoom on hover */}
         <div className="absolute inset-0 overflow-hidden">
@@ -56,52 +58,51 @@ function CategoryCard({
             src={imageSrc}
             alt={imageAlt}
             fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105 opacity-90 group-hover:opacity-95"
+            sizes="(max-width: 768px) 50vw, 50vw"
+            className={`object-cover transition-transform duration-1000 ease-out group-hover:scale-105 opacity-90 group-hover:opacity-95 ${imageClassName}`}
           />
           {/* Editorial Gradients for Depth & Legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 transition-opacity duration-500 group-hover:from-black/90 group-hover:via-black/40" />
         </div>
 
         {/* Top Meta Bar */}
-        <div className="relative z-10 p-6 sm:p-8 flex items-start justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/80 font-medium">
+        <div className="relative z-10 p-3 sm:p-5 md:p-6 lg:p-8 flex items-start justify-between gap-1.5 sm:gap-2">
+          <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
+            <span className="font-mono text-[8px] sm:text-[10px] lg:text-[11px] uppercase tracking-[0.14em] md:tracking-[0.18em] lg:tracking-[0.2em] text-white/80 font-medium whitespace-nowrap">
               {eyebrow}
             </span>
             {stats && (
-              <span className="font-mono text-[10px] text-white/60 tracking-wider">
+              <span className="hidden sm:block font-mono text-[9px] md:text-[10px] text-white/60 tracking-wider whitespace-nowrap">
                 {stats}
               </span>
             )}
           </div>
 
           {badge ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-mono text-[10px] sm:text-xs uppercase tracking-wider">
+            <span className="hidden md:inline-flex shrink-0 items-center px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-mono text-[9px] lg:text-xs uppercase tracking-wider whitespace-nowrap">
               {badge}
             </span>
           ) : (
-            <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all duration-300 group-hover:bg-white group-hover:text-neutral-950 group-hover:scale-110">
+            <div className="hidden md:flex w-7 h-7 lg:w-9 lg:h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white transition-all duration-300 group-hover:bg-white group-hover:text-neutral-950 group-hover:scale-110 shrink-0">
               <ArrowUpRight size={16} />
             </div>
           )}
         </div>
 
         {/* Bottom Content Area */}
-        <div className="relative z-10 mt-auto p-6 sm:p-8 md:p-10 flex flex-col justify-end">
-          <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-white font-normal tracking-tight mb-2 sm:mb-3">
+        <div className="relative z-10 mt-auto p-3 sm:p-5 md:p-6 lg:p-10 flex flex-col justify-end">
+          <h3 className="font-serif text-[17px] sm:text-xl md:text-3xl lg:text-4xl text-white font-normal tracking-tight leading-tight sm:leading-snug mb-1 sm:mb-2 md:mb-3">
             {title}
           </h3>
-          <p className="text-white/75 text-sm sm:text-base font-light leading-relaxed mb-6 max-w-md line-clamp-2">
+          <p className="line-clamp-2 text-[11px] sm:text-xs md:text-sm lg:text-base text-white/75 font-light leading-snug sm:leading-relaxed mb-2.5 sm:mb-4 md:mb-6 max-w-md">
             {subtitle}
           </p>
 
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-neutral-900 font-mono text-xs uppercase tracking-widest font-semibold shadow-md transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white">
+          <div className="flex items-center">
+            <span className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 rounded-full bg-white text-neutral-900 font-mono text-[9px] sm:text-[11px] md:text-xs uppercase tracking-wider sm:tracking-widest font-semibold shadow-md transition-all duration-300 group-hover:bg-brand-blue group-hover:text-white whitespace-nowrap">
               <span>{ctaText}</span>
               <ArrowRight
-                size={13}
-                className="transition-transform duration-300 group-hover:translate-x-1"
+                className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 transition-transform duration-300 group-hover:translate-x-1 shrink-0"
               />
             </span>
           </div>
@@ -113,7 +114,10 @@ function CategoryCard({
 
 export function CategoryShowcase() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-brand-surface border-b border-brand-sky-border/40">
+    <section
+      id="curated-by-silhouette"
+      className="py-16 sm:py-20 lg:py-24 bg-brand-surface border-b border-brand-sky-border/40"
+    >
       <StoreContainer>
         <SectionHeading
           eyebrow="The KNOOS Collections"
@@ -124,7 +128,7 @@ export function CategoryShowcase() {
         />
 
         {/* 2-Column Responsive Luxury Showcase */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:gap-6 lg:gap-8">
           <CategoryCard
             eyebrow="MENSWEAR ARCHIVE"
             title="The Men's Collection"
@@ -135,7 +139,7 @@ export function CategoryShowcase() {
             imageAlt="KNOOS Men's Footwear Collection"
             stats="Hand-Burnished Leathers"
             badge="Essential Series"
-            className="aspect-[4/5] sm:aspect-[16/11] md:aspect-[4/5]"
+            className="aspect-[3/4] sm:aspect-[4/5] md:aspect-[4/5]"
             delay={0}
           />
 
@@ -149,7 +153,7 @@ export function CategoryShowcase() {
             imageAlt="KNOOS Women's Footwear Collection"
             stats="Lightweight Cushioning"
             badge="New Curation"
-            className="aspect-[4/5] sm:aspect-[16/11] md:aspect-[4/5]"
+            className="aspect-[3/4] sm:aspect-[4/5] md:aspect-[4/5]"
             delay={0.12}
           />
         </div>
