@@ -10,7 +10,7 @@ import {
   OrderStatus,
   PaymentStatus,
 } from "@/lib/constants";
-import { AlertTriangle, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ChevronRight, Printer, Search, ShieldCheck } from "lucide-react";
 
 const ORDER_STATUSES = [
   "PENDING",
@@ -467,13 +467,25 @@ export default function AdminOrdersPage() {
                       })}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue border border-brand-gray-200 hover:border-brand-navy px-3 py-1.5 rounded-lg transition-colors font-medium"
-                      >
-                        <span>View</span>
-                        <ChevronRight size={13} />
-                      </Link>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Link
+                          href={`/admin/orders/${order.id}/invoice`}
+                          target="_blank"
+                          title="Print Bill"
+                          aria-label={`Print Bill for order #${order.id.slice(0, 8)}`}
+                          className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue border border-brand-gray-200 hover:border-brand-navy px-2.5 py-1.5 rounded-lg transition-colors font-medium shadow-2xs"
+                        >
+                          <Printer size={13} />
+                          <span className="hidden xl:inline">Bill</span>
+                        </Link>
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-wider text-brand-navy hover:text-brand-blue border border-brand-gray-200 hover:border-brand-navy px-3 py-1.5 rounded-lg transition-colors font-medium"
+                        >
+                          <span>View</span>
+                          <ChevronRight size={13} />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

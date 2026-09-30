@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { loginWithGoogle } from "@/lib/auth-actions";
-import { XCircle, PackageX, CheckCircle, AlertCircle } from "lucide-react";
+import { XCircle, PackageX, CheckCircle, AlertCircle, Printer } from "lucide-react";
 import AccountShell from "../../AccountShell";
 
 interface OrderAddress {
@@ -294,8 +294,16 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Actions */}
-        {isCancellable && (
-          <div className="mb-8">
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <Link
+            href={`/account/orders/${order.id}/invoice`}
+            className="inline-flex items-center gap-2 border border-brand-navy/30 bg-white text-brand-navy hover:bg-brand-navy hover:text-white px-5 py-2.5 text-xs font-mono tracking-widest uppercase rounded-xl transition-colors shadow-xs"
+          >
+            <Printer size={15} />
+            <span>Print Bill</span>
+          </Link>
+
+          {isCancellable && (
             <button
               onClick={handleCancel}
               disabled={actionLoading}
@@ -304,11 +312,9 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
               <XCircle size={15} />
               {actionLoading ? "Cancelling..." : "Cancel Order"}
             </button>
-          </div>
-        )}
+          )}
 
-        {order.orderStatus === "DELIVERED" && (
-          <div className="mb-8">
+          {order.orderStatus === "DELIVERED" && (
             <button
               onClick={handleReorder}
               disabled={actionLoading}
@@ -317,8 +323,8 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
               <PackageX size={15} />
               {actionLoading ? "Adding to Cart..." : "Buy Again"}
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
         {/* Items + Address */}

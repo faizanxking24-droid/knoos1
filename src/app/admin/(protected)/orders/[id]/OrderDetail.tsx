@@ -10,7 +10,7 @@ import {
   OrderStatus,
   PaymentStatus,
 } from "@/lib/constants";
-import { AlertTriangle, ArrowLeft, CreditCard, MapPin, ShieldCheck, User } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CreditCard, MapPin, Printer, ShieldCheck, User } from "lucide-react";
 
 const ORDER_STATUSES = [
   "PENDING",
@@ -209,13 +209,23 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
             })}
           </p>
         </div>
-        <Link
-          href="/admin/orders"
-          className="inline-flex items-center gap-2 px-4 py-2 border border-brand-gray-200 hover:border-brand-navy rounded-xl text-xs font-mono uppercase tracking-wider text-brand-navy transition-colors font-medium self-start sm:self-auto"
-        >
-          <ArrowLeft size={14} />
-          <span>Back to Orders</span>
-        </Link>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <Link
+            href={`/admin/orders/${currentOrder.id}/invoice`}
+            target="_blank"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-navy hover:bg-brand-blue text-white rounded-xl text-xs font-mono uppercase tracking-wider transition-colors font-medium shadow-xs"
+          >
+            <Printer size={14} />
+            <span>Print Bill</span>
+          </Link>
+          <Link
+            href="/admin/orders"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-brand-gray-200 hover:border-brand-navy rounded-xl text-xs font-mono uppercase tracking-wider text-brand-navy transition-colors font-medium"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Orders</span>
+          </Link>
+        </div>
       </div>
 
       {/* Status feedback message */}

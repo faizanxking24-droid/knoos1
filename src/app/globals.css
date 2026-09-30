@@ -63,3 +63,67 @@
   }
 }
 
+/* ==========================================================================
+   A4 PRINT & INVOICE STYLES
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  /* Hide website header, footer, admin sidebar, navigation, controls, and print triggers */
+  header,
+  footer,
+  aside,
+  nav,
+  [role="navigation"],
+  .no-print,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset layout shells and containers */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #14212b !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove store layout top padding applied for sticky header */
+  .pt-16,
+  .flex-grow.pt-16 {
+    padding-top: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Printable invoice overrides */
+  #knoos-printable-invoice {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Ensure rows and financial summaries avoid breaking across pages */
+  tr,
+  .break-inside-avoid,
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
