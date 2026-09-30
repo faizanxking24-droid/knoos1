@@ -28,15 +28,23 @@ export function FaqAccordion({ faqs }: { faqs: FAQ[] }) {
 
   return (
     <div className="max-w-3xl mx-auto w-full">
-      {faqs.map((faq) => {
+      {faqs.map((faq, index) => {
         const isOpen = openId === faq.id;
         const triggerId = `faq-trigger-${faq.id}`;
         const panelId = `faq-panel-${faq.id}`;
 
         return (
-          <div 
+          <motion.div 
             key={faq.id} 
-            className={`border-b border-brand-sky-border/60 transition-colors duration-300 rounded-lg ${
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{
+              duration: shouldReduceMotion ? 0.01 : 0.45,
+              delay: shouldReduceMotion ? 0 : Math.min(index * 0.05, 0.35),
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className={`border-b border-brand-sky-border/60 transition-colors duration-200 rounded-lg ${
               isOpen ? "bg-brand-sky/20 border-l-2 border-l-brand-blue" : ""
             }`}
           >
@@ -54,7 +62,7 @@ export function FaqAccordion({ faqs }: { faqs: FAQ[] }) {
               <motion.span
                 aria-hidden="true"
                 animate={{ rotate: isOpen ? 45 : 0 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className={`flex-shrink-0 transition-colors ${
                   isOpen ? "text-brand-blue" : "text-brand-navy/60 group-hover:text-brand-blue"
                 }`}
@@ -72,7 +80,7 @@ export function FaqAccordion({ faqs }: { faqs: FAQ[] }) {
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{
-                    duration: shouldReduceMotion ? 0 : 0.3,
+                    duration: shouldReduceMotion ? 0 : 0.25,
                     ease: [0.16, 1, 0.3, 1],
                   }}
                   className="overflow-hidden"
@@ -83,7 +91,7 @@ export function FaqAccordion({ faqs }: { faqs: FAQ[] }) {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
         );
       })}
     </div>

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { StoreContainer } from "@/components/store/StoreContainer";
-import { Reveal, StaggerContainer, StaggerItem } from "@/components/motion";
+import { Reveal, StaggerContainer, StaggerItem, RevealText, RevealImage, ParallaxImage } from "@/components/motion";
 import { ArrowRight, Compass, Feather, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -15,50 +15,52 @@ export default function AboutPage() {
     <main className="bg-brand-surface min-h-screen py-12 sm:py-20 lg:py-24">
       <StoreContainer>
         {/* Editorial Story Header */}
-        <Reveal>
-          <div className="max-w-3xl mb-16 sm:mb-24">
+        <div className="max-w-3xl mb-16 sm:mb-24">
+          <Reveal delay={0.05}>
             <span className="font-mono text-xs uppercase tracking-[0.25em] text-brand-blue font-semibold block mb-4">
               OUR PHILOSOPHY &bull; THE KNOOS STANDARD
             </span>
-            <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl text-brand-dark tracking-tight leading-[1.05] mb-6">
-              Architectural Footwear, Handcrafted for Life.
-            </h1>
+          </Reveal>
+          <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl text-brand-dark tracking-tight leading-[1.05] mb-6">
+            <RevealText text="Architectural Footwear,&#10;Handcrafted for Life." delay={0.1} />
+          </h1>
+          <Reveal delay={0.25}>
             <p className="font-serif italic text-2xl sm:text-3xl text-brand-navy font-light leading-relaxed mb-6">
               &ldquo;Comfort in every step.&rdquo;
             </p>
             <p className="text-neutral-600 text-base sm:text-lg font-light leading-relaxed">
               KNOOS, created by KRIPA KIRAN SHOE COMPANY, is a contemporary footwear label founded on the conviction that everyday style should never compromise on ergonomic comfort.
             </p>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
 
         {/* Editorial Workshop Image Banner */}
-        <Reveal>
-          <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-3xl overflow-hidden shadow-lg border border-brand-sky-border/50 mb-16 sm:mb-24 bg-neutral-900 group">
+        <RevealImage clipReveal="vertical" scaleFrom={1.04} className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-3xl shadow-lg border border-brand-sky-border/50 mb-16 sm:mb-24 bg-neutral-900 group">
+          <ParallaxImage speed={20} className="w-full h-full">
             <Image
               src="/images/process-footwear.jpg"
               alt="The KNOOS Footwear Workshop"
               fill
               priority
               sizes="100vw"
-              className="object-cover opacity-85 transition-transform duration-700 ease-out group-hover:scale-105"
+              className="object-cover opacity-85 transition-transform duration-700 ease-out group-hover:scale-105 scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-6 left-6 right-6 sm:bottom-10 sm:left-10 sm:right-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-white">
-              <div>
-                <span className="font-mono text-xs uppercase tracking-widest text-brand-sky/80 block">
-                  The Agra Workshop
-                </span>
-                <p className="font-serif text-xl sm:text-2xl font-light">
-                  Where traditional cordwaining meets anatomical precision.
-                </p>
-              </div>
-              <span className="font-mono text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 self-start sm:self-auto">
-                Edition 2026
+          </ParallaxImage>
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute bottom-6 left-6 right-6 sm:bottom-10 sm:left-10 sm:right-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-white z-10">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-widest text-brand-sky/80 block">
+                The Agra Workshop
               </span>
+              <p className="font-serif text-xl sm:text-2xl font-light">
+                Where traditional cordwaining meets anatomical precision.
+              </p>
             </div>
+            <span className="font-mono text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 self-start sm:self-auto">
+              Edition 2026
+            </span>
           </div>
-        </Reveal>
+        </RevealImage>
 
         {/* Three Pillars Grid */}
         <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 mb-20 sm:mb-28">
@@ -130,17 +132,17 @@ export default function AboutPage() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/men"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-neutral-950 font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-brand-blue hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-md"
+                  className="group inline-flex items-center gap-2 px-8 py-3.5 bg-white text-neutral-950 font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-brand-blue hover:text-white hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 shadow-md"
                 >
                   <span>Shop Men</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
                 <Link
                   href="/women"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 border border-white/30 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-white hover:text-neutral-950 hover:-translate-y-0.5 active:scale-95 transition-all"
+                  className="group inline-flex items-center gap-2 px-8 py-3.5 border border-white/30 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-white hover:text-neutral-950 hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200"
                 >
                   <span>Shop Women</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
                 </Link>
               </div>
             </div>
@@ -158,10 +160,10 @@ export default function AboutPage() {
             </div>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-all hover:-translate-y-0.5 active:scale-95 font-medium self-start sm:self-auto shrink-0 shadow-xs"
+              className="group inline-flex items-center gap-2 px-6 py-3 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98] font-medium self-start sm:self-auto shrink-0 shadow-xs"
             >
               <span>Contact Concierge</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
           </div>
         </Reveal>

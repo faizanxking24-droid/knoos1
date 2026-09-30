@@ -61,18 +61,18 @@ export function MobileMenu({
       opacity: 1,
       transition: {
         staggerChildren: 0.05,
-        delayChildren: 0.08,
+        delayChildren: 0.06,
       },
     },
   };
 
   const navItemVariants: Variants = {
-    hidden: { opacity: 0, x: -14 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
-      x: 0,
+      y: 0,
       transition: {
-        duration: 0.32,
+        duration: 0.28,
         ease: easings.premium,
       },
     },

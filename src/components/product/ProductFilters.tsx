@@ -233,7 +233,7 @@ export function ProductFilters({ sizes = SEARCH_SIZES }: ProductFiltersProps = {
                 key={size}
                 type="button"
                 onClick={() => handleFilterChange("size", isActive ? "" : size)}
-                className={`py-2 text-xs font-mono font-medium rounded-lg border transition-all duration-150 active:scale-[0.96] text-center ${
+                className={`py-2 text-xs font-mono font-medium rounded-lg border transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.96] text-center ${
                   isActive
                     ? "bg-brand-navy text-white border-brand-navy shadow-xs font-semibold"
                     : "bg-white text-neutral-800 border-neutral-300 hover:border-neutral-900 hover:bg-neutral-50 shadow-2xs"

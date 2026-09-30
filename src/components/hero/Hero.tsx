@@ -28,8 +28,8 @@ export function Hero() {
   });
 
   const headlineScrollY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : -20]);
-  const productScrollY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : 25]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, shouldReduceMotion ? 1 : 1.03]);
+  const productScrollY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : 20]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, shouldReduceMotion ? 1 : 1.025]);
 
   return (
     <section 
@@ -122,23 +122,23 @@ export function Hero() {
             >
               <Link
                 href="/men"
-                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-navy text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-md hover:bg-brand-blue hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-navy text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-md hover:bg-brand-blue hover:shadow-lg hover:-translate-y-[1px] transition-all duration-250 active:scale-[0.98]"
               >
                 <span>Shop Men</span>
                 <ArrowRight
                   size={14}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
+                  className="transition-transform duration-250 group-hover:translate-x-1"
                 />
               </Link>
 
               <Link
                 href="/women"
-                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/90 backdrop-blur-sm border border-brand-navy/30 text-brand-dark font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-xs hover:border-brand-navy hover:bg-white hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98]"
+                className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/90 backdrop-blur-sm border border-brand-navy/30 text-brand-dark font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-sm shadow-xs hover:border-brand-navy hover:bg-white hover:-translate-y-[1px] transition-all duration-250 active:scale-[0.98]"
               >
                 <span>Shop Women</span>
                 <ArrowRight
                   size={14}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
+                  className="transition-transform duration-250 group-hover:translate-x-1"
                 />
               </Link>
             </motion.div>
@@ -176,7 +176,7 @@ export function Hero() {
             >
               {/* Subtle living motion floating container (desktop only, disabled on reduced motion) */}
               <motion.div
-                animate={shouldReduceMotion || isMobile ? {} : { y: [0, -6, 0] }}
+                animate={shouldReduceMotion || isMobile ? {} : { y: [0, -5, 0] }}
                 transition={{
                   duration: 6,
                   ease: "easeInOut",

@@ -208,7 +208,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
         {/* Cart Items List (Cols 1-7) */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           <AnimatePresence>
-            {items.map((item) => {
+            {items.map((item, index) => {
               const isLoading = loadingIds.has(item.id);
               const isUnavailable = item.productStatus !== "ACTIVE";
               const isOutOfStock = item.stock <= 0;
@@ -229,7 +229,7 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
                     paddingBottom: 0,
                     transition: { duration: prefersReducedMotion ? 0.01 : 0.28, ease: easings.premium },
                   }}
-                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.35, ease: easings.premium }}
+                  transition={{ duration: prefersReducedMotion ? 0.01 : 0.35, delay: prefersReducedMotion ? 0 : Math.min(index * 0.06, 0.3), ease: easings.premium }}
                   key={item.id}
                   className={`bg-white border border-brand-sky-border/60 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row gap-5 ${
                     isLoading ? "opacity-50" : ""
@@ -383,10 +383,10 @@ export function CartClient({ initialItems, initialSubtotal, recommendationsSlot 
             {/* Primary Checkout CTA */}
             <Link
               href="/checkout"
-              className="w-full flex items-center justify-center gap-3 py-4 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-xl transition-all shadow-md hover:-translate-y-0.5 active:scale-[0.985]"
+              className="group w-full flex items-center justify-center gap-3 py-4 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-[0.2em] font-medium rounded-xl transition-all duration-200 shadow-md hover:-translate-y-[1px] active:scale-[0.98]"
             >
               <span>Proceed to Checkout</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
 
             {/* Reassurance Micro-items */}

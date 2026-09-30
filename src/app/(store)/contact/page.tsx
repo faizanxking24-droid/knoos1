@@ -49,10 +49,10 @@ export default function ContactPage() {
             </div>
             <a
               href="tel:7088808882"
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 font-medium shadow-xs"
+              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 font-medium shadow-xs"
             >
               <span>Call Team</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
             </a>
           </StaggerItem>
 
@@ -77,10 +77,10 @@ export default function ContactPage() {
               href="https://wa.me/917088808882"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 font-medium shadow-xs"
+              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 font-medium shadow-xs"
             >
               <span>Chat on WhatsApp</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
             </a>
           </StaggerItem>
 
@@ -103,10 +103,10 @@ export default function ContactPage() {
             </div>
             <a
               href="mailto:kkshoeco@gmail.com"
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 font-medium shadow-xs"
+              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-brand-navy hover:bg-brand-blue text-white font-mono text-xs uppercase tracking-widest rounded-xl hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 font-medium shadow-xs"
             >
               <span>Compose Email</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform duration-200" />
             </a>
           </StaggerItem>
         </StaggerContainer>
@@ -168,13 +168,13 @@ export default function ContactPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/faq"
-                className="px-6 py-3 bg-white text-neutral-950 font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-brand-blue hover:text-white hover:-translate-y-0.5 active:scale-95 transition-all shadow-xs"
+                className="px-6 py-3 bg-white text-neutral-950 font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-brand-blue hover:text-white hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 shadow-xs"
               >
                 Read FAQs
               </Link>
               <Link
                 href="/returns-refunds"
-                className="px-6 py-3 border border-white/30 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-white hover:text-neutral-950 hover:-translate-y-0.5 active:scale-95 transition-all"
+                className="px-6 py-3 border border-white/30 text-white font-mono text-xs uppercase tracking-widest font-semibold rounded-xl hover:bg-white hover:text-neutral-950 hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200"
               >
                 Return Policy
               </Link>

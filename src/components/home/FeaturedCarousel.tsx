@@ -113,13 +113,14 @@ export function FeaturedCarousel({
             {viewAllHref && (
               <Link
                 href={viewAllHref}
-                className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue pb-1 border-b border-brand-dark/20 hover:border-brand-blue transition-all duration-300 mr-2"
+                className="group relative inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue pb-1 transition-colors duration-300 mr-2"
               >
                 <span>{viewAllText}</span>
                 <ArrowRight
                   size={13}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
+                  className="transition-transform duration-250 group-hover:translate-x-1"
                 />
+                <span className="absolute bottom-0 left-0 w-full h-[1px] bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
               </Link>
             )}
 
@@ -130,26 +131,26 @@ export function FeaturedCarousel({
                 onClick={() => handleScroll("left")}
                 disabled={!canScrollPrev}
                 aria-label="Previous products"
-                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
+                className={`group w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
                   canScrollPrev
                     ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 hover:scale-105 active:scale-95"
                     : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
               </button>
               <button
                 type="button"
                 onClick={() => handleScroll("right")}
                 disabled={!canScrollNext}
                 aria-label="Next products"
-                className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
+                className={`group w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-200 ${
                   canScrollNext
                     ? "border-neutral-300 text-neutral-800 hover:border-brand-blue hover:text-brand-blue hover:bg-neutral-50 hover:scale-105 active:scale-95"
                     : "border-neutral-200 text-neutral-300 cursor-not-allowed opacity-40"
                 }`}
               >
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             </div>
           </div>
@@ -157,10 +158,19 @@ export function FeaturedCarousel({
 
         {/* Carousel Tracks */}
         <motion.div
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: durations.reveal, delay: 0.15, ease: easings.premium }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: shouldReduceMotion ? 0 : 0.07,
+                delayChildren: shouldReduceMotion ? 0 : 0.1,
+              },
+            },
+          }}
           ref={scrollRef}
           tabIndex={0}
           role="region"
@@ -168,13 +178,24 @@ export function FeaturedCarousel({
           className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-6 pt-2 -mx-5 px-5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10 focus:outline-none touch-pan-x"
         >
           {products.map((product) => (
-            <div
+            <motion.div
               key={product.id}
               data-carousel-item
+              variants={{
+                hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 25 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    duration: shouldReduceMotion ? 0.05 : 0.6,
+                    ease: easings.premium,
+                  },
+                },
+              }}
               className="flex-none w-[70vw] sm:w-[42vw] md:w-[32vw] lg:w-[calc(25%-1.5rem)] snap-start"
             >
               <ProductCard product={product} />
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       </StoreContainer>

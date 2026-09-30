@@ -31,10 +31,10 @@ export function ProductCard({
   return (
     <Link 
       href={`/product/${product.slug}`} 
-      className="group block select-none hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+      className="group block select-none sm:hover:-translate-y-[3px] transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
     >
       {/* Product Image Stage */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F6F7F9] rounded-lg transition-all duration-400 group-hover:shadow-md">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F6F7F9] rounded-lg transition-shadow duration-[450ms] group-hover:shadow-sm">
         {/* Primary Image */}
         <FallbackImage
           src={mainImage}
@@ -45,16 +45,16 @@ export function ProductCard({
           style={{ objectFit: imageFit }}
           className={`${
             isContain
-              ? "object-contain p-4 sm:p-5 group-hover:scale-[1.02]"
-              : "object-cover group-hover:scale-[1.035]"
-          } object-center transition-all duration-450 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            hoverImage ? "group-hover:opacity-0 duration-350" : ""
+              ? "object-contain p-4 sm:p-5 group-hover:scale-[1.04]"
+              : "object-cover group-hover:scale-[1.04]"
+          } object-center transition-all duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            hoverImage ? "group-hover:opacity-0 duration-[350ms]" : ""
           }`}
         />
 
         {/* Alternate Image on Hover (Crossfade ~350ms) */}
         {hoverImage && (
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-350 ease-out">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-[350ms] ease-out">
             <FallbackImage
               src={hoverImage}
               alt={`${product.name} alternate view`}
@@ -63,17 +63,17 @@ export function ProductCard({
               style={{ objectFit: imageFit }}
               className={`${
                 isContain
-                  ? "object-contain p-4 sm:p-5 group-hover:scale-[1.02]"
-                  : "object-cover group-hover:scale-[1.035]"
-              } object-center transition-transform duration-450 ease-[cubic-bezier(0.16,1,0.3,1)]`}
+                  ? "object-contain p-4 sm:p-5 group-hover:scale-[1.04]"
+                  : "object-cover group-hover:scale-[1.04]"
+              } object-center transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
             />
           </div>
         )}
 
-        {/* Subtle Sale Indicator */}
+        {/* Subtle Sale Indicator with scale transition */}
         {discount.hasDiscount && (
           <div className="absolute top-3 left-3 z-10">
-            <span className="inline-block bg-brand-navy/90 backdrop-blur-sm text-brand-gold text-[10px] font-mono uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm shadow-sm">
+            <span className="inline-block bg-brand-navy/90 backdrop-blur-sm text-brand-gold text-[10px] font-mono uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm shadow-sm transition-transform duration-300 group-hover:scale-105">
               Sale
             </span>
           </div>
@@ -82,7 +82,7 @@ export function ProductCard({
         {/* Hover View Action Pill */}
         <div className={`absolute bottom-3 right-3 z-10 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none hidden sm:flex items-center gap-1.5 ${compact ? "px-2.5 py-1" : "px-3 py-1.5"} bg-white/95 backdrop-blur-md rounded-full shadow-md text-brand-dark`}>
           <span className="font-mono text-[11px] uppercase tracking-wider font-medium">View</span>
-          <ArrowUpRight size={12} className="text-brand-blue group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+          <ArrowUpRight size={12} className="text-brand-blue group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-250" />
         </div>
       </div>
 

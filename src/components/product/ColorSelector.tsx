@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { getColorSwatch } from "@/lib/colors";
 
 export interface ColorSibling {
@@ -112,11 +113,11 @@ export function ColorSelector({
               aria-label={`${option.label}${option.isSelected ? " (Selected)" : ""}`}
               disabled={!option.slug}
               className={`
-                snap-start flex-shrink-0 group relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-200 hover:scale-[1.03] active:scale-95
+                snap-start flex-shrink-0 group relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-250 hover:scale-[1.03] active:scale-[0.97]
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2
                 ${
                   option.isSelected
-                    ? "border-brand-navy bg-brand-sky/25 ring-1 ring-brand-navy shadow-xs"
+                    ? "border-brand-navy bg-brand-sky/25 ring-2 ring-brand-navy/30 shadow-xs"
                     : "border-brand-gray-200 bg-white hover:border-brand-navy/50 hover:bg-brand-sky/10 cursor-pointer"
                 }
                 ${!option.slug ? "opacity-75 cursor-default" : ""}
@@ -157,7 +158,17 @@ export function ColorSelector({
               </span>
 
               {option.isSelected && <span className="sr-only">(Selected)</span>}
-              {option.isSelected && <span aria-hidden="true" className="font-bold">✓</span>}
+              {option.isSelected && (
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  aria-hidden="true"
+                  className="font-bold text-xs"
+                >
+                  ✓
+                </motion.span>
+              )}
               {option.soldOut && <span className="font-mono text-[9px] uppercase text-red-700">Out of stock</span>}
             </button>
           );

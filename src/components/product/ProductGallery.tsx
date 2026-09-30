@@ -104,9 +104,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               <button
                 key={image.id}
                 onClick={() => scrollToSlide(index)}
-                className={`relative aspect-[4/5] w-20 md:w-full flex-shrink-0 border transition-all duration-300 rounded-lg overflow-hidden bg-brand-sky/20 hover:scale-[1.03] ${
+                className={`relative aspect-[4/5] w-20 md:w-full flex-shrink-0 border transition-all duration-300 rounded-lg overflow-hidden bg-brand-sky/20 hover:scale-[1.04] ${
                   activeIndex === index
-                    ? "border-brand-navy ring-2 ring-brand-navy/30 opacity-100 shadow-xs"
+                    ? "border-brand-navy ring-2 ring-brand-navy/40 shadow-xs opacity-100 ring-offset-1"
                     : "border-brand-sky-border/40 opacity-60 hover:opacity-100 hover:border-brand-blue/50"
                 }`}
               >

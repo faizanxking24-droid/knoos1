@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ShoppingBag,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import AccountShell from "./AccountShell";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -124,7 +125,12 @@ export default function AccountOverviewClient() {
       subtitle="Here's what's happening with your account."
       active="overview"
     >
-      <div className="w-full space-y-9 sm:space-y-10">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full space-y-9 sm:space-y-10"
+      >
         {/* Non-blocking Onboarding Prompt for Let Us Know Preferences */}
         {!isPrefConfigured && !loading && (
           <div className="bg-brand-sky/30 border border-brand-sky-border/80 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
@@ -144,7 +150,7 @@ export default function AccountOverviewClient() {
             </div>
             <Link
               href="/account/profile"
-              className="inline-flex items-center justify-center whitespace-nowrap bg-brand-navy text-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-brand-blue transition-colors shrink-0 shadow-xs"
+              className="inline-flex items-center justify-center whitespace-nowrap bg-brand-navy text-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest rounded-xl hover:bg-brand-blue transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98] shrink-0 shadow-xs"
             >
               Complete Preferences
             </Link>
@@ -155,18 +161,22 @@ export default function AccountOverviewClient() {
         <section aria-label="Account Summary Stats">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
             <StatCard
+              index={0}
               label="Total Orders"
               value={(summary?.total ?? 0).toString()}
             />
             <StatCard
+              index={1}
               label="Active Orders"
               value={(summary?.active ?? 0).toString()}
             />
             <StatCard
+              index={2}
               label="Delivered"
               value={(summary?.delivered ?? 0).toString()}
             />
             <StatCard
+              index={3}
               label="Addresses"
               value={(summary?.addressCount ?? 0).toString()}
             />
@@ -192,42 +202,51 @@ export default function AccountOverviewClient() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             <QuickLink
+              index={0}
               href="/account/profile"
               label="Profile & Preferences"
               icon={User}
             />
             <QuickLink
+              index={1}
               href="/account/addresses"
               label="Manage Addresses"
               icon={MapPin}
             />
             <QuickLink
+              index={2}
               href="/account/orders"
               label="View All Orders"
               icon={Package}
             />
             <QuickLink
+              index={3}
               href="/account/help"
               label="Help & Support"
               icon={HelpCircle}
             />
           </div>
         </section>
-      </div>
+      </motion.div>
     </AccountShell>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, index = 0 }: { label: string; value: string; index?: number }) {
   return (
-    <div className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-blue/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-white border border-brand-sky-border/60 rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-blue/40 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+    >
       <p className="font-serif text-2xl sm:text-3xl lg:text-4xl text-brand-navy font-normal">
         {value}
       </p>
       <p className="font-mono text-xs uppercase tracking-wider text-brand-gray-500 mt-1.5">
         {label}
       </p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -305,29 +324,37 @@ function QuickLink({
   href,
   label,
   icon: Icon,
+  index = 0,
 }: {
   href: string;
   label: string;
   icon: typeof User;
+  index?: number;
 }) {
   return (
-    <Link
-      href={href}
-      className="flex items-center justify-between min-h-[72px] sm:min-h-[76px] px-5 py-4 bg-white border border-brand-sky-border/60 rounded-xl hover:border-brand-blue/50 hover:bg-brand-sky/20 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 group shadow-xs"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.12 + index * 0.05, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-brand-sky/50 text-brand-navy flex items-center justify-center shrink-0 group-hover:bg-brand-navy group-hover:text-white transition-colors">
-          <Icon size={18} strokeWidth={1.75} />
+      <Link
+        href={href}
+        className="flex items-center justify-between min-h-[72px] sm:min-h-[76px] px-5 py-4 bg-white border border-brand-sky-border/60 rounded-xl hover:border-brand-blue/50 hover:bg-brand-sky/20 hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200 group shadow-xs"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-brand-sky/50 text-brand-navy flex items-center justify-center shrink-0 group-hover:bg-brand-navy group-hover:text-white transition-colors">
+            <Icon size={18} strokeWidth={1.75} />
+          </div>
+          <span className="text-sm font-medium text-brand-dark group-hover:text-brand-blue transition-colors">
+            {label}
+          </span>
         </div>
-        <span className="text-sm font-medium text-brand-dark group-hover:text-brand-blue transition-colors">
-          {label}
-        </span>
-      </div>
-      <ArrowRight
-        size={16}
-        className="text-brand-gray-400 group-hover:text-brand-blue group-hover:translate-x-1 transition-all shrink-0"
-      />
-    </Link>
+        <ArrowRight
+          size={16}
+          className="text-brand-gray-400 group-hover:text-brand-blue group-hover:translate-x-1 transition-all shrink-0"
+        />
+      </Link>
+    </motion.div>
   );
 }
 
@@ -345,7 +372,7 @@ function EmptyState() {
       </p>
       <Link
         href="/search"
-        className="inline-block bg-brand-navy text-white px-6 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-xs"
+        className="inline-block bg-brand-navy text-white px-6 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98] shadow-xs"
       >
         Start Shopping
       </Link>

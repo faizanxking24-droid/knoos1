@@ -197,18 +197,44 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
       animate="visible"
       className="flex flex-col"
     >
-      {/* Category Eyebrow & Title */}
-      <motion.div variants={itemVariants} className="mb-6">
+      {/* 1. Breadcrumb */}
+      <motion.div variants={itemVariants} className="flex items-center gap-2 text-xs font-mono text-neutral-400 uppercase tracking-wider mb-4 flex-wrap">
+        <Link href="/" className="hover:text-brand-blue transition-colors">Home</Link>
+        <span>/</span>
+        <Link href={product.gender === "MEN" ? "/men" : "/women"} className="hover:text-brand-blue transition-colors">
+          {product.gender === "MEN" ? "Men" : "Women"}
+        </Link>
+        {product.categoryRel?.name && (
+          <>
+            <span>/</span>
+            <Link href={`/search?category=${product.categoryRel.slug}`} className="hover:text-brand-blue transition-colors">
+              {product.categoryRel.name}
+            </Link>
+          </>
+        )}
+      </motion.div>
+
+      {/* 2. Category Eyebrow & Masked Title */}
+      <motion.div variants={itemVariants} className="mb-4">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-brand-blue font-medium mb-2.5">
           {product.categoryRel?.name
             ? `${product.categoryRel.name} • SIGNATURE SERIES`
             : "KNOOS FOOTWEAR • EDITION 2026"}
         </p>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] text-brand-dark tracking-tight leading-[1.1] mb-4">
-          {product.name}
-        </h1>
+        <div className="overflow-hidden py-0.5">
+          <motion.h1 
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: easings.premium }}
+            className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] text-brand-dark tracking-tight leading-[1.1]"
+          >
+            {product.name}
+          </motion.h1>
+        </div>
+      </motion.div>
 
-        {/* Pricing Row */}
+      {/* 3. Pricing Row & Stock */}
+      <motion.div variants={itemVariants} className="mb-6">
         <div className="flex items-center gap-3.5 flex-wrap">
           <span className="text-3xl font-semibold text-neutral-950 font-serif">
             ₹{selling.toLocaleString("en-IN")}
@@ -303,8 +329,8 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
                       py-3.5 text-xs font-mono font-medium transition-all duration-200 rounded-xl border text-center
                       ${
                         isOutOfStock
-                          ? "opacity-35 cursor-not-allowed bg-neutral-100 border-neutral-200 line-through text-neutral-400"
-                          : "hover:-translate-y-0.5 active:scale-95"
+                          ? "opacity-35 cursor-not-allowed bg-neutral-100 border-neutral-200 line-through text-neutral-400 pointer-events-none"
+                          : "hover:-translate-y-[1px] active:scale-[0.96]"
                       }
                       ${
                         isSelected && !isOutOfStock
@@ -387,14 +413,14 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             authLoading
           }
           className={`
-            flex-1 py-4 px-6 font-mono text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 rounded-xl border
+            flex-1 py-4 px-6 font-mono text-xs uppercase tracking-[0.2em] font-medium transition-all duration-250 rounded-xl border
             ${
               (variants.length > 0 && !selectedVariantId) ||
               loading ||
               (selectedVariantId && stockAvailable <= 0) ||
               authLoading
                 ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-200"
-                : "border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white shadow-xs active:scale-[0.99]"
+                : "border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white shadow-xs hover:-translate-y-[1px] active:scale-[0.98]"
             }
           `}
         >
@@ -402,6 +428,8 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             ? "Loading..."
             : loading
             ? "Adding..."
+            : success
+            ? "ADDED ✓"
             : variants.length > 0 && !selectedVariantId
             ? "Select a Size"
             : selectedVariantId && stockAvailable <= 0
@@ -419,13 +447,13 @@ export function ProductInfo({ product, variants, colorSiblings = [] }: ProductIn
             authLoading
           }
           className={`
-            flex-1 py-4 px-6 font-mono text-xs uppercase tracking-[0.2em] font-medium transition-all duration-300 rounded-xl shadow-md
+            flex-1 py-4 px-6 font-mono text-xs uppercase tracking-[0.2em] font-medium transition-all duration-250 rounded-xl shadow-md
             ${
               (variants.length > 0 && !selectedVariantId) ||
               (selectedVariantId && stockAvailable <= 0) ||
               authLoading
                 ? "bg-neutral-200 text-neutral-400 cursor-not-allowed border border-neutral-200"
-                : "bg-neutral-950 text-white hover:bg-brand-blue hover:shadow-xl active:scale-[0.99]"
+                : "bg-neutral-950 text-white hover:bg-brand-blue hover:shadow-xl hover:-translate-y-[1px] active:scale-[0.98]"
             }
           `}
         >

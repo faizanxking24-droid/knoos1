@@ -15,7 +15,7 @@ export function Reveal({
   children, 
   delay = 0, 
   duration = durations.reveal, 
-  yOffset = 35,
+  yOffset = 30,
   viewportMargin = "-60px",
   viewportAmount,
   ...props 

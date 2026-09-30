@@ -114,9 +114,9 @@ export function PromoBanners({ featuredProduct, customBanners }: PromoBannersPro
                     alt={banner.imageAlt}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-105 opacity-85 group-hover:opacity-95"
+                    className="object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04] opacity-85 group-hover:opacity-95"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 transition-opacity duration-500 group-hover:via-black/45" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 transition-all duration-500 group-hover:from-black/95 group-hover:via-black/50" />
                 </div>
 
                 {/* Top Badges */}
@@ -139,7 +139,7 @@ export function PromoBanners({ featuredProduct, customBanners }: PromoBannersPro
                 </div>
 
                 {/* Bottom Content Area */}
-                <div className="relative z-10 p-6 sm:p-8 md:p-10 flex flex-col items-start transition-transform duration-500 ease-out group-hover:-translate-y-1">
+                <div className="relative z-10 p-6 sm:p-8 md:p-10 flex flex-col items-start transition-transform duration-500 ease-out group-hover:-translate-y-0.5">
                   <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-white font-normal tracking-tight mb-2 sm:mb-3">
                     {banner.title}
                   </h3>
@@ -150,7 +150,7 @@ export function PromoBanners({ featuredProduct, customBanners }: PromoBannersPro
                     <span>{banner.ctaText}</span>
                     <ArrowRight
                       size={13}
-                      className="transition-transform duration-300 group-hover:translate-x-1"
+                      className="transition-transform duration-250 group-hover:translate-x-1"
                     />
                   </span>
                 </div>

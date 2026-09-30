@@ -81,12 +81,15 @@ export function SectionHeading({
         >
           <Link
             href={viewAllHref}
-            className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue pb-1 border-b border-brand-dark/20 hover:border-brand-blue transition-all duration-300"
+            className="group relative inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-brand-dark hover:text-brand-blue py-1 transition-colors duration-200"
           >
-            <span>{viewAllText}</span>
+            <span className="relative">
+              {viewAllText}
+              <span className="absolute left-0 -bottom-0.5 w-full h-[1px] bg-brand-blue origin-left scale-x-0 transition-transform duration-250 ease-out group-hover:scale-x-100" />
+            </span>
             <ArrowRight
               size={13}
-              className="transition-transform duration-300 group-hover:translate-x-1"
+              className="transition-transform duration-200 group-hover:translate-x-1 text-brand-blue"
             />
           </Link>
         </motion.div>

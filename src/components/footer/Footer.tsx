@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MessageCircle, Info, Shield, FileText, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { StoreContainer } from "@/components/store/StoreContainer";
 import { Reveal, StaggerContainer, StaggerItem } from "@/components/motion";
 
@@ -22,15 +25,22 @@ export function Footer() {
           
           {/* Brand Column (Col 1-4) */}
           <StaggerItem className="lg:col-span-4 space-y-5">
-            <Link href="/" className="inline-block transition-opacity hover:opacity-90">
-              <Image
-                src="/knoos-logo.png"
-                alt="KNOOS Footwear"
-                width={140}
-                height={48}
-                className="h-9 sm:h-10 w-auto object-contain brightness-110"
-              />
-            </Link>
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Link href="/" className="inline-block transition-opacity hover:opacity-90">
+                <Image
+                  src="/knoos-logo.png"
+                  alt="KNOOS Footwear"
+                  width={140}
+                  height={48}
+                  className="h-9 sm:h-10 w-auto object-contain brightness-110"
+                />
+              </Link>
+            </motion.div>
 
             <p className="font-serif italic text-brand-sky text-base sm:text-lg">
               Comfort In Every Step
@@ -51,7 +61,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="KNOOS on Instagram"
-                  className="group inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition-colors"
+                  className="group inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition-colors duration-200"
                 >
                   <svg
                     width="16"
@@ -62,7 +72,7 @@ export function Footer() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-brand-blue group-hover:scale-110 group-hover:text-brand-gold transition-transform"
+                    className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200"
                     aria-hidden="true"
                   >
                     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
@@ -78,7 +88,7 @@ export function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="KNOOS on Facebook"
-                    className="group inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition-colors"
+                    className="group inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition-colors duration-200"
                   >
                     <svg
                       width="16"
@@ -89,7 +99,7 @@ export function Footer() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-brand-blue group-hover:scale-110 group-hover:text-brand-gold transition-transform"
+                      className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200"
                       aria-hidden="true"
                     >
                       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -97,6 +107,21 @@ export function Footer() {
                     <span className="hover:underline">@KNOOSSHOES</span>
                   </a>
                 )}
+
+                <a
+                  href="https://wa.me/917088808882"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="KNOOS on WhatsApp"
+                  className="group inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-white transition-colors duration-200"
+                >
+                  <MessageCircle
+                    size={16}
+                    className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="hover:underline">WHATSAPP</span>
+                </a>
               </div>
             </div>
           </StaggerItem>
@@ -108,25 +133,25 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <Link href="/men" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
+                <Link href="/men" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Men&apos;s Footwear</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/women" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
+                <Link href="/women" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Women&apos;s Footwear</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/search?sort=Newest" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
+                <Link href="/search?sort=Newest" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>New Arrivals</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
               </li>
               <li>
-                <Link href="/search" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-1.5 group">
+                <Link href="/search" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-1.5 group">
                   <span>Complete Catalog</span>
                   <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-blue" />
                 </Link>
@@ -141,36 +166,36 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-sm text-slate-300">
               <li>
-                <Link href="/about" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/about" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <Info size={13} className="text-brand-blue" />
                   <span>About Us</span>
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/contact" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <Phone size={13} className="text-brand-blue" />
                   <span>Contact Support</span>
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/faq" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <span>FAQ</span>
                 </Link>
               </li>
               <li>
-                <Link href="/returns-refunds" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/returns-refunds" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <FileText size={13} className="text-brand-blue" />
                   <span>Returns Policy</span>
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/privacy" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <Shield size={13} className="text-brand-blue" />
                   <span>Privacy Policy</span>
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white hover:translate-x-0.5 transition-all duration-200 inline-flex items-center gap-2">
+                <Link href="/terms" className="hover:text-white hover:translate-x-1 transition-all duration-200 inline-flex items-center gap-2">
                   <span>Terms of Service</span>
                 </Link>
               </li>
@@ -194,25 +219,25 @@ export function Footer() {
               <div className="pt-1 space-y-2 text-xs">
                 <a
                   href="tel:7088808882"
-                  className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors font-mono"
+                  className="group flex items-center gap-2 text-slate-300 hover:text-white transition-colors duration-200 font-mono"
                 >
-                  <Phone size={13} className="text-brand-blue shrink-0" />
+                  <Phone size={13} className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200 shrink-0" />
                   <span>+91 7088808882</span>
                 </a>
                 <a
                   href="https://wa.me/917088808882"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors font-mono"
+                  className="group flex items-center gap-2 text-slate-300 hover:text-white transition-colors duration-200 font-mono"
                 >
-                  <MessageCircle size={13} className="text-brand-blue shrink-0" />
+                  <MessageCircle size={13} className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200 shrink-0" />
                   <span>WhatsApp Concierge</span>
                 </a>
                 <a
                   href="mailto:KKSHOECOMPANY@GMAIL.COM"
-                  className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors font-mono"
+                  className="group flex items-center gap-2 text-slate-300 hover:text-white transition-colors duration-200 font-mono"
                 >
-                  <Mail size={13} className="text-brand-blue shrink-0" />
+                  <Mail size={13} className="text-brand-blue group-hover:scale-[1.08] group-hover:-translate-y-[2px] group-hover:text-brand-gold transition-all duration-200 shrink-0" />
                   <span className="truncate">KKSHOECOMPANY@GMAIL.COM</span>
                 </a>
                 <p className="text-[11px] text-slate-400 pt-1">

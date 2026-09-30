@@ -109,8 +109,8 @@ export function HeaderClient({
               width={130}
               height={45}
               priority
-              className={`w-auto object-contain transition-all duration-300 ${
-                isScrolled ? "h-8 sm:h-9" : "h-9 sm:h-10"
+              className={`w-auto object-contain origin-left transition-all duration-300 ${
+                isScrolled ? "h-8 sm:h-9 scale-[0.94]" : "h-9 sm:h-10 scale-100"
               }`}
             />
           </Link>
@@ -122,7 +122,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>Men</span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
 
             <Link
@@ -130,7 +130,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>Women</span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
 
             {/* Shop By Dropdown */}
@@ -138,7 +138,7 @@ export function HeaderClient({
               <button
                 type="button"
                 onClick={() => setIsShopByOpen(!isShopByOpen)}
-                className="group flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1"
+                className="group relative flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1"
                 aria-expanded={isShopByOpen}
               >
                 <span>Shop By</span>
@@ -148,6 +148,7 @@ export function HeaderClient({
                     isShopByOpen ? "rotate-180 text-brand-blue" : "text-brand-gray-400 group-hover:text-brand-blue"
                   }`}
                 />
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
               </button>
 
               <AnimatePresence>
@@ -228,7 +229,7 @@ export function HeaderClient({
               className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand-dark hover:text-brand-blue transition-colors py-1 relative group"
             >
               <span>About</span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
             </Link>
           </nav>
 
@@ -238,12 +239,13 @@ export function HeaderClient({
             <button
               type="button"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-1.5 text-brand-dark hover:text-brand-blue transition-colors flex items-center gap-1.5"
+              className="group p-1.5 text-brand-dark hover:text-brand-blue transition-colors flex items-center gap-1.5 relative"
               aria-label="Search KNOOS footwear"
             >
               <Search size={18} strokeWidth={1.75} />
-              <span className="hidden lg:inline font-mono text-[11px] uppercase tracking-widest text-brand-dark font-medium">
+              <span className="hidden lg:inline font-mono text-[11px] uppercase tracking-widest text-brand-dark font-medium relative">
                 Search
+                <span className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
               </span>
             </button>
 
@@ -259,7 +261,7 @@ export function HeaderClient({
                   <motion.span
                     key={cartCount}
                     initial={{ scale: 0.8 }}
-                    animate={{ scale: [1, 1.15, 1] }}
+                    animate={{ scale: [1, 1.18, 1] }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute -top-1.5 -right-2 min-w-[17px] h-[17px] px-1 bg-brand-blue text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm"
                   >
@@ -267,8 +269,9 @@ export function HeaderClient({
                   </motion.span>
                 )}
               </div>
-              <span className="hidden lg:inline font-mono text-[11px] uppercase tracking-widest text-brand-dark font-medium">
+              <span className="hidden lg:inline font-mono text-[11px] uppercase tracking-widest text-brand-dark font-medium relative">
                 Cart
+                <span className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
               </span>
             </Link>
 
@@ -278,10 +281,13 @@ export function HeaderClient({
                 <div className="flex items-center gap-3">
                   <Link
                     href="/account"
-                    className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-brand-dark hover:text-brand-blue transition-colors"
+                    className="group flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-brand-dark hover:text-brand-blue transition-colors relative py-1"
                   >
                     <User size={16} strokeWidth={1.75} />
-                    <span className="max-w-[100px] truncate">{userName}</span>
+                    <span className="max-w-[100px] truncate relative">
+                      {userName}
+                      <span className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
+                    </span>
                   </Link>
                   <button
                     type="button"
@@ -301,10 +307,13 @@ export function HeaderClient({
                       signInAction();
                     }
                   }}
-                  className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-brand-dark hover:text-brand-blue transition-colors"
+                  className="group flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-widest text-brand-dark hover:text-brand-blue transition-colors relative py-1"
                 >
                   <User size={16} strokeWidth={1.75} />
-                  <span>Sign In</span>
+                  <span className="relative">
+                    Sign In
+                    <span className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-brand-blue origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none" />
+                  </span>
                 </button>
               )}
             </div>
