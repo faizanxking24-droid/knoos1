@@ -142,7 +142,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         )}
 
         {/* Mobile Swipeable Gallery (< md) */}
-        <div className="relative w-full aspect-square bg-gradient-to-b from-brand-sky/30 to-brand-sky/10 border border-brand-sky-border/40 rounded-2xl overflow-hidden shadow-sm block md:hidden">
+        <div className="relative w-full aspect-[4/5] bg-gradient-to-b from-brand-sky/30 to-brand-sky/10 border border-brand-sky-border/40 rounded-2xl overflow-hidden shadow-sm block md:hidden">
           <div
             ref={mobileSliderRef}
             onScroll={handleMobileScroll}
@@ -152,7 +152,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               <div
                 key={image.id || index}
                 className={`relative w-full h-full flex-shrink-0 snap-center snap-always flex items-center justify-center ${
-                  image.isVideo ? "p-2 bg-black/90" : "cursor-zoom-in p-4"
+                  image.isVideo ? "p-1.5 bg-black/90" : "cursor-zoom-in p-1"
                 }`}
                 onClick={() => {
                   if (!image.isVideo) {
@@ -167,7 +167,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                     controls
                     playsInline
                     preload="metadata"
-                    className="w-full h-full max-h-[85vw] object-contain rounded-xl"
+                    className="w-full h-full object-contain rounded-xl"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
