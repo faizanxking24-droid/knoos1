@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { PageTransitionLoader } from "@/components/PageTransitionLoader";
+import { InitialSiteSplash } from "@/components/InitialSiteSplash";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${jetbrains.variable}`}>
       <body className="font-sans bg-white text-brand-dark antialiased">
+        <InitialSiteSplash />
         <PageTransitionLoader />
         {children}
       </body>
