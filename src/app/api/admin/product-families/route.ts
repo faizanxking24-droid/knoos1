@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         const slug = await uniqueProductSlug(tx, color.slug);
         created.push(await tx.product.create({ data: {
           ...productFields(parsed.data, { ...color, slug }, groupKey),
-          images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, sortOrder: index })) },
+          images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, isVideo: Boolean(image.isVideo), sortOrder: index })) },
           variants: { create: color.variants.map(({ id: _id, ...variant }) => ({ ...variant, salePrice: variant.salePrice ?? null })) },
         }, include: familyInclude }));
       }

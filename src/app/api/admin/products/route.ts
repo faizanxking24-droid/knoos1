@@ -84,6 +84,7 @@ export async function POST(request: Request) {
         images: {
           create: images.map((img) => ({
             imageUrl: img.imageUrl,
+            isVideo: Boolean(img.isVideo),
             sortOrder: img.sortOrder ?? 0,
           })),
         },

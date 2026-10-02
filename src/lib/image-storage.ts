@@ -6,11 +6,20 @@ import path from "node:path";
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 export const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+export const MAX_VIDEO_FILE_SIZE = 40 * 1024 * 1024; // 40 MB
 export const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
+]);
+export const ALLOWED_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+]);
+export const ALLOWED_MEDIA_TYPES = new Set([
+  ...ALLOWED_IMAGE_TYPES,
+  ...ALLOWED_VIDEO_TYPES,
 ]);
 
 // Extension mapping: MIME type → safe lowercase extension
@@ -19,6 +28,8 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/jpg": ".jpg",
   "image/png": ".png",
   "image/webp": ".webp",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
 };
 
 // ─── Storage Root Resolution ──────────────────────────────────────────────────
@@ -80,6 +91,45 @@ export function validateImageFile(file: { size: number; type: string }): ImageVa
   }
 
   return { valid: true };
+}
+
+export function validateVideoFile(file: { size: number; type: string }): ImageValidationResult {
+  const normalizedType = file.type.toLowerCase().trim();
+  if (!ALLOWED_VIDEO_TYPES.has(normalizedType)) {
+    return {
+      valid: false,
+      error: "Invalid file type. Only MP4 and WEBM videos are allowed.",
+      code: "INVALID_FILE_TYPE",
+    };
+  }
+
+  if (file.size > MAX_VIDEO_FILE_SIZE) {
+    return {
+      valid: false,
+      error: "File size too large. Maximum 40MB allowed.",
+      code: "FILE_TOO_LARGE",
+    };
+  }
+
+  return { valid: true };
+}
+
+export function validateMediaFile(file: { size: number; type: string }): ImageValidationResult & { isVideo?: boolean } {
+  const normalizedType = file.type.toLowerCase().trim();
+  if (ALLOWED_VIDEO_TYPES.has(normalizedType)) {
+    const videoResult = validateVideoFile(file);
+    return { ...videoResult, isVideo: true };
+  }
+  if (ALLOWED_IMAGE_TYPES.has(normalizedType)) {
+    const imageResult = validateImageFile(file);
+    return { ...imageResult, isVideo: false };
+  }
+  return {
+    valid: false,
+    error: "Invalid file type. Allowed formats: JPG, PNG, WEBP for images; MP4, WEBM for videos.",
+    code: "INVALID_FILE_TYPE",
+    isVideo: false,
+  };
 }
 
 // ─── Filename Generation ──────────────────────────────────────────────────────
@@ -284,6 +334,124 @@ export async function saveProductImage(file: {
     url,
     filename,
   };
+}
+
+/**
+ * Save a product video to Hostinger persistent storage.
+ *
+ * - Enforces 40MB limit and MP4/WEBM MIME types
+ * - Generates safe, unique filename
+ * - Writes atomically via writeFile
+ *
+ * Returns the public URL (/media/products/...) on success.
+ */
+export async function saveProductVideo(file: {
+  arrayBuffer: () => Promise<ArrayBuffer>;
+  name: string;
+  size: number;
+  type: string;
+}): Promise<ImageStorageResult> {
+  const validation = validateVideoFile(file);
+  if (!validation.valid) {
+    return {
+      success: false,
+      error: validation.error || "Invalid video file.",
+      code: validation.code || "VALIDATION_FAILED",
+    };
+  }
+
+  const rawProductDir = getProductUploadDirectory();
+  if (!rawProductDir) {
+    return {
+      success: false,
+      error: "Persistent Hostinger image storage is not available.",
+      code: "HOSTINGER_STORAGE_NOT_AVAILABLE",
+    };
+  }
+  const productDir = path.resolve(rawProductDir);
+
+  try {
+    await mkdir(productDir, { recursive: true });
+  } catch (err) {
+    console.error("[VIDEO_STORAGE_MKDIR_ERROR]", err);
+    return {
+      success: false,
+      error: "Failed to create storage directory.",
+      code: "STORAGE_MKDIR_FAILED",
+    };
+  }
+
+  try {
+    await access(productDir, constants.W_OK);
+  } catch {
+    return {
+      success: false,
+      error: "Storage directory is not writable.",
+      code: "STORAGE_NOT_WRITABLE",
+    };
+  }
+
+  const filename = generateSafeFilename(file.name || "product_video", file.type);
+
+  if (!isSafeFilename(filename)) {
+    return {
+      success: false,
+      error: "Generated filename failed safety check.",
+      code: "UNSAFE_FILENAME",
+    };
+  }
+
+  const filePath = path.resolve(productDir, filename);
+  if (!filePath.startsWith(productDir + path.sep)) {
+    return {
+      success: false,
+      error: "Path traversal detected.",
+      code: "PATH_TRAVERSAL",
+    };
+  }
+
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filePath, buffer, { flag: "wx" });
+  } catch (err) {
+    console.error("[VIDEO_STORAGE_WRITE_ERROR]", err);
+    return {
+      success: false,
+      error: "Failed to write video to storage.",
+      code: "STORAGE_WRITE_FAILED",
+    };
+  }
+
+  const url = `/media/products/${filename}`;
+
+  return {
+    success: true,
+    url,
+    filename,
+  };
+}
+
+export type MediaStorageResult =
+  | (SaveResult & { isVideo: boolean })
+  | SaveError;
+
+export async function saveProductMedia(file: {
+  arrayBuffer: () => Promise<ArrayBuffer>;
+  name: string;
+  size: number;
+  type: string;
+}): Promise<MediaStorageResult> {
+  const normalizedType = file.type.toLowerCase().trim();
+  if (ALLOWED_VIDEO_TYPES.has(normalizedType)) {
+    const result = await saveProductVideo(file);
+    if (!result.success) return result;
+    return { ...result, isVideo: true };
+  }
+
+  const result = await saveProductImage(file);
+  if (!result.success) return result;
+  return { ...result, isVideo: false };
 }
 
 /**
@@ -544,3 +712,8 @@ export async function getProductImagePath(filename: string): Promise<string | nu
     return null;
   }
 }
+
+export const getProductVideoPath = getProductImagePath;
+export const getProductMediaPath = getProductImagePath;
+export const resolveProductMediaPath = resolveProductImagePath;
+

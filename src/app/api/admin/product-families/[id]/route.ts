@@ -38,7 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             else await tx.productVariant.delete({ where: { id: oldVariant.id } });
           }
           await tx.productImage.deleteMany({ where: { productId: color.id } });
-          await tx.product.update({ where: { id: color.id }, data: { ...productFields(parsed.data, { ...color, slug }, groupKey), images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, sortOrder: index })) } } });
+          await tx.product.update({ where: { id: color.id }, data: { ...productFields(parsed.data, { ...color, slug }, groupKey), images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, isVideo: Boolean(image.isVideo), sortOrder: index })) } } });
           for (const variant of color.variants) {
             const data = { size: variant.size, stock: variant.stock, sku: variant.sku, price: variant.price, salePrice: variant.salePrice ?? null };
             const match = variant.id ? existing.variants.find((item) => item.id === variant.id) : existing.variants.find((item) => item.size.toLowerCase() === variant.size.toLowerCase());
@@ -50,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
           const slug = await uniqueProductSlug(tx, color.slug);
           saved.push(await tx.product.create({ data: {
             ...productFields(parsed.data, { ...color, slug }, groupKey),
-            images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, sortOrder: index })) },
+            images: { create: color.images.map((image, index) => ({ imageUrl: image.imageUrl, isVideo: Boolean(image.isVideo), sortOrder: index })) },
             variants: { create: color.variants.map(({ id: _id, ...variant }) => ({ ...variant, salePrice: variant.salePrice ?? null })) },
           }, include: familyInclude }));
         }

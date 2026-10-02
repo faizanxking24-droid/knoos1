@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
-import { saveProductImage } from "@/lib/image-storage";
+import { saveProductMedia } from "@/lib/image-storage";
 
 export async function POST(request: Request) {
   const adminResult = await requireAdmin();
@@ -17,8 +17,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Persist to Hostinger filesystem via the storage module
-    const result = await saveProductImage({
+    // Persist to Hostinger filesystem via the media storage module
+    const result = await saveProductMedia({
       arrayBuffer: () => file.arrayBuffer(),
       name: file.name,
       size: file.size,
@@ -39,11 +39,12 @@ export async function POST(request: Request) {
     return NextResponse.json({
       url: result.url,
       filename: result.filename,
+      isVideo: result.isVideo,
     });
   } catch (err) {
     console.error("[UPLOAD_ERROR]", err);
     return NextResponse.json(
-      { error: "Failed to upload image" },
+      { error: "Failed to upload media file" },
       { status: 500 }
     );
   }

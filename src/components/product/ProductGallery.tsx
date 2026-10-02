@@ -102,7 +102,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto hide-scrollbar md:w-24 lg:w-32 flex-shrink-0 pb-2 md:pb-0">
             {images.map((image, index) => (
               <button
-                key={image.id}
+                key={image.id || index}
                 onClick={() => scrollToSlide(index)}
                 className={`relative aspect-[4/5] w-20 md:w-full flex-shrink-0 border transition-all duration-300 rounded-lg overflow-hidden bg-brand-sky/20 hover:scale-[1.04] ${
                   activeIndex === index
@@ -110,13 +110,32 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                     : "border-brand-sky-border/40 opacity-60 hover:opacity-100 hover:border-brand-blue/50"
                 }`}
               >
-                <FallbackImage
-                  src={image.imageUrl}
-                  alt={`${productName} thumbnail ${index + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 80px, 128px"
-                  className="object-contain p-2"
-                />
+                {image.isVideo ? (
+                  <div className="relative w-full h-full bg-black flex items-center justify-center">
+                    <video
+                      src={image.imageUrl}
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow">
+                        <svg className="w-3.5 h-3.5 text-brand-navy ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <FallbackImage
+                    src={image.imageUrl}
+                    alt={`${productName} thumbnail ${index + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 80px, 128px"
+                    className="object-contain p-2"
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -131,21 +150,36 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           >
             {images.map((image, index) => (
               <div
-                key={image.id}
-                className="relative w-full h-full flex-shrink-0 snap-center snap-always cursor-zoom-in p-4"
+                key={image.id || index}
+                className={`relative w-full h-full flex-shrink-0 snap-center snap-always flex items-center justify-center ${
+                  image.isVideo ? "p-2 bg-black/90" : "cursor-zoom-in p-4"
+                }`}
                 onClick={() => {
-                  setActiveIndex(index);
-                  setIsLightboxOpen(true);
+                  if (!image.isVideo) {
+                    setActiveIndex(index);
+                    setIsLightboxOpen(true);
+                  }
                 }}
               >
-                <FallbackImage
-                  src={image.imageUrl}
-                  alt={`${productName} view ${index + 1}`}
-                  fill
-                  priority={index === 0}
-                  sizes="100vw"
-                  className="object-contain"
-                />
+                {image.isVideo ? (
+                  <video
+                    src={image.imageUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full max-h-[85vw] object-contain rounded-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <FallbackImage
+                    src={image.imageUrl}
+                    alt={`${productName} view ${index + 1}`}
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className="object-contain"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -157,7 +191,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 <button
                   key={index}
                   type="button"
-                  aria-label={`Go to image ${index + 1}`}
+                  aria-label={`Go to item ${index + 1}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     scrollToSlide(index);
@@ -173,17 +207,23 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           )}
         </div>
 
-        {/* Desktop Main Image Container (>= md) */}
+        {/* Desktop Main Media Container (>= md) */}
         <div
           ref={imageContainerRef}
-          className="relative w-full aspect-square md:aspect-[4/5] bg-[#F6F7F9] border border-neutral-200/80 overflow-hidden cursor-zoom-in group rounded-3xl shadow-xs hidden md:block"
+          className={`relative w-full aspect-square md:aspect-[4/5] bg-[#F6F7F9] border border-neutral-200/80 overflow-hidden group rounded-3xl shadow-xs hidden md:block ${
+            activeImage.isVideo ? "" : "cursor-zoom-in"
+          }`}
           onClick={() => {
-            setIsLightboxOpen(true);
-            setIsMagnifying(false);
+            if (!activeImage.isVideo) {
+              setIsLightboxOpen(true);
+              setIsMagnifying(false);
+            }
           }}
-          onMouseEnter={() => setIsMagnifying(true)}
+          onMouseEnter={() => {
+            if (!activeImage.isVideo) setIsMagnifying(true);
+          }}
           onMouseLeave={() => setIsMagnifying(false)}
-          onMouseMove={handleMouseMove}
+          onMouseMove={activeImage.isVideo ? undefined : handleMouseMove}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -192,21 +232,32 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 p-4 md:p-8"
+              className="absolute inset-0 p-4 md:p-8 flex items-center justify-center"
             >
-              <FallbackImage
-                src={activeImage.imageUrl}
-                alt={productName}
-                fill
-                priority
-                sizes="60vw"
-                className="object-contain"
-              />
+              {activeImage.isVideo ? (
+                <video
+                  src={activeImage.imageUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-contain rounded-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <FallbackImage
+                  src={activeImage.imageUrl}
+                  alt={productName}
+                  fill
+                  priority
+                  sizes="60vw"
+                  className="object-contain"
+                />
+              )}
             </motion.div>
           </AnimatePresence>
 
-          {/* Desktop Magnifier */}
-          {isMagnifying && (
+          {/* Desktop Magnifier (Only for images) */}
+          {!activeImage.isVideo && isMagnifying && (
             <div className="absolute inset-0 pointer-events-none hidden md:block overflow-hidden z-10 bg-brand-gray-50">
               <div
                 className="w-full h-full relative"
@@ -260,7 +311,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   e.stopPropagation();
                   handlePrev();
                 }}
-                aria-label="Previous Image"
+                aria-label="Previous Media"
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
@@ -275,7 +326,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   e.stopPropagation();
                   handleNext();
                 }}
-                aria-label="Next Image"
+                aria-label="Next Media"
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
@@ -284,7 +335,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
             )}
 
             <div
-              className="relative w-full max-w-6xl h-full max-h-[85vh] mx-4 md:mx-24"
+              className="relative w-full max-w-6xl h-full max-h-[85vh] mx-4 md:mx-24 flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
               <AnimatePresence mode="wait">
@@ -294,15 +345,26 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute inset-0"
+                  className="absolute inset-0 flex items-center justify-center"
                 >
-                  <FallbackImage
-                    src={activeImage.imageUrl}
-                    alt={productName}
-                    fill
-                    sizes="100vw"
-                    className="object-contain"
-                  />
+                  {activeImage.isVideo ? (
+                    <video
+                      src={activeImage.imageUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="max-w-full max-h-full object-contain rounded-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <FallbackImage
+                      src={activeImage.imageUrl}
+                      alt={productName}
+                      fill
+                      sizes="100vw"
+                      className="object-contain"
+                    />
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -312,7 +374,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                 <div className="flex gap-2 pointer-events-auto bg-black/50 p-2 rounded-xl backdrop-blur-md">
                   {images.map((image, index) => (
                     <button
-                      key={image.id}
+                      key={image.id || index}
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveIndex(index);
@@ -323,13 +385,32 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                           : "border-2 border-transparent opacity-40 hover:opacity-100"
                       }`}
                     >
-                      <FallbackImage
-                        src={image.imageUrl}
-                        alt={`Thumbnail ${index + 1}`}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
+                      {image.isVideo ? (
+                        <div className="relative w-full h-full bg-black flex items-center justify-center">
+                          <video
+                            src={image.imageUrl}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow">
+                              <svg className="w-2.5 h-2.5 text-brand-navy ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <FallbackImage
+                          src={image.imageUrl}
+                          alt={`Thumbnail ${index + 1}`}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      )}
                     </button>
                   ))}
                 </div>

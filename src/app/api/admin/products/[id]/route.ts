@@ -72,6 +72,7 @@ export async function PATCH(
                 deleteMany: {},
                 create: images.map((img) => ({
                   imageUrl: img.imageUrl,
+                  isVideo: Boolean(img.isVideo),
                   sortOrder: img.sortOrder ?? 0,
                 })),
               },

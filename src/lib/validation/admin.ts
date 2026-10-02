@@ -99,6 +99,7 @@ export const productImageSchema = z.object({
     },
     { message: "Invalid image URL. Use /media/products/... URLs, legacy /uploads/..., or absolute http(s) URLs." }
   ),
+  isVideo: z.boolean().default(false),
   sortOrder: z.number().int().nonnegative().optional(),
 });
 
