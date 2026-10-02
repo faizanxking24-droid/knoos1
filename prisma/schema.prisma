@@ -229,6 +229,7 @@ model OrderItem {
   orderId     String  @db.VarChar(36)
   productId   String? @db.VarChar(36)
   productName String  @db.VarChar(255)
+  sku         String? @db.VarChar(100)
   size        String  @db.VarChar(10)
   quantity    Int
   price       Int

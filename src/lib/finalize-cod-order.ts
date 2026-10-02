@@ -21,6 +21,7 @@ interface CodOrderInput {
   itemsToCreate: Array<{
     productId: string;
     productName: string;
+    sku?: string | null;
     size: string;
     quantity: number;
     price: number;

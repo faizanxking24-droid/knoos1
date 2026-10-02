@@ -23,6 +23,7 @@ export async function GET(
           orderId: true,
           productId: true,
           productName: true,
+          sku: true,
           size: true,
           quantity: true,
           price: true,

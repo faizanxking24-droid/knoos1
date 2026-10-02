@@ -175,6 +175,11 @@ export function InvoiceDocument({
                     <tr key={item.id} className="break-inside-avoid print-avoid-break">
                       <td className="py-3.5 px-3 font-medium text-brand-dark">
                         <div className="font-semibold">{item.productName}</div>
+                        {item.sku && (
+                          <div className="text-[11px] font-mono text-brand-gray-500 tracking-wide mt-0.5">
+                            SKU: {item.sku}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3.5 px-3 text-center font-mono text-brand-gray-600">
                         {item.size}

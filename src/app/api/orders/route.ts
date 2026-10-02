@@ -26,6 +26,7 @@ export async function GET() {
           orderId: true,
           productId: true,
           productName: true,
+          sku: true,
           size: true,
           quantity: true,
           price: true,
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
   let itemsToCreate: Array<{
     productId: string;
     productName: string;
+    sku: string | null;
     size: string;
     quantity: number;
     price: number;
@@ -149,6 +151,7 @@ export async function POST(request: Request) {
       {
         productId: product.id,
         productName: product.name,
+        sku: variant.sku,
         size: variant.size,
         quantity: qty,
         price: unitPrice,
@@ -201,6 +204,7 @@ export async function POST(request: Request) {
       return {
         productId: item.productId,
         productName: item.product.name,
+        sku: item.variant.sku,
         size: item.variant.size,
         quantity: item.quantity,
         price,

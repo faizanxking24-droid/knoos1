@@ -32,6 +32,7 @@ const PAYMENT_STATUSES = [
 interface OrderItem {
   id: string;
   productName: string;
+  sku?: string | null;
   size: string;
   quantity: number;
   price: number;
@@ -267,6 +268,11 @@ export default function AdminOrderDetail({ order: initialOrder }: OrderDetailPro
                     <p className="font-medium text-brand-navy text-sm sm:text-base truncate">
                       {item.productName}
                     </p>
+                    {item.sku && (
+                      <p className="text-[11px] font-mono text-brand-gray-500 mt-0.5">
+                        SKU: {item.sku}
+                      </p>
+                    )}
                     <p className="text-xs text-brand-gray-400 font-mono mt-0.5">
                       Size: UK {item.size} • Qty: {item.quantity}
                     </p>

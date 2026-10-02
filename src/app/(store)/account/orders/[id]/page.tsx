@@ -19,6 +19,7 @@ interface OrderAddress {
 interface OrderItem {
   id: string;
   productName: string;
+  sku?: string | null;
   size: string;
   quantity: number;
   price: number;
@@ -339,6 +340,11 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                 <div key={item.id} className="py-4 flex items-center justify-between gap-4">
                   <div>
                     <h3 className="font-medium text-sm sm:text-base text-brand-dark">{item.productName}</h3>
+                    {item.sku && (
+                      <p className="text-[11px] font-mono text-brand-gray-500 mt-0.5">
+                        SKU: {item.sku}
+                      </p>
+                    )}
                     <p className="text-xs text-brand-gray-500 mt-1">
                       Size: {item.size} &bull; Qty: {item.quantity}
                     </p>

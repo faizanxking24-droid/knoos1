@@ -11,6 +11,7 @@
 export interface InvoiceItem {
   id: string;
   productName: string;
+  sku: string | null;
   size: string;
   quantity: number;
   unitPrice: number;
@@ -88,6 +89,7 @@ export interface RawOrderSnapshot {
   items: Array<{
     id: string;
     productName: string;
+    sku?: string | null;
     size: string;
     quantity: number;
     price: number;
@@ -169,6 +171,7 @@ export function buildInvoiceData(order: RawOrderSnapshot): InvoiceData {
   const items: InvoiceItem[] = (order.items || []).map((item) => ({
     id: item.id,
     productName: item.productName,
+    sku: item.sku ?? null,
     size: item.size,
     quantity: item.quantity,
     unitPrice: item.price,
