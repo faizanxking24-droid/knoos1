@@ -1,113 +1,175 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+
+export const LOADER_DEBOUNCE_MS = 300;
+export const LOADER_FALLBACK_TIMEOUT_MS = 2000;
+
+export interface ShouldTriggerLoaderOptions {
+  targetHref: string;
+  targetAttr?: string | null;
+  hasDownload?: boolean;
+  currentHref: string;
+  button?: number;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  defaultPrevented?: boolean;
+}
+
+export function shouldTriggerNavigationLoader(options: ShouldTriggerLoaderOptions): boolean {
+  const {
+    targetHref,
+    targetAttr,
+    hasDownload,
+    currentHref,
+    button = 0,
+    ctrlKey = false,
+    metaKey = false,
+    shiftKey = false,
+    altKey = false,
+    defaultPrevented = false,
+  } = options;
+
+  // Ignore non-primary click or modified clicks
+  if (button !== 0 || ctrlKey || metaKey || shiftKey || altKey) {
+    return false;
+  }
+
+  // Ignore already prevented events
+  if (defaultPrevented) {
+    return false;
+  }
+
+  // Ignore target="_blank", "_parent", "_top", etc.
+  if (targetAttr && targetAttr !== "_self") {
+    return false;
+  }
+
+  // Ignore download links
+  if (hasDownload) {
+    return false;
+  }
+
+  if (!targetHref) {
+    return false;
+  }
+
+  // Ignore hash links and non-HTTP protocols
+  const trimmedHref = targetHref.trim();
+  if (
+    trimmedHref.startsWith("#") ||
+    trimmedHref.startsWith("mailto:") ||
+    trimmedHref.startsWith("tel:") ||
+    trimmedHref.startsWith("javascript:") ||
+    trimmedHref.startsWith("sms:")
+  ) {
+    return false;
+  }
+
+  try {
+    const url = new URL(trimmedHref, currentHref);
+    const currentUrl = new URL(currentHref);
+
+    // Cross-origin navigations are handled natively by browser
+    if (url.origin !== currentUrl.origin) {
+      return false;
+    }
+
+    // Ignore API routes
+    if (url.pathname.startsWith("/api/") || url.pathname === "/api") {
+      return false;
+    }
+
+    // Ignore static files and media downloads
+    if (url.pathname.match(/\.(png|jpe?g|webp|gif|svg|pdf|zip|mp4|webm|ico|json|txt|xml)$/i)) {
+      return false;
+    }
+
+    // Ignore same-page navigations (same path and query string)
+    if (url.pathname === currentUrl.pathname && url.search === currentUrl.search) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function LoaderContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
   const [visible, setVisible] = useState(false);
 
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearTimers = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+  };
+
+  // Immediate clearing when route or search params change
   useEffect(() => {
-    // When the route or search params change, navigation has finished rendering.
-    setIsLoading(false);
+    clearTimers();
+    setVisible(false);
   }, [pathname, searchParams]);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const startLoading = () => {
-      setIsLoading(true);
-      // Fallback timeout to clear loader if navigation fails or gets stuck
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setIsLoading(false);
-      }, 5000);
-    };
-
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
-      if (!target || !target.href) return;
-      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-      if (target.target === "_blank") return;
+      if (!target) return;
 
-      try {
-        const url = new URL(target.href);
-        const currentUrl = new URL(window.location.href);
+      const href = target.getAttribute("href") || target.href;
+      if (!href) return;
 
-        if (url.origin !== currentUrl.origin) return;
-        // Ignore same page navigation (e.g. hash links or just query changes)
-        if (url.pathname === currentUrl.pathname) return;
-        // Exclude specific static assets
-        if (url.pathname.match(/\.(png|jpg|jpeg|gif|svg|pdf|zip)$/i)) return;
+      const shouldLoad = shouldTriggerNavigationLoader({
+        targetHref: href,
+        targetAttr: target.getAttribute("target"),
+        hasDownload: target.hasAttribute("download"),
+        currentHref: window.location.href,
+        button: e.button,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        defaultPrevented: e.defaultPrevented,
+      });
 
-        startLoading();
-      } catch (err) {
-        // Ignored
-      }
-    };
+      if (!shouldLoad) return;
 
-    const handlePopState = () => {
-      // Browser back/forward
-      startLoading();
-    };
+      clearTimers();
 
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
+      // Debounce: only show loader if forward navigation takes > 300ms
+      debounceTimerRef.current = setTimeout(() => {
+        setVisible(true);
+      }, LOADER_DEBOUNCE_MS);
 
-    window.history.pushState = function (data, unused, url) {
-      if (url) {
-        try {
-          const targetUrl = new URL(url.toString(), window.location.origin);
-          if (targetUrl.pathname !== window.location.pathname) {
-            startLoading();
-          }
-        } catch (e) {}
-      }
-      return originalPushState.apply(this, [data, unused, url]);
-    };
-
-    window.history.replaceState = function (data, unused, url) {
-      if (url) {
-        try {
-          const targetUrl = new URL(url.toString(), window.location.origin);
-          if (targetUrl.pathname !== window.location.pathname) {
-            startLoading();
-          }
-        } catch (e) {}
-      }
-      return originalReplaceState.apply(this, [data, unused, url]);
+      // Defensive fallback: dismiss after 2000ms if navigation fails or aborts
+      fallbackTimerRef.current = setTimeout(() => {
+        setVisible(false);
+        clearTimers();
+      }, LOADER_FALLBACK_TIMEOUT_MS);
     };
 
     document.addEventListener("click", handleAnchorClick, true);
-    window.addEventListener("popstate", handlePopState);
 
     return () => {
       document.removeEventListener("click", handleAnchorClick, true);
-      window.removeEventListener("popstate", handlePopState);
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-      clearTimeout(timeoutId);
+      clearTimers();
     };
   }, []);
-
-  // Debounce display: only show loader if navigation genuinely takes > 180ms
-  useEffect(() => {
-    let delayTimer: NodeJS.Timeout;
-    if (isLoading) {
-      delayTimer = setTimeout(() => {
-        setVisible(true);
-      }, 180);
-    } else {
-      setVisible(false);
-    }
-    return () => {
-      clearTimeout(delayTimer);
-    };
-  }, [isLoading]);
 
   return (
     <AnimatePresence>
@@ -117,7 +179,7 @@ function LoaderContent() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/75 backdrop-blur-md"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/75 backdrop-blur-md pointer-events-none"
         >
           <div className="relative flex items-center justify-center">
             {/* Animated outer ring */}
