@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Script from "next/script";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -1296,9 +1297,18 @@ export function CheckoutClient() {
                 <button
                   type="submit"
                   disabled={savingAddress}
-                  className="bg-brand-navy hover:bg-brand-blue text-white px-6 py-2.5 font-mono text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs disabled:opacity-50"
+                  className="bg-brand-navy hover:bg-brand-blue text-white px-6 py-2.5 font-mono text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs disabled:opacity-50 inline-flex items-center gap-2"
                 >
-                  {savingAddress ? "SAVING..." : editingAddressId ? "UPDATE ADDRESS" : "SAVE ADDRESS"}
+                  {savingAddress && (
+                    <Image
+                      src="/knoos-logo-sm.webp"
+                      alt=""
+                      width={16}
+                      height={16}
+                      className="w-4 h-4 object-contain animate-pulse"
+                    />
+                  )}
+                  <span>{savingAddress ? "SAVING..." : editingAddressId ? "UPDATE ADDRESS" : "SAVE ADDRESS"}</span>
                 </button>
                 <button
                   type="button"

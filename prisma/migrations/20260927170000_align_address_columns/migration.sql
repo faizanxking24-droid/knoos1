@@ -14,7 +14,7 @@ SET @old_name_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'name'
 );
 
@@ -22,7 +22,7 @@ SET @new_name_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'fullName'
 );
 
@@ -46,7 +46,7 @@ SET @old_address_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'address'
 );
 
@@ -54,7 +54,7 @@ SET @new_address_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'addressLine1'
 );
 
@@ -78,7 +78,7 @@ SET @old_pincode_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'pincode'
 );
 
@@ -86,7 +86,7 @@ SET @new_pincode_exists = (
     SELECT COUNT(*)
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND COLUMN_NAME = 'postalCode'
 );
 
@@ -125,7 +125,7 @@ SET @named_idx_exists = (
     SELECT COUNT(*)
     FROM information_schema.STATISTICS
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'Address'
+      AND (TABLE_NAME = 'Address' OR LOWER(TABLE_NAME) = 'address')
       AND INDEX_NAME = 'Address_userId_isDefault_idx'
 );
 

@@ -1,5 +1,3 @@
-"use server";
-
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
@@ -84,39 +82,43 @@ export async function POST(request: Request) {
       );
     }
 
-    let makeDefault = isDefault ?? false;
+    const phoneDigits = phoneValidation.digits;
 
-    // If no addresses exist for this user, make this one default
-    if (!makeDefault) {
-      const count = await prisma.address.count({ where: { userId: session.user.id } });
-      if (count === 0) {
-        makeDefault = true;
+    const address = await prisma.$transaction(async (tx) => {
+      let makeDefault = Boolean(isDefault);
+
+      // If no addresses exist for this user, make this one default
+      if (!makeDefault) {
+        const count = await tx.address.count({ where: { userId: session.user.id } });
+        if (count === 0) {
+          makeDefault = true;
+        }
       }
-    }
 
-    // If this is being set as default, unset other defaults
-    if (makeDefault) {
-      await prisma.address.updateMany({
-        where: { userId: session.user.id, isDefault: true },
-        data: { isDefault: false },
+      // If this is being set as default, unset other defaults strictly for this user
+      if (makeDefault) {
+        await tx.address.updateMany({
+          where: { userId: session.user.id, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+
+      return tx.address.create({
+        data: {
+          userId: session.user.id,
+          label: typeof label === "string" && label.trim() ? label.trim().toUpperCase() : "HOME",
+          fullName: trimmedFullName,
+          phone: phoneDigits,
+          addressLine1: trimmedAddressLine1,
+          addressLine2: typeof addressLine2 === "string" && addressLine2.trim() ? addressLine2.trim() : null,
+          landmark: typeof landmark === "string" && landmark.trim() ? landmark.trim() : null,
+          city: trimmedCity,
+          state: trimmedState,
+          postalCode: trimmedPostalCode,
+          country: typeof country === "string" && country.trim() ? country.trim() : "India",
+          isDefault: makeDefault,
+        },
       });
-    }
-
-    const address = await prisma.address.create({
-      data: {
-        userId: session.user.id,
-        label: typeof label === "string" && label.trim() ? label.trim().toUpperCase() : "HOME",
-        fullName: trimmedFullName,
-        phone: phoneValidation.digits,
-        addressLine1: trimmedAddressLine1,
-        addressLine2: typeof addressLine2 === "string" && addressLine2.trim() ? addressLine2.trim() : null,
-        landmark: typeof landmark === "string" && landmark.trim() ? landmark.trim() : null,
-        city: trimmedCity,
-        state: trimmedState,
-        postalCode: trimmedPostalCode,
-        country: typeof country === "string" && country.trim() ? country.trim() : "India",
-        isDefault: makeDefault,
-      },
     });
 
     return NextResponse.json(address, { status: 201 });

@@ -1,5 +1,3 @@
-"use server";
-
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
@@ -118,17 +116,19 @@ export async function PUT(
       updateData.isDefault = Boolean(isDefault);
     }
 
-    // If setting as default, unset others first
-    if (updateData.isDefault) {
-      await prisma.address.updateMany({
-        where: { userId: session.user.id, isDefault: true, NOT: { id } },
-        data: { isDefault: false },
-      });
-    }
+    const updated = await prisma.$transaction(async (tx) => {
+      // If setting as default, unset others first strictly scoped to current user
+      if (updateData.isDefault) {
+        await tx.address.updateMany({
+          where: { userId: session.user.id, isDefault: true, NOT: { id } },
+          data: { isDefault: false },
+        });
+      }
 
-    const updated = await prisma.address.update({
-      where: { id },
-      data: updateData,
+      return tx.address.update({
+        where: { id },
+        data: updateData,
+      });
     });
 
     return NextResponse.json(updated);
@@ -160,22 +160,24 @@ export async function DELETE(
       return NextResponse.json({ error: "Address not found." }, { status: 404 });
     }
 
-    await prisma.address.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      await tx.address.delete({ where: { id } });
 
-    // If we deleted the default address, set another as default
-    if (existing.isDefault) {
-      const firstAddress = await prisma.address.findFirst({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "asc" },
-      });
-
-      if (firstAddress) {
-        await prisma.address.update({
-          where: { id: firstAddress.id },
-          data: { isDefault: true },
+      // If we deleted the default address, set another as default
+      if (existing.isDefault) {
+        const firstAddress = await tx.address.findFirst({
+          where: { userId: session.user.id },
+          orderBy: { createdAt: "asc" },
         });
+
+        if (firstAddress) {
+          await tx.address.update({
+            where: { id: firstAddress.id },
+            data: { isDefault: true },
+          });
+        }
       }
-    }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

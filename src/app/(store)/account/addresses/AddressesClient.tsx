@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Plus,
   Pencil,
@@ -356,7 +357,17 @@ export default function AddressesClient() {
                 disabled={saving}
                 className="inline-flex items-center gap-2 bg-brand-navy text-white px-5 py-2.5 text-xs font-mono tracking-widest uppercase hover:bg-brand-blue rounded-xl transition-colors shadow-xs disabled:opacity-50"
               >
-                <Save size={15} />
+                {saving ? (
+                  <Image
+                    src="/knoos-logo-sm.webp"
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="w-4 h-4 object-contain animate-pulse"
+                  />
+                ) : (
+                  <Save size={15} />
+                )}
                 <span>{saving ? "Saving..." : "Save Address"}</span>
               </button>
               <button

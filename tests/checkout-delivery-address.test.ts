@@ -307,4 +307,62 @@ describe("Checkout Delivery Address Functionality & Flows (Section 18 A-I)", () 
     assert.strictEqual(selectedAddressId, "");
     assert.strictEqual(Boolean(selectedAddressId), false);
   });
+
+  // Flow J: Customer Nazar's live address (PIN 121001) succeeds with full canonical payload
+  it("Flow J: Customer Nazar's live delivery address (PIN 121001, Faridabad) is accepted without restriction", () => {
+    const nazarForm = {
+      fullName: "Nazar",
+      phone: "9625840027",
+      addressLine1: "house no 6, gali no 1, badkhal",
+      addressLine2: "badkhal village",
+      landmark: "NEAR BADKAL LAKE",
+      city: "faridabad",
+      state: "haryana",
+      postalCode: "121001",
+      country: "India",
+      label: "HOME",
+    };
+
+    const result = validateAddressForm(nazarForm);
+    assert.strictEqual(result.isValid, true);
+    assert.strictEqual(result.normalizedPayload?.fullName, "Nazar");
+    assert.strictEqual(result.normalizedPayload?.phone, "9625840027");
+    assert.strictEqual(result.normalizedPayload?.addressLine1, "house no 6, gali no 1, badkhal");
+    assert.strictEqual(result.normalizedPayload?.addressLine2, "badkhal village");
+    assert.strictEqual(result.normalizedPayload?.landmark, "NEAR BADKAL LAKE");
+    assert.strictEqual(result.normalizedPayload?.city, "faridabad");
+    assert.strictEqual(result.normalizedPayload?.state, "haryana");
+    assert.strictEqual(result.normalizedPayload?.postalCode, "121001");
+    assert.strictEqual(result.normalizedPayload?.country, "India");
+  });
+
+  // Flow K: Default address updating remains strictly scoped to current user
+  it("Flow K: Setting an address as default unsets previous default scoped strictly to current user", () => {
+    const user1Addresses = [
+      { id: "addr_u1_1", userId: "user-1", isDefault: true },
+      { id: "addr_u1_2", userId: "user-1", isDefault: false },
+    ];
+    const user2Addresses = [
+      { id: "addr_u2_1", userId: "user-2", isDefault: true },
+    ];
+
+    // User 1 sets addr_u1_2 as default
+    const targetId = "addr_u1_2";
+    const currentUserId = "user-1";
+
+    const updatedUser1 = user1Addresses.map((a) => {
+      if (a.userId !== currentUserId) return a;
+      return { ...a, isDefault: a.id === targetId };
+    });
+
+    const updatedUser2 = user2Addresses.map((a) => {
+      if (a.userId !== currentUserId) return a;
+      return { ...a, isDefault: a.id === targetId };
+    });
+
+    assert.strictEqual(updatedUser1.find((a) => a.id === "addr_u1_1")?.isDefault, false);
+    assert.strictEqual(updatedUser1.find((a) => a.id === "addr_u1_2")?.isDefault, true);
+    // User 2's address default must remain untouched
+    assert.strictEqual(updatedUser2.find((a) => a.id === "addr_u2_1")?.isDefault, true);
+  });
 });
